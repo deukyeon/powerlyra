@@ -1,0 +1,7 @@
+nodes,pernode,nedges,nverts,format,ingress,algorithm,iterations,engine,lookup,source,directed
+8,1,1468364884,41652230,adj_ec,metis,connected_component,-1,plsync,/home/ubuntu/datasets/twitter_rv/twitter_rv_metis_partition8/part-00000,,
+8,1,1468364884,41652230,adj_ec,metis,pagerank,20,plsyncec,/home/ubuntu/datasets/twitter_rv/twitter_rv_metis_partition8/part-00000,,
+8,1,1468364884,41652230,adj_ec,metis,sssp_gather,-1,plsyncec,/home/ubuntu/datasets/twitter_rv/twitter_rv_metis_partition8/part-00000,6257722,true
+16,1,1468364884,41652230,adj_ec,metis,connected_component,-1,plsync,/home/ubuntu/datasets/twitter_rv/twitter_rv_metis_partition8/part-00000,,
+16,1,1468364884,41652230,adj_ec,metis,pagerank,20,plsyncec,/home/ubuntu/datasets/twitter_rv/twitter_rv_metis_partition8/part-00000,,
+16,1,1468364884,41652230,adj_ec,metis,sssp_gather,-1,plsyncec,/home/ubuntu/datasets/twitter_rv/twitter_rv_metis_partition8/part-00000,6257722,true

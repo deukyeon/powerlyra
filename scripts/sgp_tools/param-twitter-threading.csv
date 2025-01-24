@@ -1,0 +1,7 @@
+nodes,pernode,nedges,nverts,format,ingress,algorithm,iterations,engine,lookup,source,directed
+8,1,1468364884,41652230,snap,random,pagerank,20,plsync,,,
+16,1,1468364884,41652230,snap,random,pagerank,20,plsync,,,
+32,1,1468364884,41652230,snap,random,pagerank,20,plsync,,,
+8,1,1468364884,41652230,adj_ec,random_ec,pagerank,20,plsyncec,,,
+16,1,1468364884,41652230,adj_ec,random_ec,pagerank,20,plsyncec,,,
+32,1,1468364884,41652230,adj_ec,random_ec,pagerank,20,plsyncec,,,

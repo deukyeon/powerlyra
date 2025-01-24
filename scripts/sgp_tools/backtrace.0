@@ -1,0 +1,37 @@
+Pointers
+------------
+0x60dcd1
+0x4cd76b
+0x5bfba8
+0x5e01fd
+0x5e7a4c
+0x5efa15
+0x4c552d
+0x7f34442f1830
+0x4cc089
+Raw
+------------
+/home/ubuntu/powerlyra/release/toolkits/graph_analytics/sssp_gather(_Z18__print_back_tracev+0xa1) [0x60dcd1]
+/home/ubuntu/powerlyra/release/toolkits/graph_analytics/sssp_gather() [0x4cd76b]
+/home/ubuntu/powerlyra/release/toolkits/graph_analytics/sssp_gather(_ZN8graphlab19sharding_constraintC2EmNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE+0x138) [0x5bfba8]
+/home/ubuntu/powerlyra/release/toolkits/graph_analytics/sssp_gather(_ZN8graphlab38distributed_constrained_random_ingressI11vertex_data9edge_dataEC2ERNS_19distributed_controlERNS_17distributed_graphIS1_S2_EERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE+0x6d) [0x5e01fd]
+/home/ubuntu/powerlyra/release/toolkits/graph_analytics/sssp_gather(_ZN8graphlab17distributed_graphI11vertex_data9edge_dataE18set_ingress_methodERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEmbbS9_mmmmS9_+0x8dc) [0x5e7a4c]
+/home/ubuntu/powerlyra/release/toolkits/graph_analytics/sssp_gather(_ZN8graphlab17distributed_graphI11vertex_data9edge_dataE11set_optionsERKNS_16graphlab_optionsE+0x9b5) [0x5efa15]
+/home/ubuntu/powerlyra/release/toolkits/graph_analytics/sssp_gather(main+0x109d) [0x4c552d]
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xf0) [0x7f34442f1830]
+/home/ubuntu/powerlyra/release/toolkits/graph_analytics/sssp_gather(_start+0x29) [0x4cc089]
+
+Demangled
+------------
+__print_back_trace()
+/home/ubuntu/powerlyra/release/toolkits/graph_analytics/sssp_gather()
+graphlab::sharding_constraint::sharding_constraint(unsigned long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)
+/home/ubuntu/powerlyra/release/toolkits/graph_analytics/sssp_gather(_ZN8graphlab38distributed_constrained_random_ingressI11vert
+/home/ubuntu/powerlyra/release/toolkits/graph_analytics/sssp_gather(_ZN8graphlab17distributed_graphI11vertex_data9edge_dataE18s
+graphlab::distributed_graph<vertex_data, edge_data>::set_options(graphlab::graphlab_options const&)
+/home/ubuntu/powerlyra/release/toolkits/graph_analytics/sssp_gather(main+0x109d)
+/lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xf0)
+/home/ubuntu/powerlyra/release/toolkits/graph_analytics/sssp_gather(_start+0x29)
+-------------------------------------------------------
+
+
