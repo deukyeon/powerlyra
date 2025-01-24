@@ -1,5 +1,5 @@
-/**  
- *  Software submitted by 
+/**
+ *  Software submitted by
  *  Systems & Technology Research / Vision Systems Inc., 2013
  *
  *  Approved for public release; distribution is unlimited. [DISTAR Case #21428]
@@ -18,7 +18,6 @@
  *
  *
  */
-
 
 #ifndef TABLE_BASE_HPP
 #define TABLE_BASE_HPP
@@ -40,54 +39,52 @@
 
 #include "discrete_variable.hpp"
 
-
 namespace graphlab {
 
-
-template<size_t MAX_DIM>
+template <size_t MAX_DIM>
 class table_base {
-public:
-  typedef table_base const *const const_ptr;
+ public:
+  typedef table_base const* const const_ptr;
 
-  virtual ~table_base() { }
+  virtual ~table_base() {}
 
-  static inline double APPROX_LOG_ZERO() { 
-    //return -std::numeric_limits<double>::max();
-    return -1e6; 
+  static inline double APPROX_LOG_ZERO() {
+    // return -std::numeric_limits<double>::max();
+    return -1e6;
   }
 
   virtual table_base& deep_copy(const table_base& base) = 0;
   virtual table_base& copy_onto(const table_base& base) = 0;
 
-  //virtual table_base&   plus_equals(const table_base& base) = 0;
-  virtual table_base&  times_equals(const table_base& base) = 0;
+  // virtual table_base&   plus_equals(const table_base& base) = 0;
+  virtual table_base& times_equals(const table_base& base) = 0;
   virtual table_base& divide_equals(const table_base& base) = 0;
-  //virtual void    plus(const table_base& base, table_base& out) const = 0;
-  virtual void   times(const table_base& base, table_base& out) const = 0;
-  virtual void  divide(const table_base& base, table_base& out) const = 0;
+  // virtual void    plus(const table_base& base, table_base& out) const = 0;
+  virtual void times(const table_base& base, table_base& out) const = 0;
+  virtual void divide(const table_base& base, table_base& out) const = 0;
 
   virtual const discrete_variable& var(size_t index) const = 0;
-  
-  // REVIEW these are always dense_tables. should they be in here?
-  virtual void     MAP(table_base& msg) const = 0;
-  virtual void     marginalize(table_base& msg) const = 0;
 
-  virtual void    zero() = 0;
-  virtual size_t numel() const = 0; // REVIEW might not be necessary
+  // REVIEW these are always dense_tables. should they be in here?
+  virtual void MAP(table_base& msg) const = 0;
+  virtual void marginalize(table_base& msg) const = 0;
+
+  virtual void zero() = 0;
+  virtual size_t numel() const = 0;  // REVIEW might not be necessary
   virtual size_t ndims() const = 0;
-  virtual void    load(graphlab::iarchive& arc) = 0;
-  virtual void    save(graphlab::oarchive& arc) const = 0;
+  virtual void load(graphlab::iarchive& arc) = 0;
+  virtual void save(graphlab::oarchive& arc) const = 0;
 
   friend std::ostream& operator<<(std::ostream& out,
-                            const table_base<MAX_DIM>& factor) {
+                                  const table_base<MAX_DIM>& factor) {
     factor.print(out);
     return out;
   }
 
-private:
+ private:
   virtual std::ostream& print(std::ostream& out = std::cout) const = 0;
-}; // end of table_base
+};  // end of table_base
 
-} // end of namespace graphlab 
+}  // end of namespace graphlab
 
-#endif // TABLE_BASE_HPP
+#endif  // TABLE_BASE_HPP

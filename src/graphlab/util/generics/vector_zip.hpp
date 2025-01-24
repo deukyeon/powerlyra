@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,26 +30,25 @@
 #include <vector>
 
 namespace graphlab {
-  template<typename v1, typename v2>
-  std::vector<std::pair<v1, v2> > 
-    vector_zip(std::vector<v1>& vec1, std::vector<v2>& vec2) {
+template <typename v1, typename v2>
+std::vector<std::pair<v1, v2> > vector_zip(std::vector<v1>& vec1,
+                                           std::vector<v2>& vec2) {
+  assert(vec1.size() == vec2.size());
+  size_t length = vec1.size();
 
-      assert(vec1.size() == vec2.size());
-      size_t length = vec1.size();
-
-      std::vector<std::pair<v1, v2> >  out;
-      out.reserve(length);
-      out.resize(length);
+  std::vector<std::pair<v1, v2> > out;
+  out.reserve(length);
+  out.resize(length);
 
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-    for (ssize_t i = 0; i < ssize_t(length); ++i) {
-      out[i] = (std::pair<v1, v2>(vec1[i], vec2[i]));
-    }
-    std::vector<v1>().swap(vec1);
-    std::vector<v2>().swap(vec2);
-    return out;
+  for (ssize_t i = 0; i < ssize_t(length); ++i) {
+    out[i] = (std::pair<v1, v2>(vec1[i], vec2[i]));
   }
-} // end of graphlab
+  std::vector<v1>().swap(vec1);
+  std::vector<v2>().swap(vec2);
+  return out;
+}
+}  // namespace graphlab
 #endif

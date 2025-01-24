@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,6 @@
  *      http://www.graphlab.ml.cmu.edu
  *
  */
-
 
 #ifndef GRAPHLAB_INPLACE_LOCKFREE_QUEUE_HPP
 #define GRAPHLAB_INPLACE_LOCKFREE_QUEUE_HPP
@@ -45,40 +44,36 @@ namespace graphlab {
  */
 class inplace_lf_queue {
  public:
-   inline inplace_lf_queue():head(sentinel),tail(sentinel) {
-     for (size_t i = 0;i < sizeof(size_t); ++i) sentinel[i] = 0;
-   }
+  inline inplace_lf_queue() : head(sentinel), tail(sentinel) {
+    for (size_t i = 0; i < sizeof(size_t); ++i) sentinel[i] = 0;
+  }
 
-   void enqueue(char* c);
+  void enqueue(char* c);
 
-   void enqueue_unsafe(char* c);
+  void enqueue_unsafe(char* c);
 
-   char* dequeue_all();
+  char* dequeue_all();
 
-   char* dequeue_all_unsafe();
+  char* dequeue_all_unsafe();
 
-   static inline char* get_next(char* ptr) {
-     return *(reinterpret_cast<char**>(ptr));
-   }
+  static inline char* get_next(char* ptr) {
+    return *(reinterpret_cast<char**>(ptr));
+  }
 
-   static inline char** get_next_ptr(char* ptr) {
-     return reinterpret_cast<char**>(ptr);
-   }
+  static inline char** get_next_ptr(char* ptr) {
+    return reinterpret_cast<char**>(ptr);
+  }
 
-   inline const bool end_of_dequeue_list(char* ptr) {
-     return ptr == sentinel;
-   }
+  inline const bool end_of_dequeue_list(char* ptr) { return ptr == sentinel; }
 
  private:
+  char sentinel[sizeof(size_t)];
+  char* head;
+  char* tail;
 
-   char sentinel[sizeof(size_t)];
-   char* head;
-   char* tail;
-
-   char cache_line_padding[64 - 24];
+  char cache_line_padding[64 - 24];
 };
 
-
-} // namespace graphlab
+}  // namespace graphlab
 
 #endif

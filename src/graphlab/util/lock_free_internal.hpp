@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef GRAPHLAB_UTIL_LOCK_FREE_INTERNAL_HPP
 #define GRAPHLAB_UTIL_LOCK_FREE_INTERNAL_HPP
 
@@ -35,15 +34,11 @@ union reference_with_counter {
     index_type val;
     index_type counter;
   } q;
-  index_type& value() {
-    return q.val;
-  }
-  index_type& counter() {
-    return q.counter;
-  }
+  index_type& value() { return q.val; }
+  index_type& counter() { return q.counter; }
   typename u_integer_selector<sizeof(index_type) * 2>::integer_type combined;
 };
-  
-}
-}
+
+}  // namespace lock_free_internal
+}  // namespace graphlab
 #endif

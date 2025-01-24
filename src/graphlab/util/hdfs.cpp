@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,15 +20,13 @@
  *
  */
 
-
 #include <graphlab/util/hdfs.hpp>
 
 namespace graphlab {
-
 
 hdfs& hdfs::get_hdfs() {
   static hdfs fs;
   return fs;
 }
 
-}
+}  // namespace graphlab

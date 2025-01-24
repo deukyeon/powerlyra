@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,39 +18,36 @@
  * Class for collecting graph statistics
  */
 
-
 #ifndef TK_STATS
 #define TK_STATS
 
-  
-struct stats_info{
+struct stats_info {
   size_t validation_edges;
   size_t training_edges;
   size_t max_user;
   size_t max_item;
-  
-  stats_info(){
-    validation_edges = training_edges = max_user = max_item = 0;
-  }
 
-  stats_info & operator+=(const stats_info & other){
-     validation_edges += other.validation_edges;
-     training_edges += other.training_edges;
-     max_user = std::max(max_user, other.max_user);
-     max_item = std::max(max_item, other.max_item); 
-     return *this;
+  stats_info() { validation_edges = training_edges = max_user = max_item = 0; }
+
+  stats_info& operator+=(const stats_info& other) {
+    validation_edges += other.validation_edges;
+    training_edges += other.training_edges;
+    max_user = std::max(max_user, other.max_user);
+    max_item = std::max(max_item, other.max_item);
+    return *this;
   }
 
   /** \brief Save the values to a binary archive */
-  void save(graphlab::oarchive& arc) const { arc << validation_edges << training_edges << max_user << max_item; }
+  void save(graphlab::oarchive& arc) const {
+    arc << validation_edges << training_edges << max_user << max_item;
+  }
 
   /** \brief Read the values from a binary archive */
-  void load(graphlab::iarchive& arc) { arc >> validation_edges >> training_edges >> max_user >> max_item; }  
-
+  void load(graphlab::iarchive& arc) {
+    arc >> validation_edges >> training_edges >> max_user >> max_item;
+  }
 };
 
-  
 stats_info info;
 
-
-#endif //TK_STATS
+#endif  // TK_STATS

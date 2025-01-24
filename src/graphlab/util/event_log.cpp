@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #include <graphlab/util/event_log.hpp>
 #include <graphlab/util/timer.hpp>
 #include <graphlab/logger/assertions.hpp>
@@ -29,7 +28,7 @@
 #define BAR_CHARACTER '#'
 
 namespace graphlab {
-  
+
 static std::ofstream eventlog_file;
 static mutex eventlog_file_mutex;
 static bool eventlog_file_open = false;
@@ -38,15 +37,13 @@ static timer event_timer;
 static bool event_timer_started = false;
 static mutex event_timer_mutex;
 
-
-void event_log::initialize(std::ostream &ostrm,
-                           size_t flush_interval_ms,
+void event_log::initialize(std::ostream &ostrm, size_t flush_interval_ms,
                            event_print_type event_print) {
   m.lock();
   out = &ostrm;
   flush_interval = flush_interval_ms;
   print_method = event_print;
-  
+
   event_timer_mutex.lock();
   if (event_timer_started == false) {
     event_timer_started = true;
@@ -54,10 +51,10 @@ void event_log::initialize(std::ostream &ostrm,
   }
   event_timer_mutex.unlock();
   prevtime = event_timer.current_time_millis();
-  
-  cond.signal(); 
+
+  cond.signal();
   m.unlock();
-  
+
   if (event_print == LOG_FILE) {
     eventlog_file_mutex.lock();
     if (!eventlog_file_open) {
@@ -67,7 +64,6 @@ void event_log::initialize(std::ostream &ostrm,
     out = &eventlog_file;
     eventlog_file_mutex.unlock();
   }
-
 }
 
 event_log::~event_log() {
@@ -80,24 +76,25 @@ event_log::~event_log() {
     size_t pos;
     if (hascounter.first_bit(pos)) {
       do {
-        (*out) << descriptions[pos]  << ":\t" << totalcounter[pos].value << " Events\n";
-      } while(hascounter.next_bit(pos));
+        (*out) << descriptions[pos] << ":\t" << totalcounter[pos].value
+               << " Events\n";
+      } while (hascounter.next_bit(pos));
     }
-  }
-  else{
+  } else {
     size_t pos;
     if (hascounter.first_bit(pos)) {
       do {
-        std::cout << descriptions[pos]  << ":\t" << totalcounter[pos].value << " Events\n";
-      } while(hascounter.next_bit(pos));
+        std::cout << descriptions[pos] << ":\t" << totalcounter[pos].value
+                  << " Events\n";
+      } while (hascounter.next_bit(pos));
     }
   }
 }
 
-
 void event_log::immediate_event(unsigned char eventid) {
   m.lock();
-  immediate_events.push_back(std::make_pair(eventid, event_timer.current_time_millis()));
+  immediate_events.push_back(
+      std::make_pair(eventid, event_timer.current_time_millis()));
   m.unlock();
 }
 
@@ -108,19 +105,21 @@ void event_log::close() {
   m.unlock();
 }
 
-void event_log::add_event_type(unsigned char eventid,
-                               std::string description) {
+void event_log::add_event_type(unsigned char eventid, std::string description) {
   descriptions[eventid] = description;
   max_desc_length = std::max(max_desc_length, description.length());
-  ASSERT_MSG(max_desc_length <= 30, "Event Description length must be <= 30 characters");
+  ASSERT_MSG(max_desc_length <= 30,
+             "Event Description length must be <= 30 characters");
   counters[eventid].value = 0;
   hascounter.set_bit(eventid);
 }
 
-void event_log::add_immediate_event_type(unsigned char eventid, std::string description) {
+void event_log::add_immediate_event_type(unsigned char eventid,
+                                         std::string description) {
   descriptions[eventid] = description;
   max_desc_length = std::max(max_desc_length, description.length());
-  ASSERT_MSG(max_desc_length <= 30, "Event Description length must be <= 30 characters");
+  ASSERT_MSG(max_desc_length <= 30,
+             "Event Description length must be <= 30 characters");
   counters[eventid].value = 0;
 }
 
@@ -132,58 +131,62 @@ void event_log::flush() {
   prevtime = curtime;
 
   if (hasevents == false && noeventctr == 1) return;
-  
+
   bool found_events = false;
   if (print_method == NUMBER) {
     do {
       size_t ctrval = counters[pos].exchange(0);
       found_events = found_events || ctrval > 0;
-      (*out) << pos  << ":\t" << curtime << "\t" << ctrval << "\t" << 1000 * ctrval / timegap << " /s\n";
-    } while(hascounter.next_bit(pos));
+      (*out) << pos << ":\t" << curtime << "\t" << ctrval << "\t"
+             << 1000 * ctrval / timegap << " /s\n";
+    } while (hascounter.next_bit(pos));
     // flush immediate events
-    if (!immediate_events.empty()) { 
+    if (!immediate_events.empty()) {
       std::vector<std::pair<unsigned char, size_t> > cur;
       cur.swap(immediate_events);
-      for (size_t i = 0;i < cur.size(); ++i) {
-        (*out) << (size_t)cur[i].first << ":\t" << cur[i].second << "\t" << -1 << "\t" << 0 << " /s\n";
+      for (size_t i = 0; i < cur.size(); ++i) {
+        (*out) << (size_t)cur[i].first << ":\t" << cur[i].second << "\t" << -1
+               << "\t" << 0 << " /s\n";
       }
     }
     out->flush();
-  }
-  else if (print_method == DESCRIPTION) {
+  } else if (print_method == DESCRIPTION) {
     do {
       size_t ctrval = counters[pos].exchange(0);
       found_events = found_events || ctrval > 0;
-      (*out) << descriptions[pos]  << ":\t" << curtime << "\t" << ctrval << "\t" << 1000 * ctrval / timegap << " /s\n";
-    } while(hascounter.next_bit(pos));
-    if (!immediate_events.empty()) { 
+      (*out) << descriptions[pos] << ":\t" << curtime << "\t" << ctrval << "\t"
+             << 1000 * ctrval / timegap << " /s\n";
+    } while (hascounter.next_bit(pos));
+    if (!immediate_events.empty()) {
       std::vector<std::pair<unsigned char, size_t> > cur;
       cur.swap(immediate_events);
-      for (size_t i = 0;i < cur.size(); ++i) {
-        (*out) << descriptions[cur[i].first] << ":\t" << cur[i].second << "\t" << -1 << "\t" << 0 << " /s\n";
+      for (size_t i = 0; i < cur.size(); ++i) {
+        (*out) << descriptions[cur[i].first] << ":\t" << cur[i].second << "\t"
+               << -1 << "\t" << 0 << " /s\n";
       }
     }
     out->flush();
-  }
-  else if (print_method == LOG_FILE) {
+  } else if (print_method == LOG_FILE) {
     eventlog_file_mutex.lock();
     do {
       size_t ctrval = counters[pos].exchange(0);
       found_events = found_events || ctrval > 0;
-      (*out) << descriptions[pos]  << ":\t" << curtime << "\t" << ctrval << "\t" << 1000 * ctrval / timegap << "\n";
-    } while(hascounter.next_bit(pos));
-    if (!immediate_events.empty()) { 
+      (*out) << descriptions[pos] << ":\t" << curtime << "\t" << ctrval << "\t"
+             << 1000 * ctrval / timegap << "\n";
+    } while (hascounter.next_bit(pos));
+    if (!immediate_events.empty()) {
       std::vector<std::pair<unsigned char, size_t> > cur;
       cur.swap(immediate_events);
-      for (size_t i = 0;i < cur.size(); ++i) {
-        (*out) << descriptions[cur[i].first] << ":\t" << cur[i].second << "\t" << -1 << "\t" << 0 << " /s\n";
+      for (size_t i = 0; i < cur.size(); ++i) {
+        (*out) << descriptions[cur[i].first] << ":\t" << cur[i].second << "\t"
+               << -1 << "\t" << 0 << " /s\n";
       }
     }
     eventlog_file_mutex.unlock();
     out->flush();
-  }
-  else if (print_method == RATE_BAR) {
-    (*out) << "Time: " << "+"<<timegap << "\t" << curtime << "\n";
+  } else if (print_method == RATE_BAR) {
+    (*out) << "Time: "
+           << "+" << timegap << "\t" << curtime << "\n";
     char spacebuf[60];
     char pbuf[61];
     memset(spacebuf, ' ', EVENT_BAR_WIDTH);
@@ -193,40 +196,37 @@ void event_log::flush() {
       found_events = found_events || ctrval > 0;
       maxcounter[pos] = std::max(maxcounter[pos], ctrval);
       size_t barlen = 0;
-      size_t mc = maxcounter[pos]; 
+      size_t mc = maxcounter[pos];
       if (mc > 0) barlen = ctrval * EVENT_BAR_WIDTH / mc;
       if (barlen > EVENT_BAR_WIDTH) barlen = EVENT_BAR_WIDTH;
-      
+
       pbuf[barlen] = '\0';
       spacebuf[max_desc_length - descriptions[pos].length() + 1] = 0;
-      (*out) << descriptions[pos]  << spacebuf << "|" << pbuf;
-      spacebuf[max_desc_length - descriptions[pos].length() + 1] =' ';
+      (*out) << descriptions[pos] << spacebuf << "|" << pbuf;
+      spacebuf[max_desc_length - descriptions[pos].length() + 1] = ' ';
       pbuf[barlen] = BAR_CHARACTER;
       // now print the remaining spaces
       spacebuf[EVENT_BAR_WIDTH - barlen] = '\0';
       (*out) << spacebuf << "| " << ctrval << " : " << mc << " \n";
       spacebuf[EVENT_BAR_WIDTH - barlen] = ' ';
-      
-    } while(hascounter.next_bit(pos));
+
+    } while (hascounter.next_bit(pos));
     out->flush();
   }
   if (found_events == false) {
-      ++noeventctr;
-  }
-  else {
-      noeventctr = 0;
+    ++noeventctr;
+  } else {
+    noeventctr = 0;
   }
   hasevents = false;
-
 }
 
 void event_log::thread_loop() {
   m.lock();
-  while(!finished) {
+  while (!finished) {
     if (flush_interval == 0) {
       cond.wait(m);
-    }
-    else {
+    } else {
       m.unlock();
       my_sleep_ms(flush_interval);
       m.lock();
@@ -236,4 +236,4 @@ void event_log::thread_loop() {
   m.unlock();
 }
 
-} // namespace
+}  // namespace graphlab

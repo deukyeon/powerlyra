@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,6 @@
  *
  */
 
-
 #ifndef IMAGE_HPP
 #define IMAGE_HPP
 
@@ -31,7 +30,6 @@
 
 #include <boost/random.hpp>
 
-
 #include <graphlab.hpp>
 
 #include <graphlab/macros_def.hpp>
@@ -40,14 +38,14 @@
 class image {
   size_t _rows, _cols;
   std::vector<double> data;
-public:
 
+ public:
   /** Create an empty image */
-  image() : _rows(0), _cols(0), data(0,0) { }
-  
+  image() : _rows(0), _cols(0), data(0, 0) {}
+
   /** Create an image of a fixed size */
-  image(size_t rows, size_t cols) : 
-    _rows(rows), _cols(cols), data(rows * cols, 0) { }
+  image(size_t rows, size_t cols)
+      : _rows(rows), _cols(cols), data(rows * cols, 0) {}
 
   inline void resize(size_t rows, size_t cols);
 
@@ -61,9 +59,9 @@ public:
   inline size_t pixels() const { return _rows * _cols; }
 
   /** A function to read a pixel */
-  inline double& pixel(size_t i, size_t j) { return data[vertid(i,j)]; }
-  inline double pixel(size_t i, size_t j) const { return data[vertid(i,j)]; }
-  
+  inline double& pixel(size_t i, size_t j) { return data[vertid(i, j)]; }
+  inline double pixel(size_t i, size_t j) const { return data[vertid(i, j)]; }
+
   /** Linear indexing */
   inline double& pixel(size_t i) { return data.at(i); }
   inline double pixel(size_t i) const { return data.at(i); }
@@ -72,169 +70,150 @@ public:
   inline size_t vertid(size_t i, size_t j) const;
   inline static size_t vertid(size_t rows, size_t cols, size_t i, size_t j) {
     assert(i < rows);
-    assert(j < cols);    
-    return i * cols + j; 
+    assert(j < cols);
+    return i * cols + j;
   }
-  
-  
+
   /** Get the pixel address from the vertex id */
   std::pair<size_t, size_t> loc(size_t vertex) const;
 
-  
   /** A function to save the image to a file in pgm format */
-  inline void save(const char* filename, bool autorescale = true, double min=0, double max=255) const;
+  inline void save(const char* filename, bool autorescale = true,
+                   double min = 0, double max = 255) const;
 
   inline void save_vec(const char* filename) const {
     std::ofstream os(filename);
     assert(os.good());
-    for(size_t i = 0; i < pixels(); ++i) {
+    for (size_t i = 0; i < pixels(); ++i) {
       os << pixel(i) << "\n";
     }
     os.flush();
     os.close();
   }
 
-  
   /** paint a beautiful sunset */
   void paint_sunset(size_t num_rings);
-  
+
   /** Add random noise to the image */
   void corrupt(double sigma);
 
-  inline double min() {
-    return *std::min_element(data.begin(), data.end());
-  }
+  inline double min() { return *std::min_element(data.begin(), data.end()); }
 
-  inline double max() {
-    return *std::max_element(data.begin(), data.end());
-  }
+  inline double max() { return *std::max_element(data.begin(), data.end()); }
 
-  inline void save(graphlab::oarchive &oarc) const {
+  inline void save(graphlab::oarchive& oarc) const {
     oarc << _rows;
     oarc << _cols;
     oarc << data;
   }
-  
-  inline void load(graphlab::iarchive &iarc) {
+
+  inline void load(graphlab::iarchive& iarc) {
     iarc >> _rows;
     iarc >> _cols;
     iarc >> data;
   }
-
-
 };
 
-
-
 /** Generate a normally distributed random number N(mu, sigma^2) */
-// std::pair<double, double> randn(double mu = 0, double sigma = 1 ); 
-
+// std::pair<double, double> randn(double mu = 0, double sigma = 1 );
 
 // IMPLEMENTATION =============================================================>
-
 
 inline void image::resize(size_t rows, size_t cols) {
   _rows = rows;
   _cols = cols;
   data.resize(rows * cols, 0);
 }
-  
-
 
 /** Get the vertex id of a pixel */
 inline size_t image::vertid(size_t i, size_t j) const {
   assert(i < _rows);
-  assert(j < _cols);    
-  return i * _cols + j; 
+  assert(j < _cols);
+  return i * _cols + j;
 }
 
 // static size_t image::vertid(size_t rows, size_t cols, size_t i, size_t j)  {
 //   assert(i < rows);
-//   assert(j < cols);    
-//   return i * cols + j; 
+//   assert(j < cols);
+//   return i * cols + j;
 // }
-
 
 /** Get the vertex id of a pixel */
 inline std::pair<size_t, size_t> image::loc(size_t vertexid) const {
   assert(vertexid < _rows * _cols);
-  return std::make_pair( vertexid / _cols, vertexid % _cols);
+  return std::make_pair(vertexid / _cols, vertexid % _cols);
 }
 
-
-inline void image::save(const char* filename, bool autorescale, double min_, double max_) const {
+inline void image::save(const char* filename, bool autorescale, double min_,
+                        double max_) const {
   assert(_rows > 0 && _cols > 0);
   std::ofstream os(filename);
   os << "P2" << std::endl
      << _cols << " " << _rows << std::endl
      << 255 << std::endl;
   // Compute min and max pixel intensities
-  double min = data[0]; double max = data[0];
+  double min = data[0];
+  double max = data[0];
   if (autorescale) {
-    for(size_t i = 0; i < _rows * _cols; ++i) {
+    for (size_t i = 0; i < _rows * _cols; ++i) {
       min = std::min(min, data[i]);
       max = std::max(max, data[i]);
     }
-  }
-  else {
+  } else {
     min = min_;
     max = max_;
   }
   // Save the image (rescaled)
-  for(size_t r = 0; r < _rows; ++r) {
-    for(size_t c = 0; c < _cols; c++) {
-      if(min != max) {
-        int color = 
-          static_cast<int>(255.0 * (pixel(r,c) - min)/(max-min));
+  for (size_t r = 0; r < _rows; ++r) {
+    for (size_t c = 0; c < _cols; c++) {
+      if (min != max) {
+        int color = static_cast<int>(255.0 * (pixel(r, c) - min) / (max - min));
         if (color < 0) color = 0;
         if (color > 255) color = 255;
         os << color;
-      } else { os << min; }
-      if(c != _cols-1) os << "\t";
+      } else {
+        os << min;
+      }
+      if (c != _cols - 1) os << "\t";
     }
     os << std::endl;
-  } 
+  }
   os.flush();
   os.close();
-} // end of save
-
-
+}  // end of save
 
 inline void image::paint_sunset(size_t num_rings) {
   const double center_r = rows() / 2.0;
   const double center_c = cols() / 2.0;
   const double max_radius = std::min(rows(), cols()) / 2.0;
   // Fill out the image
-  for(size_t r = 0; r < rows(); ++r) {
-    for(size_t c = 0; c < cols(); ++c) {
-      double distance = sqrt((r-center_r)*(r-center_r) + 
-                             (c-center_c)*(c-center_c));
+  for (size_t r = 0; r < rows(); ++r) {
+    for (size_t c = 0; c < cols(); ++c) {
+      double distance = sqrt((r - center_r) * (r - center_r) +
+                             (c - center_c) * (c - center_c));
       // If on top of image
-      if(r < rows() / 2) {
+      if (r < rows() / 2) {
         // Compute ring of sunset
-        size_t ring = 
-          static_cast<size_t>(std::floor(std::min(1.0, distance/max_radius)
-                                         * (num_rings - 1) ) );
-        pixel(r,c) = ring;
+        size_t ring = static_cast<size_t>(
+            std::floor(std::min(1.0, distance / max_radius) * (num_rings - 1)));
+        pixel(r, c) = ring;
       } else {
-        pixel(r,c) = 0;
+        pixel(r, c) = 0;
       }
     }
   }
-} // end of paint_beatiful_sunset
-
+}  // end of paint_beatiful_sunset
 
 /** corrupt the image with gaussian noise */
 inline void image::corrupt(double sigma) {
   //  boost::mt19937 rng;
   boost::lagged_fibonacci607 rng;
   boost::normal_distribution<double> noise_model(0, sigma);
-  for(size_t i = 0; i < rows() * cols();  ) {
+  for (size_t i = 0; i < rows() * cols();) {
     // Corrupt two pixels at a time.
     pixel(i++) += noise_model(rng);
   }
-} // end of corrupt_image
-
+}  // end of corrupt_image
 
 // /** generate a normally distributed iid pair */
 // std::pair<double, double> randn(double mu , double sigma ) {
@@ -246,7 +225,7 @@ inline void image::corrupt(double sigma) {
 //   double n2 = coeff * std::sin(2.0 * M_PI * u2) ;
 //   // Adjust for mean and variance
 //   n1 = sigma * n1 + mu;
-//   n2 = sigma * n2 + mu; 
+//   n2 = sigma * n2 + mu;
 //   return std::make_pair(n1, n2);
 // } // end of randn
 

@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef OBJECT_REQUEST_FUTURE_HPP
 #define OBJECT_REQUEST_FUTURE_HPP
 #include <graphlab/serialization/serialization_includes.hpp>
@@ -31,36 +30,35 @@
 
 namespace graphlab {
 
-
-  /**
-   * \ingroup rpc
-   * The result of a remote_request future call.
-   * This class represents the outcome of a remote request sent to another
-   * machine via the future-based remote_request_call. The future remote_request call
-   * returns immediately with this object. Only when operator() is called on this
-   * object, then it waits for a result from the remote machine. All remote_request
-   * calls which return futures are linked below.
-   *
-   * example:
-   * \code
-   * // this function returns immediately
-   * graphlab::request_future<int> res = 
-   *   rmi.future_remote_request(SOME_OTHER_MACHINE, 
-   *                             function_which_returns_an_integer, ...);
-   *
-   * ... we can do other stuff ... 
-   * // read the result, or wait for the result if it is not done yet.
-   * int actual_result = res();
-   * \endcode
-   *
-   * \see graphlab::distributed_control::future_remote_request
-   *      graphlab::dc_dist_object::future_remote_request
-   *      graphlab::fiber_remote_request
-   *      graphlab::object_fiber_remote_request
-   *
-   * The future object holds a copy of the result of the request, and the
-   * operator() call returns a reference to this result (once it is available).
-   */
+/**
+ * \ingroup rpc
+ * The result of a remote_request future call.
+ * This class represents the outcome of a remote request sent to another
+ * machine via the future-based remote_request_call. The future remote_request
+ * call returns immediately with this object. Only when operator() is called on
+ * this object, then it waits for a result from the remote machine. All
+ * remote_request calls which return futures are linked below.
+ *
+ * example:
+ * \code
+ * // this function returns immediately
+ * graphlab::request_future<int> res =
+ *   rmi.future_remote_request(SOME_OTHER_MACHINE,
+ *                             function_which_returns_an_integer, ...);
+ *
+ * ... we can do other stuff ...
+ * // read the result, or wait for the result if it is not done yet.
+ * int actual_result = res();
+ * \endcode
+ *
+ * \see graphlab::distributed_control::future_remote_request
+ *      graphlab::dc_dist_object::future_remote_request
+ *      graphlab::fiber_remote_request
+ *      graphlab::object_fiber_remote_request
+ *
+ * The future object holds a copy of the result of the request, and the
+ * operator() call returns a reference to this result (once it is available).
+ */
 template <typename T>
 struct request_future {
   typedef typename dc_impl::function_ret_type<T>::type result_type;
@@ -69,21 +67,16 @@ struct request_future {
   bool hasval;
 
   /// default constructor
-  request_future(): 
-      reply(new dc_impl::basic_reply_container),
-      hasval(false) { }
-
+  request_future() : reply(new dc_impl::basic_reply_container), hasval(false) {}
 
   /** constructor which allows you to specify a custom target container
    * This class takes ownership of the container and will free it when done.
    */
-  request_future(dc_impl::ireply_container* container): 
-      reply(container),
-      hasval(false) { }
-
+  request_future(dc_impl::ireply_container* container)
+      : reply(container), hasval(false) {}
 
   /** We can assign return values directly to the future in the
-   * case where no remote calls are necessary. 
+   * case where no remote calls are necessary.
    * Thus allowing the following to be written easily:
    * \code
    * request_future<int> a_function(int arg) {
@@ -92,16 +85,11 @@ struct request_future {
    * }
    * \endcode
    */
-  request_future(const T& val): 
-      reply(NULL),
-      result(val), 
-      hasval(true) { }
+  request_future(const T& val) : reply(NULL), result(val), hasval(true) {}
 
-  /// copy constructor 
-  request_future(const request_future<T>& val): 
-      reply(val.reply),
-      result(val.result), 
-      hasval(val.hasval) { }
+  /// copy constructor
+  request_future(const request_future<T>& val)
+      : reply(val.reply), result(val.result), hasval(val.hasval) {}
 
   /// operator=
   request_future& operator=(const request_future<T>& val) {
@@ -115,20 +103,18 @@ struct request_future {
    * \internal
    * Returns a handle to the underlying container
    */
-  size_t get_handle() {
-    return reinterpret_cast<size_t>(reply.get());
-  }
+  size_t get_handle() { return reinterpret_cast<size_t>(reply.get()); }
 
-  /**  
+  /**
    * Waits for the request if it has not yet been received.
    */
   void wait() {
     if (!hasval) {
-      reply->wait(); 
+      reply->wait();
       dc_impl::blob& receiveddata = reply->get_blob();
-      iarchive iarc(receiveddata.c, receiveddata.len); 
-      iarc >> result;  
-      receiveddata.free(); 
+      iarchive iarc(receiveddata.c, receiveddata.len);
+      iarc >> result;
+      receiveddata.free();
       hasval = true;
     }
   }
@@ -137,9 +123,7 @@ struct request_future {
    * Returns true if the result is ready and \ref operator()
    * can be called without blocking.
    */
-  bool is_ready() {
-    return (hasval || reply->ready());
-  }
+  bool is_ready() { return (hasval || reply->ready()); }
 
   /**
    * Waits for the request if it has not yet been received.
@@ -151,29 +135,21 @@ struct request_future {
   }
 };
 
-
 template <>
 struct request_future<void> {
   typedef dc_impl::function_ret_type<void>::type result_type;
   mutable std::auto_ptr<dc_impl::ireply_container> reply;
   bool hasval;
 
-  request_future(): 
-      reply(new dc_impl::basic_reply_container),
-      hasval(false) { }
+  request_future() : reply(new dc_impl::basic_reply_container), hasval(false) {}
 
-  request_future(dc_impl::ireply_container* container): 
-      reply(container),
-      hasval(false) { }
+  request_future(dc_impl::ireply_container* container)
+      : reply(container), hasval(false) {}
 
-  request_future(int val): 
-      reply(NULL),
-      hasval(true) { }
- 
- 
-  request_future(const request_future<void>& val): 
-      reply(val.reply),
-      hasval(val.hasval) { }
+  request_future(int val) : reply(NULL), hasval(true) {}
+
+  request_future(const request_future<void>& val)
+      : reply(val.reply), hasval(val.hasval) {}
 
   request_future& operator=(const request_future<void>& val) {
     reply = val.reply;
@@ -181,23 +157,18 @@ struct request_future<void> {
     return *this;
   }
 
-  bool is_ready() {
-    return (hasval || reply->ready());
-  }
+  bool is_ready() { return (hasval || reply->ready()); }
 
-
-  size_t get_handle() {
-    return reinterpret_cast<size_t>(reply.get());
-  }
+  size_t get_handle() { return reinterpret_cast<size_t>(reply.get()); }
 
   void wait() {
     if (!hasval) {
       result_type result;
-      reply->wait(); 
+      reply->wait();
       dc_impl::blob& receiveddata = reply->get_blob();
-      iarchive iarc(receiveddata.c, receiveddata.len); 
-      iarc >> result;  
-      receiveddata.free(); 
+      iarchive iarc(receiveddata.c, receiveddata.len);
+      iarc >> result;
+      receiveddata.free();
       hasval = true;
     }
   }
@@ -208,6 +179,5 @@ struct request_future<void> {
   }
 };
 
-
-}
+}  // namespace graphlab
 #endif

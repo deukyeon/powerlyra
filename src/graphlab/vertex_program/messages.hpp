@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,37 +27,35 @@
 
 namespace graphlab {
 
-  namespace messages {
+namespace messages {
 
-    /**
-     * The priority of two messages is the sum
-     */
-    struct sum_priority : public graphlab::IS_POD_TYPE {
-      double value;
-      sum_priority(const double value = 0) : value(value) { }
-      double priority() const { return value; }
-      sum_priority& operator+=(const sum_priority& other) {
-        value += other.value;
-        return *this;
-      }
-    }; // end of sum_priority message
+/**
+ * The priority of two messages is the sum
+ */
+struct sum_priority : public graphlab::IS_POD_TYPE {
+  double value;
+  sum_priority(const double value = 0) : value(value) {}
+  double priority() const { return value; }
+  sum_priority& operator+=(const sum_priority& other) {
+    value += other.value;
+    return *this;
+  }
+};  // end of sum_priority message
 
-    /**
-     * The priority of two messages is the max
-     */
-    struct max_priority : public graphlab::IS_POD_TYPE {
-      double value;
-      max_priority(const double value = 0) : value(value) { }
-      double priority() const { return value; }
-      max_priority& operator+=(const max_priority& other) {
-        value = std::max(value, other.value);
-        return *this;
-      }
-    }; // end of max_priority message
+/**
+ * The priority of two messages is the max
+ */
+struct max_priority : public graphlab::IS_POD_TYPE {
+  double value;
+  max_priority(const double value = 0) : value(value) {}
+  double priority() const { return value; }
+  max_priority& operator+=(const max_priority& other) {
+    value = std::max(value, other.value);
+    return *this;
+  }
+};  // end of max_priority message
 
+};  // namespace messages
 
-  }; // end of messages namespace
-
-
-}; // end of graphlab namespace
+};  // namespace graphlab
 #endif

@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,33 +27,35 @@
 #include <typeinfo>
 
 namespace graphlab {
-  
+
 namespace scheduler_impl {
 
-  template <typename T>
-  struct implements_priority_member {
-    template<typename U, double (U::*)() const> struct SFINAE {};
-    template <typename U> static char test(SFINAE<U, &U::priority>*);
-    template <typename U> static int test(...);
-    static const bool value = (sizeof(test<T>(0)) == sizeof(char));
-  };
+template <typename T>
+struct implements_priority_member {
+  template <typename U, double (U::*)() const>
+  struct SFINAE {};
+  template <typename U>
+  static char test(SFINAE<U, &U::priority> *);
+  template <typename U>
+  static int test(...);
+  static const bool value = (sizeof(test<T>(0)) == sizeof(char));
+};
 
-  template <typename MessageType>
-  typename boost::enable_if_c<implements_priority_member<MessageType>::value,
-                              double>::type
-  get_message_priority(const MessageType &m) {
-    return m.priority();
-  }
+template <typename MessageType>
+typename boost::enable_if_c<implements_priority_member<MessageType>::value,
+                            double>::type
+get_message_priority(const MessageType &m) {
+  return m.priority();
+}
 
-  template <typename MessageType>
-  typename boost::disable_if_c<implements_priority_member<MessageType>::value,
-                                double>::type
-  get_message_priority(const MessageType &m) {
-    return 1.0;
-  }
+template <typename MessageType>
+typename boost::disable_if_c<implements_priority_member<MessageType>::value,
+                             double>::type
+get_message_priority(const MessageType &m) {
+  return 1.0;
+}
 
-} //namespace scheduler_impl
-} //namespace graphlab
-
+}  // namespace scheduler_impl
+}  // namespace graphlab
 
 #endif

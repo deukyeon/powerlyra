@@ -20,7 +20,6 @@
  *
  */
 
-
 #include <unistd.h>
 #include <sys/param.h>
 #include <stdlib.h>
@@ -53,11 +52,9 @@
 #include <graphlab/rpc/dc_init_from_mpi.hpp>
 #include <graphlab/rpc/dc_init_from_zookeeper.hpp>
 
-
 namespace graphlab {
 
 namespace dc_impl {
-
 
 bool thrlocal_sequentialization_key_initialized = false;
 pthread_key_t thrlocal_sequentialization_key;
@@ -70,61 +67,59 @@ void thrlocal_send_buffer_key_deleter(void* p) {
     thread_local_buffer* buf = (thread_local_buffer*)(p);
     if (buf != NULL) {
       delete buf;
-    } 
+    }
   }
 }
 
-} // namespace dc_impl
-
-
+}  // namespace dc_impl
 
 procid_t distributed_control::last_dc_procid = 0;
 distributed_control* distributed_control::last_dc = NULL;
 
-procid_t distributed_control::get_instance_procid() {
-  return last_dc_procid;
-}
+procid_t distributed_control::get_instance_procid() { return last_dc_procid; }
 
-distributed_control* distributed_control::get_instance() {
-  return last_dc;
-}
+distributed_control* distributed_control::get_instance() { return last_dc; }
 
-
-
-
-unsigned char distributed_control::set_sequentialization_key(unsigned char newkey) {
-  size_t oldval = reinterpret_cast<size_t>(pthread_getspecific(dc_impl::thrlocal_sequentialization_key));
+unsigned char distributed_control::set_sequentialization_key(
+    unsigned char newkey) {
+  size_t oldval = reinterpret_cast<size_t>(
+      pthread_getspecific(dc_impl::thrlocal_sequentialization_key));
   size_t newval = newkey;
-  pthread_setspecific(dc_impl::thrlocal_sequentialization_key, reinterpret_cast<void*>(newval));
+  pthread_setspecific(dc_impl::thrlocal_sequentialization_key,
+                      reinterpret_cast<void*>(newval));
   assert(oldval < 256);
   return (unsigned char)oldval;
 }
 
 unsigned char distributed_control::new_sequentialization_key() {
-  size_t oldval = reinterpret_cast<size_t>(pthread_getspecific(dc_impl::thrlocal_sequentialization_key));
+  size_t oldval = reinterpret_cast<size_t>(
+      pthread_getspecific(dc_impl::thrlocal_sequentialization_key));
   size_t newval = (oldval + 1) % 256;
-  pthread_setspecific(dc_impl::thrlocal_sequentialization_key, reinterpret_cast<void*>(newval));
+  pthread_setspecific(dc_impl::thrlocal_sequentialization_key,
+                      reinterpret_cast<void*>(newval));
   assert(oldval < 256);
   return (unsigned char)oldval;
 }
 
 unsigned char distributed_control::get_sequentialization_key() {
-  size_t oldval = reinterpret_cast<size_t>(pthread_getspecific(dc_impl::thrlocal_sequentialization_key));
+  size_t oldval = reinterpret_cast<size_t>(
+      pthread_getspecific(dc_impl::thrlocal_sequentialization_key));
   assert(oldval < 256);
   return (unsigned char)oldval;
 }
 
-
 distributed_control::distributed_control() {
   dc_init_param initparam;
   if (init_param_from_env(initparam)) {
-    logstream(LOG_INFO) << "Distributed Control Initialized from Environment" << std::endl;
+    logstream(LOG_INFO) << "Distributed Control Initialized from Environment"
+                        << std::endl;
   } else if (init_param_from_zookeeper(initparam)) {
-      logstream(LOG_INFO) << "Distributed Control Initialized from Zookeeper" << std::endl;
+    logstream(LOG_INFO) << "Distributed Control Initialized from Zookeeper"
+                        << std::endl;
   } else if (mpi_tools::initialized() && init_param_from_mpi(initparam)) {
-      logstream(LOG_INFO) << "Distributed Control Initialized from MPI" << std::endl;
-  }
-  else {
+    logstream(LOG_INFO) << "Distributed Control Initialized from MPI"
+                        << std::endl;
+  } else {
     logstream(LOG_INFO) << "Shared Memory Execution" << std::endl;
     // get a port and socket
     std::pair<size_t, int> port_and_sock = get_free_tcp_port();
@@ -137,27 +132,22 @@ distributed_control::distributed_control() {
     initparam.numhandlerthreads = RPC_DEFAULT_NUMHANDLERTHREADS;
     initparam.commtype = RPC_DEFAULT_COMMTYPE;
   }
-  init(initparam.machines,
-        initparam.initstring,
-        initparam.curmachineid,
-        initparam.numhandlerthreads,
-        initparam.commtype);
+  init(initparam.machines, initparam.initstring, initparam.curmachineid,
+       initparam.numhandlerthreads, initparam.commtype);
   INITIALIZE_TRACER(dc_receive_queuing, "dc: time spent on enqueue");
-  INITIALIZE_TRACER(dc_receive_multiplexing, "dc: time spent exploding a chunk");
+  INITIALIZE_TRACER(dc_receive_multiplexing,
+                    "dc: time spent exploding a chunk");
   INITIALIZE_TRACER(dc_call_dispatch, "dc: time spent issuing RPC calls");
 }
 
 distributed_control::distributed_control(dc_init_param initparam) {
-  init(initparam.machines,
-        initparam.initstring,
-        initparam.curmachineid,
-        initparam.numhandlerthreads,
-        initparam.commtype);
+  init(initparam.machines, initparam.initstring, initparam.curmachineid,
+       initparam.numhandlerthreads, initparam.commtype);
   INITIALIZE_TRACER(dc_receive_queuing, "dc: time spent on enqueue");
-  INITIALIZE_TRACER(dc_receive_multiplexing, "dc: time spent exploding a chunk");
+  INITIALIZE_TRACER(dc_receive_multiplexing,
+                    "dc: time spent exploding a chunk");
   INITIALIZE_TRACER(dc_call_dispatch, "dc: time spent issuing RPC calls");
 }
-
 
 distributed_control::~distributed_control() {
   // detach the instance
@@ -174,13 +164,13 @@ distributed_control::~distributed_control() {
 
   size_t bytessent = bytes_sent();
   std::vector<size_t> bytessents = bytes_sent_vector();
-  for (size_t i = 0;i < senders.size(); ++i) {
+  for (size_t i = 0; i < senders.size(); ++i) {
     senders[i]->flush();
   }
 
   comm->close();
 
-  for (size_t i = 0;i < senders.size(); ++i) {
+  for (size_t i = 0; i < senders.size(); ++i) {
     delete senders[i];
   }
   senders.clear();
@@ -189,40 +179,43 @@ distributed_control::~distributed_control() {
   pthread_key_delete(dc_impl::thrlocal_send_buffer_key);
 
   size_t bytesreceived = bytes_received();
-  for (size_t i = 0;i < receivers.size(); ++i) {
+  for (size_t i = 0; i < receivers.size(); ++i) {
     receivers[i]->shutdown();
     delete receivers[i];
   }
   receivers.clear();
   // shutdown function call handlers
-  for (size_t i = 0;i < fcallqueue.size(); ++i) fcallqueue[i].stop_blocking();
+  for (size_t i = 0; i < fcallqueue.size(); ++i) fcallqueue[i].stop_blocking();
   fcallhandlers.join();
-  logstream(LOG_INFO) << localprocid << " " << "Bytes Sent: " << bytessent << std::endl;
-  logstream(LOG_INFO) << localprocid << " " << "Calls Sent: " << calls_sent() << std::endl;
-  logstream(LOG_INFO) << localprocid << " " << "Network Sent: " << network_bytes_sent() << std::endl;
-  logstream(LOG_INFO) << localprocid << " " << "Bytes Received: " << bytesreceived << std::endl;
-  logstream(LOG_INFO) << localprocid << " " << "Calls Received: " << calls_received() << std::endl;
+  logstream(LOG_INFO) << localprocid << " "
+                      << "Bytes Sent: " << bytessent << std::endl;
+  logstream(LOG_INFO) << localprocid << " "
+                      << "Calls Sent: " << calls_sent() << std::endl;
+  logstream(LOG_INFO) << localprocid << " "
+                      << "Network Sent: " << network_bytes_sent() << std::endl;
+  logstream(LOG_INFO) << localprocid << " "
+                      << "Bytes Received: " << bytesreceived << std::endl;
+  logstream(LOG_INFO) << localprocid << " "
+                      << "Calls Received: " << calls_received() << std::endl;
 
   std::ostringstream oss;
   for (size_t i = 0; i < bytessents.size(); ++i) {
-      oss << bytessents[i];
-      if (i < bytessents.size() - 1) {
-          oss << ",";
-      }
+    oss << bytessents[i];
+    if (i < bytessents.size() - 1) {
+      oss << ",";
+    }
   }
   oss.str();
-  logstream(LOG_INFO) << localprocid << " Bytes Sent Vector: "
-   << oss.str() << std::endl;
+  logstream(LOG_INFO) << localprocid << " Bytes Sent Vector: " << oss.str()
+                      << std::endl;
 
   delete comm;
-
 }
 
-
 void distributed_control::exec_function_call(procid_t source,
-                                            unsigned char packet_type_mask,
-                                            const char* data,
-                                            const size_t len) {
+                                             unsigned char packet_type_mask,
+                                             const char* data,
+                                             const size_t len) {
   BEGIN_TRACEPOINT(dc_call_dispatch);
   // extract the dispatch function
   iarchive arc(data, len);
@@ -235,12 +228,13 @@ void distributed_control::exec_function_call(procid_t source,
   END_TRACEPOINT(dc_call_dispatch);
 }
 
-unsigned char distributed_control::get_block_sequentialization_key(fcallqueue_entry& fcallblock) {
+unsigned char distributed_control::get_block_sequentialization_key(
+    fcallqueue_entry& fcallblock) {
   unsigned char seq_key = 0;
   char* data = fcallblock.chunk_src;
   size_t remaininglen = fcallblock.chunk_len;
   // loop through all the messages
-  while(remaininglen > 0) {
+  while (remaininglen > 0) {
     ASSERT_GE(remaininglen, sizeof(dc_impl::packet_hdr));
     dc_impl::packet_hdr hdr = *reinterpret_cast<dc_impl::packet_hdr*>(data);
     ASSERT_LE(hdr.len, remaininglen);
@@ -254,7 +248,8 @@ unsigned char distributed_control::get_block_sequentialization_key(fcallqueue_en
   return seq_key;
 }
 
-void distributed_control::deferred_function_call_chunk(char* buf, size_t len, procid_t src) {
+void distributed_control::deferred_function_call_chunk(char* buf, size_t len,
+                                                       procid_t src) {
   BEGIN_TRACEPOINT(dc_receive_queuing);
   fcallqueue_entry* fc = new fcallqueue_entry;
   fc->chunk_src = buf;
@@ -273,36 +268,35 @@ void distributed_control::deferred_function_call_chunk(char* buf, size_t len, pr
   idx = src % fcallqueue.size();
   fcallqueue[idx].enqueue(fc, !fcall_handler_blockers.get(idx));
 #endif
-/*
-  if (get_block_sequentialization_key(*fc) > 0) {
-    fcallqueue[src % fcallqueue.size()].enqueue(fc);
-  } else {
-    const uint32_t prod = 
-        random::fast_uniform(uint32_t(0), 
-                             uint32_t(fcallqueue.size() * fcallqueue.size() - 1));
-    const uint32_t r1 = prod / fcallqueue.size();
-    const uint32_t r2 = prod % fcallqueue.size();
-    uint32_t idx = (fcallqueue[r1].size() < fcallqueue[r2].size()) ? r1 : r2;  
-    fcallqueue[idx].enqueue(fc);
-  } */
+  /*
+    if (get_block_sequentialization_key(*fc) > 0) {
+      fcallqueue[src % fcallqueue.size()].enqueue(fc);
+    } else {
+      const uint32_t prod =
+          random::fast_uniform(uint32_t(0),
+                               uint32_t(fcallqueue.size() * fcallqueue.size() -
+    1)); const uint32_t r1 = prod / fcallqueue.size(); const uint32_t r2 = prod
+    % fcallqueue.size(); uint32_t idx = (fcallqueue[r1].size() <
+    fcallqueue[r2].size()) ? r1 : r2; fcallqueue[idx].enqueue(fc);
+    } */
 
-//   const uint32_t prod = 
-//       random::fast_uniform(uint32_t(0), 
-//                            uint32_t(fcallqueue.size() * fcallqueue.size() - 1));
-//   const uint32_t r1 = prod / fcallqueue.size();
-//   const uint32_t r2 = prod % fcallqueue.size();
-//   uint32_t idx = (fcallqueue[r1].size() < fcallqueue[r2].size()) ? r1 : r2;  
-//   fcallqueue[idx].enqueue(fc);
+  //   const uint32_t prod =
+  //       random::fast_uniform(uint32_t(0),
+  //                            uint32_t(fcallqueue.size() * fcallqueue.size() -
+  //                            1));
+  //   const uint32_t r1 = prod / fcallqueue.size();
+  //   const uint32_t r2 = prod % fcallqueue.size();
+  //   uint32_t idx = (fcallqueue[r1].size() < fcallqueue[r2].size()) ? r1 : r2;
+  //   fcallqueue[idx].enqueue(fc);
   END_TRACEPOINT(dc_receive_queuing);
 }
 
-
-void distributed_control::process_fcall_block(fcallqueue_entry &fcallblock) {
+void distributed_control::process_fcall_block(fcallqueue_entry& fcallblock) {
   if (fcallblock.is_chunk == false) {
-    for (size_t i = 0;i < fcallblock.calls.size(); ++i) {
+    for (size_t i = 0; i < fcallblock.calls.size(); ++i) {
       fcallqueue_length.dec();
       exec_function_call(fcallblock.source, fcallblock.calls[i].packet_mask,
-                        fcallblock.calls[i].data, fcallblock.calls[i].len);
+                         fcallblock.calls[i].data, fcallblock.calls[i].len);
     }
     if (fcallblock.chunk_ref_counter != NULL) {
       if (fcallblock.chunk_ref_counter->dec(fcallblock.calls.size()) == 0) {
@@ -315,11 +309,11 @@ void distributed_control::process_fcall_block(fcallqueue_entry &fcallblock) {
   else {
     fcallqueue_length.dec();
 
-    //parse the data in fcallblock.data
+    // parse the data in fcallblock.data
     char* data = fcallblock.chunk_src;
     size_t remaininglen = fcallblock.chunk_len;
-    //PERMANENT_ACCUMULATE_DIST_EVENT(eventlog, BYTES_EVENT, remaininglen);
-    while(remaininglen > 0) {
+    // PERMANENT_ACCUMULATE_DIST_EVENT(eventlog, BYTES_EVENT, remaininglen);
+    while (remaininglen > 0) {
       ASSERT_GE(remaininglen, sizeof(dc_impl::packet_hdr));
       dc_impl::packet_hdr hdr = *reinterpret_cast<dc_impl::packet_hdr*>(data);
       ASSERT_LE(hdr.len, remaininglen);
@@ -329,8 +323,7 @@ void distributed_control::process_fcall_block(fcallqueue_entry &fcallblock) {
       }
 
       exec_function_call(fcallblock.source, hdr.packet_type_mask,
-                         data + sizeof(dc_impl::packet_hdr),
-                         hdr.len);
+                         data + sizeof(dc_impl::packet_hdr), hdr.len);
       data += sizeof(dc_impl::packet_hdr) + hdr.len;
       remaininglen -= sizeof(dc_impl::packet_hdr) + hdr.len;
     }
@@ -351,7 +344,7 @@ void distributed_control::process_fcall_block(fcallqueue_entry &fcallblock) {
     immediate_queue.source = fcallblock.source;
     immediate_queue.is_chunk = false;
 
-    for (size_t i = 0;i < fcallqueue.size(); ++i) {
+    for (size_t i = 0; i < fcallqueue.size(); ++i) {
       queuebufs[i] = new fcallqueue_entry;
       queuebufs[i]->chunk_src = fcallblock.chunk_src;
       queuebufs[i]->chunk_ref_counter = refctr;
@@ -360,42 +353,36 @@ void distributed_control::process_fcall_block(fcallqueue_entry &fcallblock) {
       queuebufs[i]->is_chunk = false;
     }
 
-    //parse the data in fcallblock.data
+    // parse the data in fcallblock.data
     char* data = fcallblock.chunk_src;
     size_t remaininglen = fcallblock.chunk_len;
-    //PERMANENT_ACCUMULATE_DIST_EVENT(eventlog, BYTES_EVENT, remaininglen);
+    // PERMANENT_ACCUMULATE_DIST_EVENT(eventlog, BYTES_EVENT, remaininglen);
     size_t stripe = 0;
-    while(remaininglen > 0) {
+    while (remaininglen > 0) {
       ASSERT_GE(remaininglen, sizeof(dc_impl::packet_hdr));
       dc_impl::packet_hdr hdr = *reinterpret_cast<dc_impl::packet_hdr*>(data);
       ASSERT_LE(hdr.len, remaininglen);
 
       refctr->value++;
 
-
       if ((hdr.packet_type_mask & CONTROL_PACKET)) {
         // control calls are handled immediately with priority.
         immediate_queue.calls.push_back(function_call_block(
-                                            data + sizeof(dc_impl::packet_hdr),
-                                            hdr.len,
-                                            hdr.packet_type_mask));
+            data + sizeof(dc_impl::packet_hdr), hdr.len, hdr.packet_type_mask));
       } else {
         global_bytes_received[hdr.src].inc(hdr.len);
         if (hdr.sequentialization_key == 0) {
-          queuebufs[stripe]->calls.push_back(function_call_block(
-                                              data + sizeof(dc_impl::packet_hdr),
-                                              hdr.len,
-                                              hdr.packet_type_mask));
+          queuebufs[stripe]->calls.push_back(
+              function_call_block(data + sizeof(dc_impl::packet_hdr), hdr.len,
+                                  hdr.packet_type_mask));
           ++stripe;
           if (stripe == (fcallblock.source % fcallqueue.size())) ++stripe;
           if (stripe >= fcallqueue.size()) stripe -= fcallqueue.size();
-        }
-        else {
+        } else {
           size_t idx = (hdr.sequentialization_key % (fcallqueue.size()));
-          queuebufs[idx]->calls.push_back(function_call_block(
-                                              data + sizeof(dc_impl::packet_hdr),
-                                              hdr.len,
-                                              hdr.packet_type_mask));
+          queuebufs[idx]->calls.push_back(
+              function_call_block(data + sizeof(dc_impl::packet_hdr), hdr.len,
+                                  hdr.packet_type_mask));
         }
       }
       data += sizeof(dc_impl::packet_hdr) + hdr.len;
@@ -403,12 +390,11 @@ void distributed_control::process_fcall_block(fcallqueue_entry &fcallblock) {
     }
     END_TRACEPOINT(dc_receive_multiplexing);
     BEGIN_TRACEPOINT(dc_receive_queuing);
-    for (size_t i = 0;i < fcallqueue.size(); ++i) {
+    for (size_t i = 0; i < fcallqueue.size(); ++i) {
       if (queuebufs[i]->calls.size() > 0) {
         fcallqueue_length.inc(queuebufs[i]->calls.size());
         fcallqueue[i].enqueue(queuebufs[i]);
-      }
-      else {
+      } else {
         delete queuebufs[i];
       }
     }
@@ -419,21 +405,20 @@ void distributed_control::process_fcall_block(fcallqueue_entry &fcallblock) {
 }
 
 void distributed_control::stop_handler_threads(size_t threadid,
-                                                size_t total_threadid) {
+                                               size_t total_threadid) {
   stop_handler_threads_no_wait(threadid, total_threadid);
 }
 
 void distributed_control::stop_handler_threads_no_wait(size_t threadid,
                                                        size_t total_threadid) {
-  for (size_t i = threadid;i < fcallqueue.size(); i += total_threadid) {
+  for (size_t i = threadid; i < fcallqueue.size(); i += total_threadid) {
     fcall_handler_blockers.set_bit(i);
   }
 }
 
-
 void distributed_control::start_handler_threads(size_t threadid,
                                                 size_t total_threadid) {
-  for (size_t i = threadid;i < fcallqueue.size(); i += total_threadid) {
+  for (size_t i = threadid; i < fcallqueue.size(); i += total_threadid) {
     fcall_handler_blockers.clear_bit(i);
     fcallqueue[i].broadcast();
   }
@@ -441,7 +426,7 @@ void distributed_control::start_handler_threads(size_t threadid,
 
 void distributed_control::handle_incoming_calls(size_t threadid,
                                                 size_t total_threadid) {
-  for (size_t i = threadid;i < fcallqueue.size(); i += total_threadid) {
+  for (size_t i = threadid; i < fcallqueue.size(); i += total_threadid) {
     if (fcallqueue[i].empty_unsafe() == false) {
       std::deque<fcallqueue_entry*> q;
       fcallqueue[i].swap(q);
@@ -459,9 +444,9 @@ void distributed_control::handle_incoming_calls(size_t threadid,
 
 void distributed_control::fcallhandler_loop(size_t id) {
   // pop an element off the queue
-//  float t = timer::approx_time_seconds();
+  //  float t = timer::approx_time_seconds();
   fcall_handler_active[id].inc();
-  while(fcallqueue[id].is_alive()) {
+  while (fcallqueue[id].is_alive()) {
     fcallqueue[id].wait_for_data();
     std::deque<fcallqueue_entry*> q;
     fcallqueue[id].swap(q);
@@ -478,16 +463,15 @@ void distributed_control::fcallhandler_loop(size_t id) {
   fcall_handler_active[id].dec();
 }
 
-
-std::map<std::string, std::string>
-  distributed_control::parse_options(std::string initstring) {
+std::map<std::string, std::string> distributed_control::parse_options(
+    std::string initstring) {
   std::map<std::string, std::string> options;
   std::replace(initstring.begin(), initstring.end(), ',', ' ');
   std::replace(initstring.begin(), initstring.end(), ';', ' ');
   std::string opt, value;
   // read till the equal
   std::stringstream s(initstring);
-  while(s.good()) {
+  while (s.good()) {
     getline(s, opt, '=');
     if (s.bad() || s.eof()) break;
     getline(s, value, ' ');
@@ -497,16 +481,16 @@ std::map<std::string, std::string>
   return options;
 }
 
-void distributed_control::init(const std::vector<std::string> &machines,
-            const std::string &initstring,
-            procid_t curmachineid,
-            size_t numhandlerthreads,
-            dc_comm_type commtype) {
-
+void distributed_control::init(const std::vector<std::string>& machines,
+                               const std::string& initstring,
+                               procid_t curmachineid, size_t numhandlerthreads,
+                               dc_comm_type commtype) {
   if (numhandlerthreads == RPC_DEFAULT_NUMHANDLERTHREADS) {
     // autoconfigure
-    if (thread::cpu_count() > 2) numhandlerthreads = std::min(thread::cpu_count(), 64ul) - 2;
-    else numhandlerthreads = 2;
+    if (thread::cpu_count() > 2)
+      numhandlerthreads = std::min(thread::cpu_count(), 64ul) - 2;
+    else
+      numhandlerthreads = 2;
   }
   ASSERT_MSG(machines.size() <= RPC_MAX_N_PROCS,
              "Number of processes exceeded hard limit of %d", RPC_MAX_N_PROCS);
@@ -514,13 +498,15 @@ void distributed_control::init(const std::vector<std::string> &machines,
   // initialize thread local storage
   if (dc_impl::thrlocal_sequentialization_key_initialized == false) {
     dc_impl::thrlocal_sequentialization_key_initialized = true;
-    int err = pthread_key_create(&dc_impl::thrlocal_sequentialization_key, NULL);
+    int err =
+        pthread_key_create(&dc_impl::thrlocal_sequentialization_key, NULL);
     ASSERT_EQ(err, 0);
   }
 
   if (dc_impl::thrlocal_send_buffer_key_initialized == false) {
     dc_impl::thrlocal_send_buffer_key = true;
-    int err = pthread_key_create(&dc_impl::thrlocal_send_buffer_key, dc_impl::thrlocal_send_buffer_key_deleter);
+    int err = pthread_key_create(&dc_impl::thrlocal_send_buffer_key,
+                                 dc_impl::thrlocal_send_buffer_key_deleter);
     ASSERT_EQ(err, 0);
   }
 
@@ -540,7 +526,7 @@ void distributed_control::init(const std::vector<std::string> &machines,
   set_fast_track_requests(true);
 
   // parse the initstring
-  std::map<std::string,std::string> options = parse_options(initstring);
+  std::map<std::string, std::string> options = parse_options(initstring);
 
   if (commtype == TCP_COMM) {
     comm = new dc_impl::dc_tcp_comm();
@@ -555,20 +541,19 @@ void distributed_control::init(const std::vector<std::string> &machines,
   // store the threads in the threadgroup
   fcall_handler_active.resize(numhandlerthreads);
   fcall_handler_blockers.resize(numhandlerthreads);
-  fcallhandlers.set_stacksize(256*1024); // 256K
-  for (size_t i = 0;i < numhandlerthreads; ++i) {
+  fcallhandlers.set_stacksize(256 * 1024);  // 256K
+  for (size_t i = 0; i < numhandlerthreads; ++i) {
     fiber_control::affinity_type affinity;
     affinity.clear();
     affinity.set_bit(i);
-    fcallhandlers.launch(boost::bind(&distributed_control::fcallhandler_loop,
-                                      this, i), affinity);
+    fcallhandlers.launch(
+        boost::bind(&distributed_control::fcallhandler_loop, this, i),
+        affinity);
   }
-
 
   // set the local proc values
   localprocid = curmachineid;
   localnumprocs = machines.size();
-
 
   // construct the services
   distributed_services = new dc_services(*this);
@@ -579,14 +564,14 @@ void distributed_control::init(const std::vector<std::string> &machines,
   if (mpi_tools::initialized()) MPI_Barrier(MPI_COMM_WORLD);
 #endif
 
-  comm->init(machines, options, curmachineid,
-              receivers, senders);
+  comm->init(machines, options, curmachineid, receivers, senders);
   logstream(LOG_INFO) << "TCP Communication layer constructed." << std::endl;
   if (localprocid == 0) {
-    logstream(LOG_EMPH) << "Cluster of " << machines.size() << " instances created." << std::endl;
+    logstream(LOG_EMPH) << "Cluster of " << machines.size()
+                        << " instances created." << std::endl;
     // check for duplicate IP addresses
     std::map<std::string, size_t> ipaddresses;
-    for (size_t i = 0; i < machines.size(); ++i ){
+    for (size_t i = 0; i < machines.size(); ++i) {
       size_t pos = machines[i].find(":");
       ASSERT_NE(pos, std::string::npos);
       std::string address = machines[i].substr(0, pos);
@@ -597,15 +582,17 @@ void distributed_control::init(const std::vector<std::string> &machines,
     while (iter != ipaddresses.end()) {
       if (iter->second > 1) {
         hasduplicate = true;
-        logstream(LOG_WARNING) << "Duplicate IP address: " << iter->first << std::endl;
+        logstream(LOG_WARNING)
+            << "Duplicate IP address: " << iter->first << std::endl;
       }
       ++iter;
     }
     if (hasduplicate) {
-      logstream(LOG_WARNING) << "For maximum performance, GraphLab strongly prefers running just one process per machine." << std::endl;
+      logstream(LOG_WARNING) << "For maximum performance, GraphLab strongly "
+                                "prefers running just one process per machine."
+                             << std::endl;
     }
   }
-
 
   // improves reliability of initialization
 #ifdef HAS_MPI
@@ -624,38 +611,31 @@ void distributed_control::init(const std::vector<std::string> &machines,
   // initialize the event log
 
   INITIALIZE_EVENT_LOG(*this);
-  ADD_CUMULATIVE_CALLBACK_EVENT(EVENT_NETWORK_BYTES, "Network Utilization",
-      "MB", boost::bind(&distributed_control::network_megabytes_sent, this));
-  ADD_CUMULATIVE_CALLBACK_EVENT(EVENT_RPC_CALLS, "RPC Calls",
-      "Calls", boost::bind(&distributed_control::calls_sent, this));
+  ADD_CUMULATIVE_CALLBACK_EVENT(
+      EVENT_NETWORK_BYTES, "Network Utilization", "MB",
+      boost::bind(&distributed_control::network_megabytes_sent, this));
+  ADD_CUMULATIVE_CALLBACK_EVENT(
+      EVENT_RPC_CALLS, "RPC Calls", "Calls",
+      boost::bind(&distributed_control::calls_sent, this));
 }
 
-
-
-void distributed_control::barrier() {
-  distributed_services->barrier();
-}
+void distributed_control::barrier() { distributed_services->barrier(); }
 
 void distributed_control::flush() {
-  for (procid_t i = 0;i < senders.size(); ++i) {
+  for (procid_t i = 0; i < senders.size(); ++i) {
     senders[i]->flush();
   }
 }
 
-void distributed_control::flush(procid_t p) {
-  senders[p]->flush();
-}
+void distributed_control::flush(procid_t p) { senders[p]->flush(); }
 
 void distributed_control::flush_soon() {
-  for (procid_t i = 0;i < senders.size(); ++i) {
+  for (procid_t i = 0; i < senders.size(); ++i) {
     senders[i]->flush_soon();
   }
 }
 
-
-void distributed_control::flush_soon(procid_t p) {
-  senders[p]->flush_soon();
-}
+void distributed_control::flush_soon(procid_t p) { senders[p]->flush_soon(); }
 /*****************************************************************************
                       Implementation of Full Barrier
 *****************************************************************************/
@@ -664,8 +644,8 @@ void distributed_control::flush_soon(procid_t p) {
   I can't think of a simple enough solution.
 
   Part of the issue is that the "context" concept was not built into to the
-  RPC system to begin with and is currently folded in through the dc_dist_object system.
-  As a result, the global context becomes very hard to define properly.
+  RPC system to begin with and is currently folded in through the dc_dist_object
+  system. As a result, the global context becomes very hard to define properly.
   Including a dc_dist_object as a member only resolves the high level contexts
   such as barrier, broadcast, etc which do not require intrusive access into
   deeper information about the context. The full barrier however, requires deep
@@ -683,7 +663,7 @@ and calls issued while the barrier is being evaluated.
 void distributed_control::full_barrier() {
   // gather a sum of all the calls issued to machine 0
   std::vector<size_t> calls_sent_to_target(numprocs(), 0);
-  for (size_t i = 0;i < numprocs(); ++i) {
+  for (size_t i = 0; i < numprocs(); ++i) {
     calls_sent_to_target[i] = global_calls_sent[i].value;
   }
 
@@ -693,10 +673,12 @@ void distributed_control::full_barrier() {
   all_gather(all_calls_sent, true);
 
   // get the number of calls I am supposed to receive from each machine
-  calls_to_receive.clear(); calls_to_receive.resize(numprocs(), 0);
-  for (size_t i = 0;i < numprocs(); ++i) {
+  calls_to_receive.clear();
+  calls_to_receive.resize(numprocs(), 0);
+  for (size_t i = 0; i < numprocs(); ++i) {
     calls_to_receive[i] += all_calls_sent[i][procid()];
-//    std::cout << "Expecting " << calls_to_receive[i] << " calls from " << i << std::endl;
+    //    std::cout << "Expecting " << calls_to_receive[i] << " calls from " <<
+    //    i << std::endl;
   }
   // clear the counters
   num_proc_recvs_incomplete.value = numprocs();
@@ -705,7 +687,7 @@ void distributed_control::full_barrier() {
   full_barrier_in_effect = true;
   __asm("mfence");
   // begin one pass to set all which are already completed
-  for (procid_t i = 0;i < numprocs(); ++i) {
+  for (procid_t i = 0; i < numprocs(); ++i) {
     if (global_calls_received[i].value >= calls_to_receive[i]) {
       if (procs_complete.set_bit(i) == false) {
         num_proc_recvs_incomplete.dec();
@@ -714,15 +696,15 @@ void distributed_control::full_barrier() {
   }
 
   full_barrier_lock.lock();
-  while (num_proc_recvs_incomplete.value > 0) full_barrier_cond.wait(full_barrier_lock);
+  while (num_proc_recvs_incomplete.value > 0)
+    full_barrier_cond.wait(full_barrier_lock);
   full_barrier_lock.unlock();
   full_barrier_in_effect = false;
   barrier();
-//   for (size_t i = 0; i < numprocs(); ++i) {
-//     std::cout << "Received " << global_calls_received[i].value << " from " << i << std::endl;
-//   }
+  //   for (size_t i = 0; i < numprocs(); ++i) {
+  //     std::cout << "Received " << global_calls_received[i].value << " from "
+  //     << i << std::endl;
+  //   }
 }
 
-
-} //namespace graphlab
-
+}  // namespace graphlab

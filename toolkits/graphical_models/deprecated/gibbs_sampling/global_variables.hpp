@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,17 +17,16 @@
  *
  */
 
-
-#ifndef  PGIBBS_GLOBAL_VARIABLES
-#define  PGIBBS_GLOBAL_VARIABLES
-
+#ifndef PGIBBS_GLOBAL_VARIABLES
+#define PGIBBS_GLOBAL_VARIABLES
 
 #include <graphlab.hpp>
 
 #include "factorized_model.hpp"
 
 // Global Shared Varaibles ====================================================>
-//extern graphlab::glshared_const<factorized_model::factor_map_t*> SHARED_FACTORS;
+// extern graphlab::glshared_const<factorized_model::factor_map_t*>
+// SHARED_FACTORS;
 extern const factorized_model::factor_map_t* SHARED_FACTORS_PTR;
 extern graphlab::glshared_const<size_t> MAX_NSAMPLES;
 extern graphlab::glshared<size_t> n_samples;

@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,6 @@
  *      http://www.graphlab.ml.cmu.edu
  *
  */
-
 
 #undef __GLRPC_NIF0
 #undef __GLRPC_NIF1
@@ -41,4 +40,3 @@
 #undef __GLRPC_FRESULT
 #undef REMOVE_CONST_REF
 #undef __GLRPC_FARITY
-

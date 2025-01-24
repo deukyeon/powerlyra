@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,6 @@
  *      http://www.graphlab.ml.cmu.edu
  *
  */
-
 
 #include <boost/bind.hpp>
 #include <graphlab/util/random.hpp>
@@ -42,12 +41,11 @@ fiber_control::affinity_type fiber_control::all_affinity() {
   return ret;
 }
 
-fiber_control::fiber_control(size_t nworkers, 
-                             size_t affinity_base)
-    :nworkers(nworkers),
-    affinity_base(affinity_base),
-    stop_workers(false),
-    flsdeleter(NULL) {
+fiber_control::fiber_control(size_t nworkers, size_t affinity_base)
+    : nworkers(nworkers),
+      affinity_base(affinity_base),
+      stop_workers(false),
+      flsdeleter(NULL) {
   // initialize the thread local storage keys
   if (!tls_created) {
     pthread_key_create(&tlskey, fiber_control::tls_deleter);
@@ -56,7 +54,7 @@ fiber_control::fiber_control(size_t nworkers,
 
   // set up the queues.
   schedule.resize(nworkers);
-  for (size_t i = 0;i < nworkers; ++i) {
+  for (size_t i = 0; i < nworkers; ++i) {
     schedule[i].waiting = false;
     schedule[i].nwaiting = 0;
     schedule[i].affinity_queue = new inplace_lf_queue2<fiber>;
@@ -65,8 +63,8 @@ fiber_control::fiber_control(size_t nworkers,
     schedule[i].popped_priority_queue = NULL;
   }
   // launch the workers
-  for (size_t i = 0;i < nworkers; ++i) {
-    workers.launch(boost::bind(&fiber_control::worker_init, this, i), 
+  for (size_t i = 0; i < nworkers; ++i) {
+    workers.launch(boost::bind(&fiber_control::worker_init, this, i),
                    affinity_base + i);
   }
 }
@@ -74,7 +72,7 @@ fiber_control::fiber_control(size_t nworkers,
 fiber_control::~fiber_control() {
   join();
   stop_workers = true;
-  for (size_t i = 0;i < nworkers; ++i) {
+  for (size_t i = 0; i < nworkers; ++i) {
     schedule[i].active_lock.lock();
     schedule[i].active_cond.broadcast();
     schedule[i].active_lock.unlock();
@@ -83,11 +81,8 @@ fiber_control::~fiber_control() {
   }
   workers.join();
 
-
-
   pthread_key_delete(tlskey);
 }
-
 
 void fiber_control::tls_deleter(void* f) {
   fiber_control::tls* t = (fiber_control::tls*)(f);
@@ -98,24 +93,26 @@ void fiber_control::create_tls_ptr() {
   pthread_setspecific(tlskey, (void*)(new fiber_control::tls));
 }
 
-
 fiber_control::tls* fiber_control::get_tls_ptr() {
-  if (tls_created == false) return NULL;
-  else return (fiber_control::tls*) pthread_getspecific(tlskey);
+  if (tls_created == false)
+    return NULL;
+  else
+    return (fiber_control::tls*)pthread_getspecific(tlskey);
 }
 
 fiber_control::fiber* fiber_control::get_active_fiber() {
   tls* t = get_tls_ptr();
-  if (t != NULL) return t->cur_fiber;
-  else return NULL;
+  if (t != NULL)
+    return t->cur_fiber;
+  else
+    return NULL;
 }
 
-
-
-
-void fiber_control::active_queue_insert_tail(size_t workerid, fiber_control::fiber* value) {
+void fiber_control::active_queue_insert_tail(size_t workerid,
+                                             fiber_control::fiber* value) {
   if (value->scheduleable) {
-//     printf("%ld: Scheduling %ld on %ld\n", get_worker_id(), value->id, workerid);
+    //     printf("%ld: Scheduling %ld on %ld\n", get_worker_id(), value->id,
+    //     workerid);
     schedule[workerid].affinity_queue->enqueue(value);
     ++schedule[workerid].nwaiting;
     if (schedule[workerid].waiting) {
@@ -126,10 +123,11 @@ void fiber_control::active_queue_insert_tail(size_t workerid, fiber_control::fib
   }
 }
 
-
-void fiber_control::active_queue_insert_head(size_t workerid, fiber_control::fiber* value) {
+void fiber_control::active_queue_insert_head(size_t workerid,
+                                             fiber_control::fiber* value) {
   if (value->scheduleable) {
-//     printf("%ld: Scheduling %ld on %ld\n", get_worker_id(), value->id, workerid);
+    //     printf("%ld: Scheduling %ld on %ld\n", get_worker_id(), value->id,
+    //     workerid);
     schedule[workerid].priority_queue->enqueue(value);
     ++schedule[workerid].nwaiting;
     if (schedule[workerid].waiting) {
@@ -140,8 +138,8 @@ void fiber_control::active_queue_insert_head(size_t workerid, fiber_control::fib
   }
 }
 
-fiber_control::fiber* fiber_control::try_pop_queue(inplace_lf_queue2<fiber>& lfqueue,
-                                                   fiber*& popped_queue) {
+fiber_control::fiber* fiber_control::try_pop_queue(
+    inplace_lf_queue2<fiber>& lfqueue, fiber*& popped_queue) {
   fiber_control::fiber* ret = NULL;
   // if there is stuff in the popped queue, pop it.
   if (popped_queue == NULL) {
@@ -152,8 +150,8 @@ fiber_control::fiber* fiber_control::try_pop_queue(inplace_lf_queue2<fiber>& lfq
     ret = popped_queue;
     do {
       popped_queue = ret->next;
-      asm volatile("pause\n": : :"memory");
-    } while(popped_queue == NULL);
+      asm volatile("pause\n" : : : "memory");
+    } while (popped_queue == NULL);
     // we have reached the end of the queue. clear the popped queue
     // and return
     if (popped_queue == lfqueue.end_of_dequeue_list()) {
@@ -168,7 +166,7 @@ fiber_control::fiber* fiber_control::active_queue_remove(size_t workerid) {
   thread_schedule& curts = schedule[workerid];
   ret = try_pop_queue(*curts.priority_queue, curts.popped_priority_queue);
   if (ret == NULL) {
-    ret = try_pop_queue(*curts.affinity_queue , curts.popped_affinity_queue);
+    ret = try_pop_queue(*curts.affinity_queue, curts.popped_affinity_queue);
   }
   if (ret) {
     // printf("%ld: Running %ld\n", get_worker_id(), ret->id);
@@ -183,7 +181,7 @@ void fiber_control::exit() {
   if (fib != NULL) {
     // add to garbage.
     fib->terminate = true;
-    yield(); // never returns
+    yield();  // never returns
     ASSERT_MSG(false, "Impossible Condition. Dead Fiber woke up");
   } else {
     ASSERT_MSG(false, "Calling fiber exit not from a fiber");
@@ -196,7 +194,7 @@ mutex flush_lock;
 void fiber_control::worker_init(size_t workerid) {
   /*
    * This is the "root" stack for each worker.
-   * When there are active user threads associated with this worker, 
+   * When there are active user threads associated with this worker,
    * it will switch directly between the fibers.
    * But, when the worker has no other fiber to run, it will return to this
    * stack and and wait in a condition variable
@@ -213,7 +211,7 @@ void fiber_control::worker_init(size_t workerid) {
 
   schedule[workerid].waiting = true;
   schedule[workerid].active_lock.lock();
-  while(!stop_workers) {
+  while (!stop_workers) {
     // get a fiber to run
     fiber* next_fib = t->parent->active_queue_remove(workerid);
     if (next_fib != NULL) {
@@ -260,8 +258,7 @@ void fiber_control::trampoline(intptr_t _args) {
   fiber_control::exit();
 }
 
-size_t fiber_control::launch(boost::function<void(void)> fn, 
-                             size_t stacksize, 
+size_t fiber_control::launch(boost::function<void(void)> fn, size_t stacksize,
                              affinity_type affinity) {
   ASSERT_GT(affinity.popcount(), 0);
   size_t b = 0;
@@ -274,13 +271,15 @@ size_t fiber_control::launch(boost::function<void(void)> fn,
   fib->parent = this;
   fib->stack = malloc(stacksize);
   fib->id = fiber_id_counter.inc();
-  foreach(size_t b, affinity) {
-    if (b < nworkers) fib->affinity_array.push_back((unsigned char)b);
-    else break;
+  foreach (size_t b, affinity) {
+    if (b < nworkers)
+      fib->affinity_array.push_back((unsigned char)b);
+    else
+      break;
   }
   ASSERT_GT(fib->affinity_array.size(), 0);
   fib->affinity = affinity;
-  //VALGRIND_STACK_REGISTER(fib->stack, (char*)fib->stack + stacksize);
+  // VALGRIND_STACK_REGISTER(fib->stack, (char*)fib->stack + stacksize);
   fib->fls = NULL;
   fib->next = NULL;
   fib->deschedule_lock = NULL;
@@ -293,8 +292,7 @@ size_t fiber_control::launch(boost::function<void(void)> fn,
   fib->initial_trampoline_args = (intptr_t)(args);
   // stack grows downwards.
   fib->context = boost::context::make_fcontext((char*)fib->stack + stacksize,
-                                               stacksize,
-                                               trampoline);
+                                               stacksize, trampoline);
   fibers_active.inc();
 
   // find a place to put the thread
@@ -307,12 +305,13 @@ size_t fiber_control::pick_fiber_worker(fiber* fib) {
   // first try to use the original worker if possible
   size_t choice = get_worker_id();
   if (choice == (size_t)(-1) || fib->affinity.get(choice) == 0) {
-    //choice rejected, pick randomly from the available choices
-    // if there is only one affinity option, return it
+    // choice rejected, pick randomly from the available choices
+    //  if there is only one affinity option, return it
     if (fib->affinity_array.size() == 1) {
       choice = fib->affinity_array[0];
     } else {
-      size_t ra = graphlab::random::fast_uniform<size_t>(0,fib->affinity_array.size() - 1);
+      size_t ra = graphlab::random::fast_uniform<size_t>(
+          0, fib->affinity_array.size() - 1);
       std::swap(fib->affinity_array[ra], fib->affinity_array[0]);
       choice = fib->affinity_array[0];
     }
@@ -323,14 +322,15 @@ size_t fiber_control::pick_fiber_worker(fiber* fib) {
 void fiber_control::yield_to(fiber* next_fib) {
   // the core scheduling logic
   tls* t = get_tls_ptr();
-  
-//   if (next_fib) {
-//     if (t->cur_fiber) {
-//       printf("%ld: yield to: %ld from %ld\n", get_worker_id(), next_fib->id, t->cur_fiber->id);
-//     }  else {
-//       printf("%ld: yield to: %ld\n", get_worker_id(), next_fib->id);
-//     }
-//   } 
+
+  //   if (next_fib) {
+  //     if (t->cur_fiber) {
+  //       printf("%ld: yield to: %ld from %ld\n", get_worker_id(),
+  //       next_fib->id, t->cur_fiber->id);
+  //     }  else {
+  //       printf("%ld: yield to: %ld\n", get_worker_id(), next_fib->id);
+  //     }
+  //   }
   if (next_fib != NULL) {
     // reset the priority flag
     next_fib->priority = false;
@@ -344,15 +344,14 @@ void fiber_control::yield_to(fiber* next_fib) {
                                     t->cur_fiber->context,
                                     t->cur_fiber->initial_trampoline_args);
     } else {
-      boost::context::jump_fcontext(&t->base_context,
-                                    t->cur_fiber->context,
+      boost::context::jump_fcontext(&t->base_context, t->cur_fiber->context,
                                     t->cur_fiber->initial_trampoline_args);
     }
   } else {
     // ok. there isn't anything to schedule to
     // am I meant to be terminated? or descheduled?
     if (t->cur_fiber &&
-        (t->cur_fiber->terminate || t->cur_fiber->descheduled) ) {
+        (t->cur_fiber->terminate || t->cur_fiber->descheduled)) {
       // yup. killing current fiber
       // context switch back to basecontext which will
       // do the cleanup
@@ -362,8 +361,7 @@ void fiber_control::yield_to(fiber* next_fib) {
       // (as identifibed by cur_fiber = NULL)
       t->prev_fiber = t->cur_fiber;
       t->cur_fiber = NULL;
-      boost::context::jump_fcontext(t->prev_fiber->context,
-                                    &t->base_context,
+      boost::context::jump_fcontext(t->prev_fiber->context, &t->base_context,
                                     0);
     } else {
       // nothing to do, and not terminating...
@@ -390,23 +388,25 @@ void fiber_control::reschedule_fiber(size_t workerid, fiber* fib) {
     fib->lock.unlock();
     // we reschedule it
     // Re-lock the queue
-    //printf("%ld: Reinserting %ld\n", get_worker_id(), fib->id);
-    if (!fib->priority) active_queue_insert_tail(workerid, fib);
-    else active_queue_insert_head(workerid, fib);
+    // printf("%ld: Reinserting %ld\n", get_worker_id(), fib->id);
+    if (!fib->priority)
+      active_queue_insert_tail(workerid, fib);
+    else
+      active_queue_insert_head(workerid, fib);
   } else if (fib->descheduled) {
     // unflag descheduled and unset scheduleable
     fib->descheduled = false;
     fib->scheduleable = false;
     if (fib->deschedule_lock) pthread_mutex_unlock(fib->deschedule_lock);
     fib->deschedule_lock = NULL;
-    //printf("%ld: Descheduling complete %ld\n", get_worker_id(), fib->id);
+    // printf("%ld: Descheduling complete %ld\n", get_worker_id(), fib->id);
     fib->lock.unlock();
   } else if (fib->terminate) {
     fib->lock.unlock();
     // previous fiber is dead. destroy it
     free(fib->stack);
-    //VALGRIND_STACK_DEREGISTER(fib->stack);
-    // delete the fiber local storage if any
+    // VALGRIND_STACK_DEREGISTER(fib->stack);
+    //  delete the fiber local storage if any
     if (fib->fls && flsdeleter) flsdeleter(fib->fls);
     delete fib;
     // if we are out of threads, signal the join
@@ -432,15 +432,11 @@ void fiber_control::yield() {
   t->parent->yield_to(next_fib);
 }
 
-
-void fiber_control::fast_yield() {
-  yield();
-}
-
+void fiber_control::fast_yield() { yield(); }
 
 void fiber_control::join() {
   join_lock.lock();
-  while(fibers_active.value > 0) {
+  while (fibers_active.value > 0) {
     join_cond.wait(join_lock);
   }
   join_lock.unlock();
@@ -448,14 +444,13 @@ void fiber_control::join() {
 
 size_t fiber_control::get_tid() {
   fiber_control::tls* tls = get_tls_ptr();
-  if (tls != NULL) return reinterpret_cast<size_t>(tls->cur_fiber);
-  else return (size_t)(0);
+  if (tls != NULL)
+    return reinterpret_cast<size_t>(tls->cur_fiber);
+  else
+    return (size_t)(0);
 }
 
-
-bool fiber_control::in_fiber() {
-  return get_tls_ptr() != NULL;
-}
+bool fiber_control::in_fiber() { return get_tls_ptr() != NULL; }
 
 void fiber_control::deschedule_self(pthread_mutex_t* lock) {
   fiber* fib = get_tls_ptr()->cur_fiber;
@@ -464,7 +459,7 @@ void fiber_control::deschedule_self(pthread_mutex_t* lock) {
   assert(fib->scheduleable == true);
   fib->deschedule_lock = lock;
   fib->descheduled = true;
-  //printf("%ld: Descheduling requested %ld\n", get_worker_id(), fib->id);
+  // printf("%ld: Descheduling requested %ld\n", get_worker_id(), fib->id);
   fib->lock.unlock();
   yield();
 }
@@ -483,13 +478,15 @@ bool fiber_control::worker_has_fibers_on_queue() {
   fiber_control* parentgroup = t->parent;
   size_t workerid = t->workerid;
   return !parentgroup->schedule[workerid].priority_queue->empty() ||
-          !parentgroup->schedule[workerid].affinity_queue->empty();
+         !parentgroup->schedule[workerid].affinity_queue->empty();
 }
 
 size_t fiber_control::get_worker_id() {
   fiber_control::tls* tls = get_tls_ptr();
-  if (tls != NULL) return tls->workerid;
-  else return (size_t)(-1);
+  if (tls != NULL)
+    return tls->workerid;
+  else
+    return (size_t)(-1);
 }
 
 void fiber_control::schedule_tid(size_t tid, bool priority) {
@@ -501,18 +498,18 @@ void fiber_control::schedule_tid(size_t tid, bool priority) {
   fib->descheduled = false;
   if (fib->scheduleable == false) {
     // if this thread was descheduled completely. Reschedule it.
-    //printf("%ld: Scheduling requested %ld\n", get_worker_id(), fib->id);
+    // printf("%ld: Scheduling requested %ld\n", get_worker_id(), fib->id);
     fib->scheduleable = true;
     fib->priority = priority;
     fib->lock.unlock();
     size_t choice = fib->parent->pick_fiber_worker(fib);
     fib->parent->reschedule_fiber(choice, fib);
   } else {
-    //printf("%ld: Scheduling requested of running thread %ld\n", get_worker_id(), fib->id);
+    // printf("%ld: Scheduling requested of running thread %ld\n",
+    // get_worker_id(), fib->id);
     fib->lock.unlock();
   }
 }
-
 
 void fiber_control::set_tls_deleter(void (*deleter)(void*)) {
   flsdeleter = deleter;
@@ -539,7 +536,6 @@ void fiber_control::set_tls(void* tls) {
   }
 }
 
-
 void fiber_control::instance_set_parameters(size_t nworkers = 0,
                                             size_t affinity_base = 0) {
   instance_construct_params_nworkers = nworkers;
@@ -552,9 +548,9 @@ fiber_control& fiber_control::get_instance() {
   if (instance_construct_params_nworkers == 0) {
     instance_construct_params_nworkers = thread::cpu_count();
   }
-  static fiber_control singleton(instance_construct_params_nworkers, 
+  static fiber_control singleton(instance_construct_params_nworkers,
                                  instance_construct_params_affinity_base);
   return singleton;
 }
 
-}
+}  // namespace graphlab

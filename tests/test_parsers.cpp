@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,35 +20,37 @@
  *
  */
 
-
 #include <graphlab/graph/distributed_graph.hpp>
 #include <graphlab/macros_def.hpp>
 
 typedef graphlab::distributed_graph<size_t, size_t> graph_type;
 
-void check_structure(graph_type &graph) {
+void check_structure(graph_type& graph) {
   ASSERT_EQ(graph.num_vertices(), 5);
   ASSERT_EQ(graph.num_edges(), 7);
-  // check vertex 0 
+  // check vertex 0
   {
     graph_type::vertex_type vtype = graph.vertex(0);
-    graph_type::local_edge_list_type v0_out = graph_type::local_vertex_type(vtype).out_edges();
+    graph_type::local_edge_list_type v0_out =
+        graph_type::local_vertex_type(vtype).out_edges();
     ASSERT_EQ(v0_out.size(), 1);
     ASSERT_EQ(v0_out[0].target().global_id(), 5);
   }
   // vertex 1
   {
     graph_type::vertex_type vtype = graph.vertex(1);
-    graph_type::local_edge_list_type v0_out = graph_type::local_vertex_type(vtype).out_edges();
+    graph_type::local_edge_list_type v0_out =
+        graph_type::local_vertex_type(vtype).out_edges();
     ASSERT_EQ(v0_out.size(), 2);
     ASSERT_EQ(v0_out[0].target().global_id(), 0);
     ASSERT_EQ(v0_out[1].target().global_id(), 5);
   }
-  
+
   // vertex 2
   {
     graph_type::vertex_type vtype = graph.vertex(2);
-    graph_type::local_edge_list_type v0_out = graph_type::local_vertex_type(vtype).out_edges();
+    graph_type::local_edge_list_type v0_out =
+        graph_type::local_vertex_type(vtype).out_edges();
     ASSERT_EQ(v0_out.size(), 2);
     ASSERT_EQ(v0_out[0].target().global_id(), 0);
     ASSERT_EQ(v0_out[1].target().global_id(), 5);
@@ -56,34 +58,33 @@ void check_structure(graph_type &graph) {
   // vertex 3
   {
     graph_type::vertex_type vtype = graph.vertex(3);
-    graph_type::local_edge_list_type v0_out = graph_type::local_vertex_type(vtype).out_edges();
+    graph_type::local_edge_list_type v0_out =
+        graph_type::local_vertex_type(vtype).out_edges();
     ASSERT_EQ(v0_out.size(), 2);
     ASSERT_EQ(v0_out[0].target().global_id(), 0);
     ASSERT_EQ(v0_out[1].target().global_id(), 5);
   }
 }
 
-
-
 void test_adj(graphlab::distributed_control& dc) {
   graphlab::distributed_graph<size_t, size_t> graph(dc);
   graph.load_format("data/test_adj", "adj");
   graph.finalize();
-  check_structure(graph);  
+  check_structure(graph);
 }
 
 void test_snap(graphlab::distributed_control& dc) {
   graphlab::distributed_graph<size_t, size_t> graph(dc);
   graph.load_format("data/test_snap", "snap");
   graph.finalize();
-  check_structure(graph);  
+  check_structure(graph);
 }
 
 void test_tsv(graphlab::distributed_control& dc) {
   graphlab::distributed_graph<size_t, size_t> graph(dc);
   graph.load_format("data/test_tsv", "tsv");
   graph.finalize();
-  check_structure(graph);  
+  check_structure(graph);
 }
 
 void test_powerlaw(graphlab::distributed_control& dc) {
@@ -93,7 +94,6 @@ void test_powerlaw(graphlab::distributed_control& dc) {
   ASSERT_EQ(graph.num_vertices(), 1000);
   std::cout << graph.num_edges() << " Edges\n";
 }
-
 
 void test_save_load(graphlab::distributed_control& dc) {
   graphlab::distributed_graph<size_t, size_t> graph(dc);
@@ -114,9 +114,7 @@ void test_save_load(graphlab::distributed_control& dc) {
   graph3.finalize();
   ASSERT_EQ(graph.num_vertices(), graph3.num_vertices());
   ASSERT_EQ(graph.num_edges(), graph3.num_edges());
-
 }
-
 
 int main(int argc, char** argv) {
   graphlab::distributed_control dc;
@@ -126,4 +124,3 @@ int main(int argc, char** argv) {
   test_powerlaw(dc);
   test_save_load(dc);
 };
-

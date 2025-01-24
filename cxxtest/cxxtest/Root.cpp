@@ -26,4 +26,4 @@
 #include <cxxtest/TestTracker.cpp>
 #include <cxxtest/ValueTraits.cpp>
 
-#endif // __cxxtest__Root_cpp__
+#endif  // __cxxtest__Root_cpp__

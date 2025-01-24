@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #include <iostream>
 #include <string>
 #include <map>
@@ -30,17 +29,14 @@
 #include <graphlab/rpc/async_consensus.hpp>
 using namespace graphlab;
 
-
-
-
 class seq_test {
  public:
   dc_dist_object<seq_test> rmi;
   std::vector<size_t> ctr;
-  seq_test(distributed_control &dc):rmi(dc, this), ctr(100,0) {
+  seq_test(distributed_control &dc) : rmi(dc, this), ctr(100, 0) {
     rmi.barrier();
   }
-  
+
   void recv(size_t idx, size_t val) {
     ASSERT_EQ(thread::thread_id(), idx);
     ASSERT_EQ(ctr[idx], val);
@@ -50,15 +46,14 @@ class seq_test {
   void run() {
     for (size_t i = 1; i < 2; ++i) {
       rmi.dc().set_sequentialization_key(i);
-      for (size_t j = 0;j < 1000000; ++j) {
+      for (size_t j = 0; j < 1000000; ++j) {
         rmi.remote_call(1, &seq_test::recv, i, j);
       }
     }
   }
 };
 
-
-int main(int argc, char ** argv) {
+int main(int argc, char **argv) {
   /** Initialization */
   mpi_tools::init(argc, argv);
   global_logger().set_log_level(LOG_DEBUG);

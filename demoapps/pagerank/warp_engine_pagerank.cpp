@@ -29,7 +29,7 @@
 using namespace graphlab;
 
 // The graph type is determined by the vertex and edge data types
-typedef distributed_graph<float , graphlab::empty> graph_type;
+typedef distributed_graph<float, graphlab::empty> graph_type;
 typedef warp::warp_engine<graph_type> warp_engine_type;
 
 /*
@@ -38,34 +38,25 @@ typedef warp::warp_engine<graph_type> warp_engine_type;
  */
 void init_vertex(graph_type::vertex_type& vertex) { vertex.data() = 1; }
 
-
 float pagerank_map(graph_type::edge_type edge, graph_type::vertex_type other) {
   return other.data() / other.num_out_edges();
 }
 
-
 void signal_neighbor(warp_engine_type::context& context,
-                     graph_type::edge_type edge, graph_type::vertex_type other) {
+                     graph_type::edge_type edge,
+                     graph_type::vertex_type other) {
   context.signal(other);
 }
-
-
 
 void pagerank(warp_engine_type::context& context,
               graph_type::vertex_type vertex) {
   float old_vdata = vertex.data();
-  vertex.data() = 0.15 + 0.85 * warp::map_reduce_neighborhood(vertex,
-                                                              IN_EDGES,
+  vertex.data() = 0.15 + 0.85 * warp::map_reduce_neighborhood(vertex, IN_EDGES,
                                                               pagerank_map);
   if (std::fabs(old_vdata - vertex.data()) > 1E-2) {
     warp::broadcast_neighborhood(context, vertex, OUT_EDGES, signal_neighbor);
   }
 }
-
-
-
-
-
 
 /*
  * We want to save the final graph so we define a write which will be
@@ -78,8 +69,7 @@ struct pagerank_writer {
     return strm.str();
   }
   std::string save_edge(graph_type::edge_type e) { return ""; }
-}; // end of pagerank writer
-
+};  // end of pagerank writer
 
 int main(int argc, char** argv) {
   global_logger().set_log_level(LOG_INFO);
@@ -100,14 +90,14 @@ int main(int argc, char** argv) {
   clopts.attach_option("saveprefix", saveprefix,
                        "Prefix to save the output pagerank in");
 
-  if(!clopts.parse(argc, argv)) {
+  if (!clopts.parse(argc, argv)) {
     dc.cout() << "Error in parsing command line arguments." << std::endl;
     return EXIT_FAILURE;
   }
 
   // Build the graph ----------------------------------------------------------
   graph_type graph(dc, clopts);
-  dc.cout() << "Loading graph in format: "<< format << std::endl;
+  dc.cout() << "Loading graph in format: " << format << std::endl;
   graph.load_format(graph_dir, format);
   // must call finalize before querying the graph
   graph.finalize();
@@ -121,21 +111,16 @@ int main(int argc, char** argv) {
   engine.set_update_function(pagerank);
   engine.start();
 
-  dc.cout() << "Finished Running in " << ti.current_time()
-            << " seconds." << std::endl;
-
+  dc.cout() << "Finished Running in " << ti.current_time() << " seconds."
+            << std::endl;
 
   // Save the final graph -----------------------------------------------------
   if (saveprefix != "") {
     graph.save(saveprefix, pagerank_writer(),
-               false,    // do not gzip
-               true,     // save vertices
-               false);   // do not save edges
+               false,   // do not gzip
+               true,    // save vertices
+               false);  // do not save edges
   }
 
   mpi_tools::finalize();
-} // End of main
-
-
-
-
+}  // End of main

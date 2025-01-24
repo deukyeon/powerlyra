@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,13 +20,9 @@
 #ifndef EIGEN_SERIALIZATION_HPP
 #define EIGEN_SERIALIZATION_HPP
 
-
-
 #include <Eigen/Dense>
 
 #include <graphlab.hpp>
-
-
 
 /**
  * \brief Use the GraphLab serialization macros to add a save routine
@@ -38,8 +34,8 @@ BEGIN_OUT_OF_PLACE_SAVE(arc, Eigen::VectorXd, vec) {
   const index_type size = vec.size();
   arc << size;
   graphlab::serialize(arc, vec.data(), size * sizeof(scalar_type));
-} END_OUT_OF_PLACE_SAVE()
-
+}
+END_OUT_OF_PLACE_SAVE()
 
 /**
  * \brief Use the GraphLab serialization macros to add a load routine
@@ -52,8 +48,8 @@ BEGIN_OUT_OF_PLACE_LOAD(arc, Eigen::VectorXd, vec) {
   arc >> size;
   vec.resize(size);
   graphlab::deserialize(arc, vec.data(), size * sizeof(scalar_type));
-} END_OUT_OF_PLACE_LOAD()
-
+}
+END_OUT_OF_PLACE_LOAD()
 
 /**
  * \brief Use the GraphLab serialization macros to add a save routine
@@ -65,27 +61,22 @@ BEGIN_OUT_OF_PLACE_SAVE(arc, Eigen::MatrixXd, mat) {
   const index_type rows = mat.rows();
   const index_type cols = mat.cols();
   arc << rows << cols;
-  graphlab::serialize(arc, mat.data(), rows*cols*sizeof(scalar_type));
-} END_OUT_OF_PLACE_SAVE()
-
-
+  graphlab::serialize(arc, mat.data(), rows * cols * sizeof(scalar_type));
+}
+END_OUT_OF_PLACE_SAVE()
 
 /**
  * \brief Use the GraphLab serialization macros to add a load routine
  * to the Eigen::MatrixXd object.
  */
 BEGIN_OUT_OF_PLACE_LOAD(arc, Eigen::MatrixXd, mat) {
-  typedef Eigen::MatrixXd::Index index_type; 
+  typedef Eigen::MatrixXd::Index index_type;
   typedef Eigen::MatrixXd::Scalar scalar_type;
-  index_type rows=0, cols=0;
+  index_type rows = 0, cols = 0;
   arc >> rows >> cols;
-  mat.resize(rows,cols);
-  graphlab::deserialize(arc, mat.data(), rows*cols*sizeof(scalar_type));
-} END_OUT_OF_PLACE_LOAD()
-
-
-
-
-
+  mat.resize(rows, cols);
+  graphlab::deserialize(arc, mat.data(), rows * cols * sizeof(scalar_type));
+}
+END_OUT_OF_PLACE_LOAD()
 
 #endif

@@ -8,13 +8,11 @@
 namespace graphlab {
 class distributed_control;
 
-
 namespace dc_impl {
 
 struct thread_local_buffer {
-  std::vector<inplace_lf_queue2<buffer_elem>* > outbuf;
+  std::vector<inplace_lf_queue2<buffer_elem>*> outbuf;
   std::vector<size_t> bytes_sent;
-
 
   std::vector<mutex> archive_locks;
   std::vector<oarchive> current_archive;
@@ -32,16 +30,15 @@ struct thread_local_buffer {
    */
   oarchive* acquire(procid_t target);
 
-  inline size_t get_bytes_sent(procid_t target) {
-    return bytes_sent[target];
-  }
+  inline size_t get_bytes_sent(procid_t target) { return bytes_sent[target]; }
   /**
    * Must be called from within the thread owning this buffer.
    * Releases a buffer previously acquired with acquire
    */
   void release(procid_t target, bool do_not_count_bytes_sent);
 
-  void write(procid_t target, char* c, size_t len, bool do_not_count_bytes_sent);
+  void write(procid_t target, char* c, size_t len,
+             bool do_not_count_bytes_sent);
 
   /**
    * Must be called from within the thread owning this buffer.
@@ -51,18 +48,19 @@ struct thread_local_buffer {
    */
   void push_flush();
 
-
   /**
    * Can be called anywhere.
-   * Flushes the buffer to the sender. This function blocks until all 
-   * buffers have been flushed. Equivalent to calling distributed_control::flush()
+   * Flushes the buffer to the sender. This function blocks until all
+   * buffers have been flushed. Equivalent to calling
+   * distributed_control::flush()
    */
   void pull_flush();
 
   /**
    * Can be called anywhere.
-   * Flushes the buffer to the sender. This function blocks until all 
-   * buffers have been flushed. Equivalent to calling distributed_control::flush()
+   * Flushes the buffer to the sender. This function blocks until all
+   * buffers have been flushed. Equivalent to calling
+   * distributed_control::flush()
    */
   void pull_flush(procid_t p);
 
@@ -72,7 +70,6 @@ struct thread_local_buffer {
    * soon. Equivalent to calling distributed_control::flush()
    */
   void pull_flush_soon();
-
 
   /**
    * Can be called anywhere.
@@ -84,7 +81,7 @@ struct thread_local_buffer {
   /**
    * Extracts the buffer going to a given target.
    * The first element of the pair points to the head of the linked list
-   * The linked list ends when the pointer becomes the second element of 
+   * The linked list ends when the pointer becomes the second element of
    * the pair.
    */
   std::pair<buffer_elem*, buffer_elem*> extract(procid_t target);
@@ -93,6 +90,6 @@ struct thread_local_buffer {
 
   void add_to_queue(procid_t target, char* ptr, size_t len);
 };
-}
-}
+}  // namespace dc_impl
+}  // namespace graphlab
 #endif

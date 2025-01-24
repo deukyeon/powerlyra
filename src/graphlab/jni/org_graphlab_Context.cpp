@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,7 @@
  *      http://www.graphlab.ml.cmu.edu
  *
  */
- 
+
 /**
  * @file org_graphlab_Context.cpp
  * Implementations of native methods in \c org.graphlab.Context. Refer to
@@ -36,19 +36,15 @@ using namespace graphlab;
 extern "C" {
 #endif
 
-  JNIEXPORT void JNICALL
-  Java_org_graphlab_Context_schedule
-  ( JNIEnv *env,
-    jobject obj,
-    jlong context_ptr,
-    jobject updater,
-    jint vertex_id){
-
-    // convert longs to pointers
-    proxy_updater::context *context = (proxy_updater::context *) context_ptr;
-    context->schedule(vertex_id, proxy_updater(env, updater));
-    
-  }
+JNIEXPORT void JNICALL Java_org_graphlab_Context_schedule(JNIEnv *env,
+                                                          jobject obj,
+                                                          jlong context_ptr,
+                                                          jobject updater,
+                                                          jint vertex_id) {
+  // convert longs to pointers
+  proxy_updater::context *context = (proxy_updater::context *)context_ptr;
+  context->schedule(vertex_id, proxy_updater(env, updater));
+}
 
 #ifdef __cplusplus
 }

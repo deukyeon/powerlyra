@@ -20,7 +20,6 @@
  *
  */
 
-
 /**
  * Also contains code that is Copyright 2011 Yahoo! Inc.  All rights
  * reserved.
@@ -30,14 +29,10 @@
  *
  */
 
-
-
 #ifndef GRAPHLAB_ATOMIC_ADD_VECTOR2_EMPTY_SPECIALIZATION_HPP
 #define GRAPHLAB_ATOMIC_ADD_VECTOR2_EMPTY_SPECIALIZATION_HPP
 
-
 #include <vector>
-
 
 #include <graphlab/parallel/pthread_tools.hpp>
 #include <graphlab/util/lock_free_pool.hpp>
@@ -45,101 +40,78 @@
 #include <graphlab/util/dense_bitset.hpp>
 #include <graphlab/parallel/atomic_add_vector2.hpp>
 
-
 namespace graphlab {
 
+/**
+ * \TODO DOCUMENT THIS CLASS
+ */
+
+template <>
+class atomic_add_vector2<graphlab::empty> {
+ public:
+  typedef graphlab::empty value_type;
+
+ private:
+  dense_bitset atomic_box_vec;
+
+  /** Not assignable */
+  void operator=(const atomic_add_vector2& other) {}
+
+ public:
+  /** Initialize the per vertex task set */
+  atomic_add_vector2(size_t num_vertices = 0) {
+    resize(num_vertices);
+    atomic_box_vec.clear();
+  }
+
   /**
-   * \TODO DOCUMENT THIS CLASS
+   * Resize the internal locks for a different graph
    */
+  void resize(size_t num_vertices) {
+    atomic_box_vec.resize(num_vertices);
+    atomic_box_vec.clear();
+  }
 
-  template<>
-  class atomic_add_vector2<graphlab::empty> {
-  public:
-    typedef graphlab::empty value_type;
+  /** Add a task to the set returning false if the task was already
+      present. */
+  bool add(const size_t& idx, const value_type& val) {
+    return !atomic_box_vec.set_bit(idx);
+  }  // end of add task to set
 
+  // /** Add a task to the set returning false if the task was already
+  //     present. */
+  // bool add_unsafe(const size_t& idx,
+  //                 const value_type& val) {
+  //   ASSERT_LT(idx, atomic_box_vec.size());
+  //   return atomic_box_vec[idx].set_unsafe(pool, val, joincounter);
+  // } // end of add task to set
 
-  private:
+  bool add(const size_t& idx, const value_type& val, value_type& new_value) {
+    return !atomic_box_vec.set_bit(idx);
+  }  // end of add task to set
 
-    dense_bitset atomic_box_vec;
+  bool test_and_get(const size_t& idx, value_type& ret_val) {
+    return atomic_box_vec.clear_bit(idx);
+  }
 
+  bool peek(const size_t& idx, value_type& ret_val) {
+    return atomic_box_vec.get(idx);
+  }
 
-    /** Not assignable */
-    void operator=(const atomic_add_vector2& other) { }
+  bool empty(const size_t& idx) const { return !atomic_box_vec.get(idx); }
 
+  size_t size() const { return atomic_box_vec.size(); }
 
-  public:
-    /** Initialize the per vertex task set */
-    atomic_add_vector2(size_t num_vertices = 0) {
-      resize(num_vertices);
-      atomic_box_vec.clear();
-    }
+  size_t num_joins() const { return 0; }
 
-    /**
-     * Resize the internal locks for a different graph
-     */
-    void resize(size_t num_vertices) {
-      atomic_box_vec.resize(num_vertices);
-      atomic_box_vec.clear();
-    }
+  void clear() { atomic_box_vec.clear(); }
 
-    /** Add a task to the set returning false if the task was already
-        present. */
-    bool add(const size_t& idx,
-             const value_type& val) {
-      return !atomic_box_vec.set_bit(idx);
-    } // end of add task to set
+  void clear(size_t i) { atomic_box_vec.clear_bit(i); }
 
+};  // end of vertex map
 
-    // /** Add a task to the set returning false if the task was already
-    //     present. */
-    // bool add_unsafe(const size_t& idx,
-    //                 const value_type& val) {
-    //   ASSERT_LT(idx, atomic_box_vec.size());
-    //   return atomic_box_vec[idx].set_unsafe(pool, val, joincounter);
-    // } // end of add task to set
-
-
-    bool add(const size_t& idx,
-             const value_type& val,
-             value_type& new_value) {
-      return !atomic_box_vec.set_bit(idx);
-    } // end of add task to set
-
-
-    bool test_and_get(const size_t& idx,
-                      value_type& ret_val) {
-      return atomic_box_vec.clear_bit(idx);
-    }
-
-    bool peek(const size_t& idx,
-                   value_type& ret_val) {
-      return atomic_box_vec.get(idx);
-    }
-
-    bool empty(const size_t& idx) const {
-      return !atomic_box_vec.get(idx);
-    }
-
-    size_t size() const {
-      return atomic_box_vec.size();
-    }
-
-    size_t num_joins() const {
-      return 0;
-    }
-
-
-    void clear() {
-      atomic_box_vec.clear();
-    }
-
-    void clear(size_t i) { atomic_box_vec.clear_bit(i);}
-
-  }; // end of vertex map
-
-}; // end of namespace graphlab
+};  // end of namespace graphlab
 
 #undef VALUE_PENDING
 
 #endif
-

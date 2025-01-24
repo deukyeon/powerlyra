@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef DC_BUFFERED_STREAM_SEND2_HPP
 #define DC_BUFFERED_STREAM_SEND2_HPP
 #include <iostream>
@@ -39,7 +38,6 @@ namespace graphlab {
 class distributed_control;
 
 namespace dc_impl {
-
 
 /**
  * \internal
@@ -61,12 +59,11 @@ Sender for the dc class.
 
 */
 
-class dc_buffered_stream_send2: public dc_send{
+class dc_buffered_stream_send2 : public dc_send {
  public:
-  dc_buffered_stream_send2(distributed_control* dc,
-                                   dc_comm_base *comm,
-                                   procid_t target) :
-                  dc(dc),  comm(comm), target(target) { }
+  dc_buffered_stream_send2(distributed_control* dc, dc_comm_base* comm,
+                           procid_t target)
+      : dc(dc), comm(comm), target(target) {}
 
   ~dc_buffered_stream_send2();
 
@@ -87,15 +84,13 @@ class dc_buffered_stream_send2: public dc_send{
  private:
   /// pointer to the owner
   distributed_control* dc;
-  dc_comm_base *comm;
+  dc_comm_base* comm;
   procid_t target;
   atomic<size_t> total_bytes_sent;
 
-
-
   std::vector<thread_local_buffer*> send_buffers;
   // temporary array matched to the same length as send_buffers
-  // to avoid repeated reallocation of this array when 
+  // to avoid repeated reallocation of this array when
   // get_outgoing_data is called
   std::vector<std::vector<std::pair<char*, size_t> > > to_send;
 
@@ -103,9 +98,6 @@ class dc_buffered_stream_send2: public dc_send{
   mutex lock;
 };
 
-
-
-} // namespace dc_impl
-} // namespace graphlab
-#endif // DC_BUFFERED_STREAM_SEND_EXPQUEUE_HPP
-
+}  // namespace dc_impl
+}  // namespace graphlab
+#endif  // DC_BUFFERED_STREAM_SEND_EXPQUEUE_HPP

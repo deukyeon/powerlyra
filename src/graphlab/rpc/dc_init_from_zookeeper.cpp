@@ -20,7 +20,6 @@
  *
  */
 
-
 #include <cstdio>
 #include <cstdlib>
 #include <string>
@@ -35,13 +34,10 @@
 #include <graphlab/logger/logger.hpp>
 namespace graphlab {
 
-void zk_callback(zookeeper::server_list* slist,
-                std::string name_space,
-                std::vector<std::string> servers,
-                std::vector<std::string>& result,
-                size_t num_to_watch_for,
-                mutex& result_lock,
-                conditional& result_cond) {
+void zk_callback(zookeeper::server_list* slist, std::string name_space,
+                 std::vector<std::string> servers,
+                 std::vector<std::string>& result, size_t num_to_watch_for,
+                 mutex& result_lock, conditional& result_cond) {
   if (servers.size() == num_to_watch_for) {
     result_lock.lock();
     result = servers;
@@ -50,7 +46,6 @@ void zk_callback(zookeeper::server_list* slist,
     result_lock.unlock();
   }
 }
-
 
 bool init_param_from_zookeeper(dc_init_param& param) {
   char* zk_hosts = getenv("ZK_SERVERS");
@@ -78,9 +73,7 @@ bool init_param_from_zookeeper(dc_init_param& param) {
   logstream(LOG_INFO) << "Will Listen on: " << ipaddr << std::endl;
 
   // get an ip address
-  zookeeper::server_list server_list(zk_hosts_list,
-                                     zk_jobname,
-                                     ipaddr);
+  zookeeper::server_list server_list(zk_hosts_list, zk_jobname, ipaddr);
 
   // final server list goes here
   std::vector<std::string> received_servers;
@@ -89,14 +82,9 @@ bool init_param_from_zookeeper(dc_init_param& param) {
   conditional cond;
 
   // construct the watch to watch for changes on zookeeper
-  server_list.set_callback(boost::bind(zk_callback,
-                                       _1,
-                                       _2,
-                                       _3,
-                                       boost::ref(received_servers),
-                                       numnodes,
-                                       boost::ref(lock),
-                                       boost::ref(cond)));
+  server_list.set_callback(boost::bind(zk_callback, _1, _2, _3,
+                                       boost::ref(received_servers), numnodes,
+                                       boost::ref(lock), boost::ref(cond)));
 
   server_list.join("graphlab");
 
@@ -104,7 +92,7 @@ bool init_param_from_zookeeper(dc_init_param& param) {
   received_servers = server_list.watch_changes("graphlab");
   // wait until I get all the servers
   // TODO: add a timeout
-  while(received_servers.size() < numnodes) cond.wait(lock);
+  while (received_servers.size() < numnodes) cond.wait(lock);
   lock.unlock();
 
   // done!
@@ -115,12 +103,14 @@ bool init_param_from_zookeeper(dc_init_param& param) {
 
   // now fill the parameter list
   param.machines = received_servers;
-  param.curmachineid = std::find(received_servers.begin(), received_servers.end(),
-                                 ipaddr) - received_servers.begin();
+  param.curmachineid =
+      std::find(received_servers.begin(), received_servers.end(), ipaddr) -
+      received_servers.begin();
   ASSERT_LT(param.curmachineid, received_servers.size());
   param.numhandlerthreads = RPC_DEFAULT_NUMHANDLERTHREADS;
   param.commtype = RPC_DEFAULT_COMMTYPE;
-  param.initstring = param.initstring + std::string(" __sockhandle__=") + tostr(sock) + " ";
+  param.initstring =
+      param.initstring + std::string(" __sockhandle__=") + tostr(sock) + " ";
   // detach from the server list
   // now, this takes advantage of the Zookeeper feature that
   // every machine sees all changes in the same order.
@@ -132,5 +122,4 @@ bool init_param_from_zookeeper(dc_init_param& param) {
   return true;
 }
 
-} // namespace graphlab
-
+}  // namespace graphlab

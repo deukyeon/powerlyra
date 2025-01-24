@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,7 +25,7 @@
 #include <graphlab/scheduler/fifo_scheduler.hpp>
 #include <graphlab/scheduler/get_message_priority.hpp>
 #include <graphlab/scheduler/ischeduler.hpp>
- #include <graphlab/scheduler/priority_scheduler.hpp>
+#include <graphlab/scheduler/priority_scheduler.hpp>
 #include <graphlab/scheduler/queued_fifo_scheduler.hpp>
 #include <graphlab/scheduler/scheduler_factory.hpp>
 #include <graphlab/scheduler/scheduler_list.hpp>

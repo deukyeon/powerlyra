@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef GRAPHLAB_SERIALIZABLE
 #define GRAPHLAB_SERIALIZABLE
 #include <boost/concept/assert.hpp>
@@ -30,32 +29,31 @@
 #include <graphlab/serialization/serialize.hpp>
 namespace graphlab {
 
-  /**
-   * \brief Concept checks if a type T is serializable.
-   *
-   * This is a concept checking class for boost::concept and can be 
-   * used to enforce that a type T is \ref sec_serializable, assignable and 
-   * default constructible. 
-   *
-   * \tparam T The type to test for serializability.
-   */
-  template <typename T>
-  class Serializable : boost::Assignable<T>, boost::DefaultConstructible<T> {
-   public:
-    BOOST_CONCEPT_USAGE(Serializable) {
-      std::stringstream strm;
-      oarchive oarc(strm);
-      iarchive iarc(strm);
-      const T const_t = T();
-      T t = T();
-      // A compiler error on these lines implies that your type is not
-      // serializable.  See the documentaiton on how to make
-      // serializable type.
-      oarc << const_t;
-      iarc >> t;
-    }
-  };
+/**
+ * \brief Concept checks if a type T is serializable.
+ *
+ * This is a concept checking class for boost::concept and can be
+ * used to enforce that a type T is \ref sec_serializable, assignable and
+ * default constructible.
+ *
+ * \tparam T The type to test for serializability.
+ */
+template <typename T>
+class Serializable : boost::Assignable<T>, boost::DefaultConstructible<T> {
+ public:
+  BOOST_CONCEPT_USAGE(Serializable) {
+    std::stringstream strm;
+    oarchive oarc(strm);
+    iarchive iarc(strm);
+    const T const_t = T();
+    T t = T();
+    // A compiler error on these lines implies that your type is not
+    // serializable.  See the documentaiton on how to make
+    // serializable type.
+    oarc << const_t;
+    iarc >> t;
+  }
+};
 
-} // namespace graphlab
+}  // namespace graphlab
 #endif
-

@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,10 +20,8 @@
  *
  */
 
-
 #include <iostream>
 #include <vector>
-
 
 #include <graphlab/util/hdfs.hpp>
 
@@ -36,7 +34,7 @@ int main(int argc, char **argv) {
     file << "Hello World\n";
     file.close();
     std::vector<std::string> files = hdfs.list_files("/tmp/");
-    for(size_t i = 0; i < files.size(); ++i) 
+    for (size_t i = 0; i < files.size(); ++i)
       std::cout << files[i] << std::endl;
   }
 
@@ -50,5 +48,5 @@ int main(int argc, char **argv) {
     std::cout << answer << std::endl;
     file.close();
   }
-    std::cout << "Done!" << std::endl;
+  std::cout << "Done!" << std::endl;
 }

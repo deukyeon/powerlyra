@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,6 @@
  *      http://www.graphlab.ml.cmu.edu
  *
  */
-
 
 #ifndef DC_STREAM_RECEIVE_HPP
 #define DC_STREAM_RECEIVE_HPP
@@ -44,43 +43,37 @@ namespace dc_impl {
   The job of the receiver is to take as input a byte stream
   (as received from the socket) and cut it up into meaningful chunks.
   This can be thought of as a receiving end of a multiplexor.
-  
+
   This is the default unbuffered receiver.
 */
-class dc_stream_receive: public dc_receive{
+class dc_stream_receive : public dc_receive {
  public:
-  
-  dc_stream_receive(distributed_control* dc, procid_t associated_proc): 
-                  writebuffer(NULL), write_buffer_written(0), dc(dc), 
-                  associated_proc(associated_proc) { 
+  dc_stream_receive(distributed_control* dc, procid_t associated_proc)
+      : writebuffer(NULL),
+        write_buffer_written(0),
+        dc(dc),
+        associated_proc(associated_proc) {
     writebuffer = (char*)malloc(RECEIVE_BUFFER_SIZE);
     write_buffer_len = RECEIVE_BUFFER_SIZE;
   }
 
  private:
-
   char* writebuffer;
   size_t write_buffer_written;
   size_t write_buffer_len;
-  
+
   /// pointer to the owner
   distributed_control* dc;
 
   procid_t associated_proc;
-  
+
   void shutdown();
 
-  
   char* get_buffer(size_t& retbuflength);
-  
 
-  char* advance_buffer(char* c, size_t wrotelength, 
-                              size_t& retbuflength);
-  
+  char* advance_buffer(char* c, size_t wrotelength, size_t& retbuflength);
 };
 
-
-} // namespace dc_impl
-} // namespace graphlab
+}  // namespace dc_impl
+}  // namespace graphlab
 #endif
-

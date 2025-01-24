@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #include <graphlab/rpc/get_current_process_hash.hpp>
 #include <graphlab/ui/mongoose/mongoose.h>
 
@@ -34,7 +33,6 @@
 #endif
 namespace graphlab {
 namespace dc_impl {
-
 
 #ifdef __linux
 std::string get_current_process_hash() {
@@ -53,10 +51,10 @@ std::string get_current_process_hash() {
 
   pid_t pid = getpid();
   char pathbuf[PROC_PIDPATHINFO_MAXSIZE];
-  int pidsuccess = proc_pidpath (pid, pathbuf, sizeof(pathbuf));
+  int pidsuccess = proc_pidpath(pid, pathbuf, sizeof(pathbuf));
   if (pidsuccess > 0) {
     char buf[33];
-    mg_md5_file(buf,  pathbuf);
+    mg_md5_file(buf, pathbuf);
     buf[32] = '\0';
     ret = buf;
   }
@@ -67,5 +65,5 @@ std::string get_current_process_hash() {
 }
 #endif
 
-} // dc_impl
-} // graphlab
+}  // namespace dc_impl
+}  // namespace graphlab

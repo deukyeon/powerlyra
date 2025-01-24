@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef GRAPHLAB_SERIALIZE_LIST_HPP
 #define GRAPHLAB_SERIALIZE_LIST_HPP
 
@@ -30,26 +29,24 @@
 #include <graphlab/serialization/oarchive.hpp>
 #include <graphlab/serialization/iterator.hpp>
 
-
 namespace graphlab {
 namespace archive_detail {
-  /** serializes a list  */
-  template <typename OutArcType, typename T>
-  struct serialize_impl<OutArcType, std::list<T>, false > {
-  static void exec(OutArcType& oarc, const std::list<T>& vec){
-    serialize_iterator(oarc,vec.begin(),vec.end(), vec.size());
+/** serializes a list  */
+template <typename OutArcType, typename T>
+struct serialize_impl<OutArcType, std::list<T>, false> {
+  static void exec(OutArcType& oarc, const std::list<T>& vec) {
+    serialize_iterator(oarc, vec.begin(), vec.end(), vec.size());
   }
-  };
+};
 
-  /** deserializes a list  */
-  template <typename InArcType, typename T>
-  struct deserialize_impl<InArcType, std::list<T>, false > {
-  static void exec(InArcType& iarc, std::list<T>& vec){
+/** deserializes a list  */
+template <typename InArcType, typename T>
+struct deserialize_impl<InArcType, std::list<T>, false> {
+  static void exec(InArcType& iarc, std::list<T>& vec) {
     vec.clear();
-    deserialize_iterator<T>(iarc, std::inserter(vec,vec.end()));
+    deserialize_iterator<T>(iarc, std::inserter(vec, vec.end()));
   }
-  };
-} // archive_detail  
-} // graphlab
-#endif 
-
+};
+}  // namespace archive_detail
+}  // namespace graphlab
+#endif

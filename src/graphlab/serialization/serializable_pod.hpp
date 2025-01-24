@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,19 +20,17 @@
  *
  */
 
-
 #ifndef SERIALIZABLE_POD_HPP
 #define SERIALIZABLE_POD_HPP
 
 #include <graphlab/serialization/is_pod.hpp>
 
-#define SERIALIZABLE_POD(tname)                   \
-namespace graphlab {                              \
-    template <>                                   \
-    struct gl_is_pod<tname> {                     \
-      BOOST_STATIC_CONSTANT(bool, value = true);  \
-    };                                            \
-}
+#define SERIALIZABLE_POD(tname)                \
+  namespace graphlab {                         \
+  template <>                                  \
+  struct gl_is_pod<tname> {                    \
+    BOOST_STATIC_CONSTANT(bool, value = true); \
+  };                                           \
+  }
 
 #endif
-

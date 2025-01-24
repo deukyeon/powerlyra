@@ -10,20 +10,18 @@
 #include "MurmurHash3.h"
 
 // Here I define the basic "var" variant type.
-// which is basically a boost::variant around a double, string, vector and matrix
+// which is basically a boost::variant around a double, string, vector and
+// matrix
 
 namespace graphlab {
 namespace extension {
 
-// the key here is that we are going to lock down the 
+// the key here is that we are going to lock down the
 // type system for GraphLab to a wrapped boost::variant
-typedef boost::variant<double, 
-                       std::string,
-                       Eigen::VectorXd,
-                       Eigen::MatrixXd> var;
+typedef boost::variant<double, std::string, Eigen::VectorXd, Eigen::MatrixXd>
+    var;
 
 extern var& operator+=(var& value, const var& other);
-   
 
 /**
  * Gets a typechecked value from the variant var
@@ -53,55 +51,62 @@ inline T& get(var& v) {
   return *val;
 }
 
-
-
 //////////////////////////////////////////////////////////////
 // Here we briefly escape out tp the global namespace       //
 // to define serializers and deserializers for the var      //
 //////////////////////////////////////////////////////////////
-}}
+}  // namespace extension
+}  // namespace graphlab
 
 BEGIN_OUT_OF_PLACE_SAVE(oarc, graphlab::extension::var, value) {
-  if ( const double* val = boost::get<double>( &value) ) {
+  if (const double* val = boost::get<double>(&value)) {
     oarc << char(1) << (*val);
-  } else if ( const std::string* val = boost::get<std::string>( &value) ) {
+  } else if (const std::string* val = boost::get<std::string>(&value)) {
     oarc << char(2) << (*val);
-  } else if ( const Eigen::VectorXd* val = boost::get<Eigen::VectorXd>( &value) ) {
+  } else if (const Eigen::VectorXd* val = boost::get<Eigen::VectorXd>(&value)) {
     oarc << char(3) << (*val);
-  } else if ( const Eigen::MatrixXd* val = boost::get<Eigen::MatrixXd>( &value) ) {
+  } else if (const Eigen::MatrixXd* val = boost::get<Eigen::MatrixXd>(&value)) {
     oarc << char(4) << (*val);
   }
-} END_OUT_OF_PLACE_SAVE()
-
+}
+END_OUT_OF_PLACE_SAVE()
 
 BEGIN_OUT_OF_PLACE_LOAD(iarc, graphlab::extension::var, value) {
   char content_type;
   iarc >> content_type;
   if (content_type == 1) {
-    double val; iarc >> val; value = val;
+    double val;
+    iarc >> val;
+    value = val;
   } else if (content_type == 2) {
-    std::string val; iarc >> val; value = val;
+    std::string val;
+    iarc >> val;
+    value = val;
   } else if (content_type == 3) {
-    Eigen::VectorXd val; iarc >> val; value = val;
+    Eigen::VectorXd val;
+    iarc >> val;
+    value = val;
   } else if (content_type == 4) {
-    Eigen::MatrixXd val; iarc >> val; value = val;
+    Eigen::MatrixXd val;
+    iarc >> val;
+    value = val;
   }
-} END_OUT_OF_PLACE_LOAD()
-namespace graphlab { namespace extension { 
+}
+END_OUT_OF_PLACE_LOAD()
+namespace graphlab {
+namespace extension {
 
 //////////////////////////////////////////////////////////////
 // Returning to your regular progamming                     //
 //////////////////////////////////////////////////////////////
 
-
-
 typedef uint32_t key_id_type;
 
 /** vars is a dynamic struct with a mapping from string->var.
-  * Internally, it is stored as key_id_type->var where the key is
-  * a hash value of the string.
-  * we assume that the murmurhash will never collide for the small
-  * namespaces considered.
+ * Internally, it is stored as key_id_type->var where the key is
+ * a hash value of the string.
+ * we assume that the murmurhash will never collide for the small
+ * namespaces considered.
  */
 inline key_id_type get_id_from_name(const char* key) {
   uint32_t ret = 0;
@@ -115,11 +120,7 @@ inline key_id_type get_id_from_name(const std::string& key) {
   return ret;
 }
 // overload for int
-inline key_id_type get_id_from_name(key_id_type key) {
-  return key;
-}
-
-
+inline key_id_type get_id_from_name(key_id_type key) { return key; }
 
 /**
  * A dynamic struct storing mappings from string->var where var
@@ -130,13 +131,12 @@ struct vars {
   std::vector<std::pair<key_id_type, var*> > table;
   static var empty_var;
   simple_spinlock lock;
-  vars() { }
-  ~vars() {
-    }
+  vars() {}
+  ~vars() {}
 
   void clear() {
     lock.lock();
-    for(const std::pair<key_id_type, var*>& p: table) {
+    for (const std::pair<key_id_type, var*>& p : table) {
       delete p.second;
     }
     table.clear();
@@ -145,7 +145,7 @@ struct vars {
 
   vars& operator=(const vars& v) {
     clear();
-    for (size_t i = 0;i < v.table.size(); ++i) {
+    for (size_t i = 0; i < v.table.size(); ++i) {
       field(v.table[i].first) = *(v.table[i].second);
     }
     return *this;
@@ -154,39 +154,28 @@ struct vars {
   void save(oarchive& oarc) const {
     lock.lock();
     oarc << (size_t)table.size();
-    for(const std::pair<key_id_type, var*>& p: table) {
+    for (const std::pair<key_id_type, var*>& p : table) {
       oarc << p.first << (*p.second);
     }
     lock.unlock();
   }
-  
+
   void load(iarchive& iarc) {
     size_t tsize;
     iarc >> tsize;
-    for (size_t i = 0;i < tsize; ++i) {
-      key_id_type key; iarc >> key;
+    for (size_t i = 0; i < tsize; ++i) {
+      key_id_type key;
+      iarc >> key;
       iarc >> field(key);
     }
   }
 
-  var& operator()(const std::string& key) {
-    return field(key);
-  }
-  const var& operator()(const std::string& key) const {
-    return field(key);
-  }
-  var& operator()(const char* key) {
-    return field(key);
-  }
-  const var& operator()(const char* key) const {
-    return field(key);
-  }
-  var& operator()(key_id_type key) {
-    return field(key);
-  }
-  const var& operator()(key_id_type key) const {
-    return field(key);
-  }
+  var& operator()(const std::string& key) { return field(key); }
+  const var& operator()(const std::string& key) const { return field(key); }
+  var& operator()(const char* key) { return field(key); }
+  const var& operator()(const char* key) const { return field(key); }
+  var& operator()(key_id_type key) { return field(key); }
+  const var& operator()(key_id_type key) const { return field(key); }
 
   var& field(const std::string& _key) {
     key_id_type key = get_id_from_name(_key);
@@ -197,7 +186,7 @@ struct vars {
     key_id_type key = get_id_from_name(_key);
     return field(key);
   }
-  
+
   var& field(const char* _key) {
     key_id_type key = get_id_from_name(_key);
     return field(key);
@@ -206,11 +195,11 @@ struct vars {
     key_id_type key = get_id_from_name(_key);
     return field(key);
   }
-   
+
   var& field(key_id_type key) {
     lock.lock();
 
-    for(std::pair<key_id_type , var*>& p: table) {
+    for (std::pair<key_id_type, var*>& p : table) {
       if (p.first == key) {
         lock.unlock();
         return *(p.second);
@@ -226,21 +215,18 @@ struct vars {
   }
 
   const var& field(key_id_type key) const {
-    for(const std::pair<key_id_type , var*>& p: table) {
+    for (const std::pair<key_id_type, var*>& p : table) {
       if (p.first == key) {
         return *(p.second);
       }
     }
     return empty_var;
   }
-
-}; 
-
-
+};
 
 typedef distributed_graph<vars, vars> internal_graph_type;
 
-} // namespace extension
-} // namespace graphlab
+}  // namespace extension
+}  // namespace graphlab
 
 #endif

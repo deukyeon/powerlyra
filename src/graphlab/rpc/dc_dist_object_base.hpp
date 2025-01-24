@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef GRAPHLAB_DC_DIST_OBJECT_BASE_HPP
 #define GRAPHLAB_DC_DIST_OBJECT_BASE_HPP
 #include <vector>
@@ -33,16 +32,15 @@ namespace dc_impl {
  * \internal
 Provides an interface for extracting and updating counters from dc_dist_objects
 */
-class dc_dist_object_base{
+class dc_dist_object_base {
  public:
-
-  virtual ~dc_dist_object_base() { } 
+  virtual ~dc_dist_object_base() {}
 
   /// Increment the number of calls sent from this object
   virtual void inc_calls_sent(procid_t source) = 0;
   /// Increment the number of calls received by this object
   virtual void inc_calls_received(procid_t dest) = 0;
-  
+
   /// Increment the number of bytes sent from this object
   virtual void inc_bytes_sent(procid_t target, size_t bytes) = 0;
 
@@ -52,8 +50,7 @@ class dc_dist_object_base{
   virtual size_t calls_sent() const = 0;
 };
 
-}
-}
+}  // namespace dc_impl
+}  // namespace graphlab
 
 #endif
-

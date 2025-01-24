@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,44 +23,38 @@
 #include <graphlab/util/web_util.hpp>
 #include <graphlab/util/stl_util.hpp>
 
-
-
 namespace graphlab {
-  namespace web_util {
+namespace web_util {
 
-    std::string url_decode(const std::string& url) {
+std::string url_decode(const std::string& url) {
 #define HEXTOI(x) (isdigit(x) ? x - '0' : x - 'W')
-      std::string ret_str;
-      for (size_t i = 0; i < url.size(); ++i) {
-        if (url[i] == '%' && 
-            (i+1 < url.size() && isxdigit(url[i+1])) &&
-            (i+1 < url.size() && isxdigit(url[i+2]))) {
-          const char a = tolower(url[i+1]);
-          const char b = tolower(url[i+2]);
-          const char new_char = ((HEXTOI(a) << 4) | HEXTOI(b));
-          i += 2;
-          ret_str.push_back(new_char);
-        } else if (url[i] == '+') {
-          ret_str.push_back(' ');
-        } else {
-          ret_str.push_back(url[i]);
-        }
-      }
+  std::string ret_str;
+  for (size_t i = 0; i < url.size(); ++i) {
+    if (url[i] == '%' && (i + 1 < url.size() && isxdigit(url[i + 1])) &&
+        (i + 1 < url.size() && isxdigit(url[i + 2]))) {
+      const char a = tolower(url[i + 1]);
+      const char b = tolower(url[i + 2]);
+      const char new_char = ((HEXTOI(a) << 4) | HEXTOI(b));
+      i += 2;
+      ret_str.push_back(new_char);
+    } else if (url[i] == '+') {
+      ret_str.push_back(' ');
+    } else {
+      ret_str.push_back(url[i]);
+    }
+  }
 #undef HEXTOI
-      return ret_str;
-    } // end of url decode
+  return ret_str;
+}  // end of url decode
 
+std::map<std::string, std::string> parse_query(const std::string& query) {
+  std::vector<std::string> pairs = graphlab::strsplit(query, ",=", true);
+  std::map<std::string, std::string> map;
+  for (size_t i = 0; i + 1 < pairs.size(); i += 2)
+    map[url_decode(pairs[i])] = url_decode(pairs[i + 1]);
+  return map;
+}  // end of parse url query
 
+}  // end of namespace web_util
 
-    std::map<std::string, std::string> parse_query(const std::string& query) {
-      std::vector<std::string> pairs = graphlab::strsplit(query, ",=", true);
-      std::map<std::string, std::string> map;
-      for(size_t i = 0; i+1 < pairs.size(); i+=2) 
-        map[url_decode(pairs[i])] = url_decode(pairs[i+1]);
-      return map;
-    } // end of parse url query
-
-  } // end of namespace web_util
- 
-}; // end of namespace GraphLab
-
+};  // namespace graphlab

@@ -20,7 +20,6 @@
  *
  */
 
-
 #include <graphlab/rpc/dc.hpp>
 
 #ifndef GRAPHLAB_DC_DIST_OBJECT_HPP
@@ -45,9 +44,7 @@
 
 #define BARRIER_BRANCH_FACTOR 128
 
-
 namespace graphlab {
-
 
 /**
 \ingroup rpc
@@ -112,9 +109,9 @@ a reasonably large amount of state, so frequent construction and deletion
 of objects is not recommended.
 */
 template <typename T>
-class dc_dist_object : public dc_impl::dc_dist_object_base{
+class dc_dist_object : public dc_impl::dc_dist_object_base {
  private:
-  distributed_control &dc_;
+  distributed_control& dc_;
   size_t obj_id;
   size_t control_obj_id;  // object id of this object
   T* owner;
@@ -122,41 +119,37 @@ class dc_dist_object : public dc_impl::dc_dist_object_base{
   std::vector<atomic<size_t> > callssent;
   std::vector<atomic<size_t> > bytessent;
   // make operator= private
-  dc_dist_object<T>& operator=(const dc_dist_object<T> &d) {return *this;}
+  dc_dist_object<T>& operator=(const dc_dist_object<T>& d) { return *this; }
   friend class distributed_control;
-
 
   DECLARE_TRACER(distobj_remote_call_time);
 
-
  public:
-
   /// \cond GRAPHLAB_INTERNAL
 
   /// Should not be used by the user
   void inc_calls_received(procid_t p) {
     if (!full_barrier_in_effect) {
-        size_t t = callsreceived[p].inc();
-        if (full_barrier_in_effect) {
-          if (t == calls_to_receive[p]) {
-            // if it was me who set the bit
-            if (procs_complete.set_bit(p) == false) {
-              // then decrement the incomplete count.
-              // if it was me to decreased it to 0
-              // lock and signal
-              full_barrier_lock.lock();
-              if (num_proc_recvs_incomplete.dec() == 0) {
-                full_barrier_cond.signal();
-              }
-              full_barrier_lock.unlock();
+      size_t t = callsreceived[p].inc();
+      if (full_barrier_in_effect) {
+        if (t == calls_to_receive[p]) {
+          // if it was me who set the bit
+          if (procs_complete.set_bit(p) == false) {
+            // then decrement the incomplete count.
+            // if it was me to decreased it to 0
+            // lock and signal
+            full_barrier_lock.lock();
+            if (num_proc_recvs_incomplete.dec() == 0) {
+              full_barrier_cond.signal();
             }
+            full_barrier_lock.unlock();
           }
         }
-    }
-    else {
-      //check the proc I just incremented.
-      // If I just exceeded the required size, I need
-      // to decrement the full barrier counter
+      }
+    } else {
+      // check the proc I just incremented.
+      //  If I just exceeded the required size, I need
+      //  to decrement the full barrier counter
       if (callsreceived[p].inc() == calls_to_receive[p]) {
         // if it was me who set the bit
         if (procs_complete.set_bit(p) == false) {
@@ -174,22 +167,15 @@ class dc_dist_object : public dc_impl::dc_dist_object_base{
   }
 
   /// Should not be used by the user
-  void inc_calls_sent(procid_t p) {
-    callssent[p].inc();
-  }
+  void inc_calls_sent(procid_t p) { callssent[p].inc(); }
 
   /// Should not be used by the user
-  void inc_bytes_sent(procid_t p, size_t bytes) {
-    bytessent[p].inc(bytes);
-  }
+  void inc_bytes_sent(procid_t p, size_t bytes) { bytessent[p].inc(bytes); }
 
   /// Should not be used by the user
-  size_t get_obj_id() const {
-    return obj_id;
-  }
+  size_t get_obj_id() const { return obj_id; }
   /// \endcond GRAPHLAB_INTERNAL
  public:
-
   /**
    * \brief Constructs a distributed object context.
    *
@@ -200,8 +186,7 @@ class dc_dist_object : public dc_impl::dc_dist_object_base{
    *            communication control plane.
    * \param owner The object to associate with
    */
-  dc_dist_object(distributed_control &dc_, T* owner):
-    dc_(dc_),owner(owner) {
+  dc_dist_object(distributed_control& dc_, T* owner) : dc_(dc_), owner(owner) {
     callssent.resize(dc_.numprocs());
     callsreceived.resize(dc_.numprocs());
     bytessent.resize(dc_.numprocs());
@@ -210,31 +195,27 @@ class dc_dist_object : public dc_impl::dc_dist_object_base{
     //------ Initialize the gatherer ------
     gather_receive.resize(dc_.numprocs());
 
-
     //------- Initialize the Barrier ----------
     child_barrier_counter.value = 0;
     barrier_sense = 1;
     barrier_release = -1;
 
-
     // compute my children
     childbase = size_t(dc_.procid()) * BARRIER_BRANCH_FACTOR + 1;
     if (childbase >= dc_.numprocs()) {
       numchild = 0;
-    }
-    else {
-      size_t maxchild = std::min<size_t>(dc_.numprocs(),
-                                         childbase + BARRIER_BRANCH_FACTOR);
+    } else {
+      size_t maxchild =
+          std::min<size_t>(dc_.numprocs(), childbase + BARRIER_BRANCH_FACTOR);
       numchild = (procid_t)(maxchild - childbase);
     }
 
-    parent =  (procid_t)((dc_.procid() - 1) / BARRIER_BRANCH_FACTOR)   ;
+    parent = (procid_t)((dc_.procid() - 1) / BARRIER_BRANCH_FACTOR);
 
     //-------- Initialize all gather --------------
     ab_child_barrier_counter.value = 0;
     ab_barrier_sense = 1;
     ab_barrier_release = -1;
-
 
     //-------- Initialize the full barrier ---------
 
@@ -247,14 +228,15 @@ class dc_dist_object : public dc_impl::dc_dist_object_base{
 
     //-------- Initialize Tracer
     std::string name = typeid(T).name();
-    INITIALIZE_TRACER(distobj_remote_call_time,
-                      std::string("dc_dist_object ") + name + ": remote_call time");
+    INITIALIZE_TRACER(
+        distobj_remote_call_time,
+        std::string("dc_dist_object ") + name + ": remote_call time");
   }
 
   /// \brief The number of function calls received by this object
   size_t calls_received() const {
     size_t ctr = 0;
-    for (size_t i = 0;i < numprocs(); ++i) {
+    for (size_t i = 0; i < numprocs(); ++i) {
       ctr += callsreceived[i].value;
     }
     return ctr;
@@ -263,7 +245,7 @@ class dc_dist_object : public dc_impl::dc_dist_object_base{
   /// \brief The number of function calls sent from this object
   size_t calls_sent() const {
     size_t ctr = 0;
-    for (size_t i = 0;i < numprocs(); ++i) {
+    for (size_t i = 0; i < numprocs(); ++i) {
       ctr += callssent[i].value;
     }
     return ctr;
@@ -274,110 +256,112 @@ class dc_dist_object : public dc_impl::dc_dist_object_base{
    */
   size_t bytes_sent() const {
     size_t ctr = 0;
-    for (size_t i = 0;i < numprocs(); ++i) {
+    for (size_t i = 0; i < numprocs(); ++i) {
       ctr += bytessent[i].value;
     }
     return ctr;
   }
 
   /// \brief A reference to the underlying distributed_control object
-  distributed_control& dc() {
-    return dc_;
-  }
+  distributed_control& dc() { return dc_; }
 
   /// \brief A const reference to the underlying distributed_control object
-  const distributed_control& dc() const {
-    return dc_;
-  }
+  const distributed_control& dc() const { return dc_; }
 
   /// \brief The current process ID
-  inline procid_t procid() const {
-    return dc_.procid();
-  }
+  inline procid_t procid() const { return dc_.procid(); }
 
   /// \brief The number of processes in the distributed program.
-  inline procid_t numprocs() const {
-    return dc_.numprocs();
-  }
+  inline procid_t numprocs() const { return dc_.numprocs(); }
 
   /**
    * \brief A wrapper on cout, that outputs only on machine 0
    */
-  std::ostream& cout() const {
-    return dc_.cout();
-  }
+  std::ostream& cout() const { return dc_.cout(); }
 
   /**
    * \brief A wrapper on cerr, that outputs only on machine 0
    */
-  std::ostream& cerr() const {
-    return dc_.cout();
-  }
+  std::ostream& cerr() const { return dc_.cout(); }
 
   /// \cond GRAPHLAB_INTERNAL
 
-    /*
-  This generates the interface functions for the standard calls, basic calls
-  The function looks like this:
-  \code
-  template<typename F , typename T0> void remote_call (procid_t target, F remote_function , T0 i0 )
-  {
-      ASSERT_LT(target, dc_.senders.size());
-      if ((STANDARD_CALL & CONTROL_PACKET) == 0) inc_calls_sent(target);
-      dc_impl::object_call_issue1 <T, F , T0> ::exec(dc_.senders[target],
-                                                      STANDARD_CALL,
-                                                      target,obj_id,
-                                                      remote_function ,
-                                                      i0 );
+  /*
+This generates the interface functions for the standard calls, basic calls
+The function looks like this:
+\code
+template<typename F , typename T0> void remote_call (procid_t target, F
+remote_function , T0 i0 )
+{
+    ASSERT_LT(target, dc_.senders.size());
+    if ((STANDARD_CALL & CONTROL_PACKET) == 0) inc_calls_sent(target);
+    dc_impl::object_call_issue1 <T, F , T0> ::exec(dc_.senders[target],
+                                                    STANDARD_CALL,
+                                                    target,obj_id,
+                                                    remote_function ,
+                                                    i0 );
+}
+
+The argument to the RPC_INTERFACE_GENERATOR are:
+  - the name of the rpc call ("remote_call" in the first one)
+  - the name of the issueing processor ("object_call_issue")
+  - The flags to set on the call ("STANDARD_CALL")
+
+  The call can be issued with
+  rmi.remote_call(target,
+                  &object_type::function_name,
+                  arg1,
+                  arg2...)
+\endcode
+*/
+#define GENARGS(Z, N, _) BOOST_PP_CAT(T, N) BOOST_PP_CAT(i, N)
+#define GENI(Z, N, _) BOOST_PP_CAT(i, N)
+#define GENT(Z, N, _) BOOST_PP_CAT(T, N)
+#define GENARC(Z, N, _) arc << BOOST_PP_CAT(i, N);
+
+#define RPC_INTERFACE_GENERATOR(Z, N, FNAME_AND_CALL)                        \
+  template <typename F BOOST_PP_COMMA_IF(N)                                  \
+                BOOST_PP_ENUM_PARAMS(N, typename T)>                         \
+  void BOOST_PP_TUPLE_ELEM(3, 0, FNAME_AND_CALL)(                            \
+      procid_t target,                                                       \
+      F remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N, GENARGS, _)) { \
+    ASSERT_LT(target, dc_.senders.size());                                   \
+    BEGIN_TRACEPOINT(distobj_remote_call_time);                              \
+    if ((BOOST_PP_TUPLE_ELEM(3, 2, FNAME_AND_CALL) & CONTROL_PACKET) == 0)   \
+      inc_calls_sent(target);                                                \
+    BOOST_PP_CAT(                                                            \
+        BOOST_PP_TUPLE_ELEM(3, 1, FNAME_AND_CALL),                           \
+        N)<T, F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(                   \
+                  N, T)>::exec(this, dc_.senders[target],                    \
+                               BOOST_PP_TUPLE_ELEM(3, 2, FNAME_AND_CALL),    \
+                               target, obj_id,                               \
+                               remote_function BOOST_PP_COMMA_IF(N)          \
+                                   BOOST_PP_ENUM(N, GENI, _));               \
+    END_TRACEPOINT(distobj_remote_call_time);                                \
   }
 
-  The argument to the RPC_INTERFACE_GENERATOR are:
-    - the name of the rpc call ("remote_call" in the first one)
-    - the name of the issueing processor ("object_call_issue")
-    - The flags to set on the call ("STANDARD_CALL")
-
-    The call can be issued with
-    rmi.remote_call(target,
-                    &object_type::function_name,
-                    arg1,
-                    arg2...)
-  \endcode
-  */
-  #define GENARGS(Z,N,_)  BOOST_PP_CAT(T, N) BOOST_PP_CAT(i, N)
-  #define GENI(Z,N,_) BOOST_PP_CAT(i, N)
-  #define GENT(Z,N,_) BOOST_PP_CAT(T, N)
-  #define GENARC(Z,N,_) arc << BOOST_PP_CAT(i, N);
-
-  #define RPC_INTERFACE_GENERATOR(Z,N,FNAME_AND_CALL) \
-  template<typename F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(N, typename T)> \
-  void  BOOST_PP_TUPLE_ELEM(3,0,FNAME_AND_CALL) (procid_t target, F remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N,GENARGS ,_) ) {  \
-    ASSERT_LT(target, dc_.senders.size()); \
-    BEGIN_TRACEPOINT(distobj_remote_call_time); \
-    if ((BOOST_PP_TUPLE_ELEM(3,2,FNAME_AND_CALL) & CONTROL_PACKET) == 0) inc_calls_sent(target); \
-    BOOST_PP_CAT( BOOST_PP_TUPLE_ELEM(3,1,FNAME_AND_CALL),N) \
-        <T, F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(N, T)> \
-          ::exec(this, dc_.senders[target],  BOOST_PP_TUPLE_ELEM(3,2,FNAME_AND_CALL), target,obj_id, remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N,GENI ,_) ); \
-    END_TRACEPOINT(distobj_remote_call_time); \
-  }   \
-
   /*
-  Generates the interface functions. 3rd argument is a tuple (interface name, issue name, flags)
+  Generates the interface functions. 3rd argument is a tuple (interface name,
+  issue name, flags)
   */
-  BOOST_PP_REPEAT(7, RPC_INTERFACE_GENERATOR, (remote_call, dc_impl::object_call_issue, STANDARD_CALL) )
-  BOOST_PP_REPEAT(7, RPC_INTERFACE_GENERATOR, (control_call,dc_impl::object_call_issue, (STANDARD_CALL | CONTROL_PACKET)) )
+  BOOST_PP_REPEAT(7, RPC_INTERFACE_GENERATOR,
+                  (remote_call, dc_impl::object_call_issue, STANDARD_CALL))
+  BOOST_PP_REPEAT(7, RPC_INTERFACE_GENERATOR,
+                  (control_call, dc_impl::object_call_issue,
+                   (STANDARD_CALL | CONTROL_PACKET)))
 
   /**
    * This generates a "split call". Where the header of the call message
    * is written to with split_call_begin, and the message actually sent with
-   * split_call_end(). It is then up to the user to serialize the message arguments
-   * into the oarchive returned. The split call can provide performance gains 
-   * when the contents of the message are large, since this allows the user to
-   * control the serialization process. 
+   * split_call_end(). It is then up to the user to serialize the message
+   * arguments into the oarchive returned. The split call can provide
+   * performance gains when the contents of the message are large, since this
+   * allows the user to control the serialization process.
    *
    * Example:
    * \code
    * struct mystruct {
-   *   void function_to_call(size_t len, wild_pointer w) { 
+   *   void function_to_call(size_t len, wild_pointer w) {
    *      // w will contain all the serialized contents of ..stuff...
    *   }
    *
@@ -386,13 +370,14 @@ class dc_dist_object : public dc_impl::dc_dist_object_base{
    *     (*oarc) << ... stuff...
    *     rmi.split_call_end(1,  // to machine 1
    *                        oarc);
-   *     
+   *
    *   }
    * }
    * \endcode
    */
   oarchive* split_call_begin(void (T::*remote_function)(size_t, wild_pointer)) {
-    return dc_impl::object_split_call<T, void(T::*)(size_t, wild_pointer)>::split_call_begin(this, obj_id, remote_function);
+    return dc_impl::object_split_call<T, void (T::*)(size_t, wild_pointer)>::
+        split_call_begin(this, obj_id, remote_function);
   }
 
   /**
@@ -401,39 +386,44 @@ class dc_dist_object : public dc_impl::dc_dist_object_base{
    */
   void split_call_end(procid_t target, oarchive* oarc) {
     inc_calls_sent(target);
-    return dc_impl::object_split_call<T, void(T::*)(size_t, wild_pointer)>::split_call_end(this, oarc, dc_.senders[target],
-                                                                           target, STANDARD_CALL);
+    return dc_impl::object_split_call<T, void (T::*)(size_t, wild_pointer)>::
+        split_call_end(this, oarc, dc_.senders[target], target, STANDARD_CALL);
   }
 
   /**
    * Cancels a split call began with split_call_begin
    */
   void split_call_cancel(oarchive* oarc) {
-    return dc_impl::object_split_call<T, void(T::*)(size_t, wild_pointer)>::split_call_cancel(oarc);
+    return dc_impl::object_split_call<
+        T, void (T::*)(size_t, wild_pointer)>::split_call_cancel(oarc);
   }
 
-
-
-  #define BROADCAST_INTERFACE_GENERATOR(Z,N,FNAME_AND_CALL) \
-  template<typename Iterator, typename F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(N, typename T)> \
-  void  BOOST_PP_TUPLE_ELEM(3,0,FNAME_AND_CALL) (Iterator target_begin, Iterator target_end, \
-                      F remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N,GENARGS ,_) ) {  \
-    if (target_begin == target_end) return;               \
-    BEGIN_TRACEPOINT(distobj_remote_call_time); \
-    if ((BOOST_PP_TUPLE_ELEM(3,2,FNAME_AND_CALL) & CONTROL_PACKET) == 0) {            \
-      Iterator iter = target_begin;       \
-      while (iter != target_end){         \
-        inc_calls_sent(*iter);            \
-        ++iter;                           \
-      }                                   \
-    }                                     \
-    BOOST_PP_CAT( BOOST_PP_TUPLE_ELEM(3,1,FNAME_AND_CALL),N) \
-        <Iterator, T, F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(N, T)> \
-          ::exec(this, dc_.senders,  BOOST_PP_TUPLE_ELEM(3,2,FNAME_AND_CALL), target_begin, target_end,obj_id, remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N,GENI ,_) ); \
-    END_TRACEPOINT(distobj_remote_call_time); \
+#define BROADCAST_INTERFACE_GENERATOR(Z, N, FNAME_AND_CALL)                   \
+  template <typename Iterator, typename F BOOST_PP_COMMA_IF(N)                \
+                                   BOOST_PP_ENUM_PARAMS(N, typename T)>       \
+  void BOOST_PP_TUPLE_ELEM(3, 0, FNAME_AND_CALL)(                             \
+      Iterator target_begin, Iterator target_end,                             \
+      F remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N, GENARGS, _)) {  \
+    if (target_begin == target_end) return;                                   \
+    BEGIN_TRACEPOINT(distobj_remote_call_time);                               \
+    if ((BOOST_PP_TUPLE_ELEM(3, 2, FNAME_AND_CALL) & CONTROL_PACKET) == 0) {  \
+      Iterator iter = target_begin;                                           \
+      while (iter != target_end) {                                            \
+        inc_calls_sent(*iter);                                                \
+        ++iter;                                                               \
+      }                                                                       \
+    }                                                                         \
+    BOOST_PP_CAT(                                                             \
+        BOOST_PP_TUPLE_ELEM(3, 1, FNAME_AND_CALL),                            \
+        N)<Iterator, T, F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(N, T)>::  \
+        exec(this, dc_.senders, BOOST_PP_TUPLE_ELEM(3, 2, FNAME_AND_CALL),    \
+             target_begin, target_end, obj_id,                                \
+             remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N, GENI, _)); \
+    END_TRACEPOINT(distobj_remote_call_time);                                 \
   }
 
-  BOOST_PP_REPEAT(7, BROADCAST_INTERFACE_GENERATOR, (remote_call, dc_impl::object_broadcast_issue, STANDARD_CALL) )
+  BOOST_PP_REPEAT(7, BROADCAST_INTERFACE_GENERATOR,
+                  (remote_call, dc_impl::object_broadcast_issue, STANDARD_CALL))
 
   /*
   The generation procedure for requests are the same. The only
@@ -450,335 +440,373 @@ class dc_dist_object : public dc_impl::dc_dist_object_base{
                               arg2...)
     \endcode
   */
-#define CUSTOM_REQUEST_INTERFACE_GENERATOR(Z,N,ARGS) \
-  template<typename F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(N, typename T)> \
-    BOOST_PP_TUPLE_ELEM(2,0,ARGS) (procid_t target, size_t handle, unsigned char flags, F remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N,GENARGS ,_) ) {  \
-    ASSERT_LT(target, dc_.senders.size()); \
-    if ((flags & CONTROL_PACKET) == 0) inc_calls_sent(target); \
-    BOOST_PP_CAT( BOOST_PP_TUPLE_ELEM(2,1,ARGS),N) \
-        <T, F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(N, T)> \
-          ::exec(this, dc_.senders[target],  handle, flags, target,obj_id, remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N,GENI ,_) ); \
+#define CUSTOM_REQUEST_INTERFACE_GENERATOR(Z, N, ARGS)                       \
+  template <typename F BOOST_PP_COMMA_IF(N)                                  \
+                BOOST_PP_ENUM_PARAMS(N, typename T)>                         \
+  BOOST_PP_TUPLE_ELEM(2, 0, ARGS)                                            \
+  (procid_t target, size_t handle, unsigned char flags,                      \
+   F remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N, GENARGS, _)) {    \
+    ASSERT_LT(target, dc_.senders.size());                                   \
+    if ((flags & CONTROL_PACKET) == 0) inc_calls_sent(target);               \
+    BOOST_PP_CAT(BOOST_PP_TUPLE_ELEM(2, 1, ARGS),                            \
+                 N)<T, F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(          \
+                           N, T)>::exec(this, dc_.senders[target], handle,   \
+                                        flags, target, obj_id,               \
+                                        remote_function BOOST_PP_COMMA_IF(N) \
+                                            BOOST_PP_ENUM(N, GENI, _));      \
   }
 
-
-#define FUTURE_REQUEST_INTERFACE_GENERATOR(Z,N,ARGS) \
-  template<typename F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(N, typename T)> \
-    BOOST_PP_TUPLE_ELEM(2,0,ARGS) (procid_t target, F remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N,GENARGS ,_) ) {  \
-    ASSERT_LT(target, dc_.senders.size()); \
-    request_future<__GLRPC_FRESULT> reply;      \
-    custom_remote_request(target, reply.get_handle(), BOOST_PP_TUPLE_ELEM(2,1,ARGS), remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N,GENI ,_) ); \
-    return reply; \
-  }   
-
-  #define REQUEST_INTERFACE_GENERATOR(Z,N,ARGS) \
-  template<typename F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(N, typename T)> \
-    BOOST_PP_TUPLE_ELEM(2,0,ARGS) (procid_t target, F remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N,GENARGS ,_) ) {  \
-    ASSERT_LT(target, dc_.senders.size()); \
-    request_future<__GLRPC_FRESULT> reply;      \
-    custom_remote_request(target, reply.get_handle(),BOOST_PP_TUPLE_ELEM(2,1,ARGS), remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N,GENI ,_) ); \
-    return reply(); \
+#define FUTURE_REQUEST_INTERFACE_GENERATOR(Z, N, ARGS)                    \
+  template <typename F BOOST_PP_COMMA_IF(N)                               \
+                BOOST_PP_ENUM_PARAMS(N, typename T)>                      \
+  BOOST_PP_TUPLE_ELEM(2, 0, ARGS)                                         \
+  (procid_t target,                                                       \
+   F remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N, GENARGS, _)) { \
+    ASSERT_LT(target, dc_.senders.size());                                \
+    request_future<__GLRPC_FRESULT> reply;                                \
+    custom_remote_request(                                                \
+        target, reply.get_handle(), BOOST_PP_TUPLE_ELEM(2, 1, ARGS),      \
+        remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N, GENI, _));  \
+    return reply;                                                         \
   }
 
+#define REQUEST_INTERFACE_GENERATOR(Z, N, ARGS)                           \
+  template <typename F BOOST_PP_COMMA_IF(N)                               \
+                BOOST_PP_ENUM_PARAMS(N, typename T)>                      \
+  BOOST_PP_TUPLE_ELEM(2, 0, ARGS)                                         \
+  (procid_t target,                                                       \
+   F remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N, GENARGS, _)) { \
+    ASSERT_LT(target, dc_.senders.size());                                \
+    request_future<__GLRPC_FRESULT> reply;                                \
+    custom_remote_request(                                                \
+        target, reply.get_handle(), BOOST_PP_TUPLE_ELEM(2, 1, ARGS),      \
+        remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N, GENI, _));  \
+    return reply();                                                       \
+  }
 
   /*
   Generates the interface functions. 3rd argument is a tuple
   (interface name, issue name, flags)
   */
- BOOST_PP_REPEAT(6, CUSTOM_REQUEST_INTERFACE_GENERATOR, (void custom_remote_request, dc_impl::object_request_issue) )
- BOOST_PP_REPEAT(6, REQUEST_INTERFACE_GENERATOR, (typename dc_impl::function_ret_type<__GLRPC_FRESULT>::type remote_request, (STANDARD_CALL | FLUSH_PACKET)) )
- BOOST_PP_REPEAT(6, FUTURE_REQUEST_INTERFACE_GENERATOR, (request_future<__GLRPC_FRESULT> future_remote_request, (STANDARD_CALL)) )
+  BOOST_PP_REPEAT(6, CUSTOM_REQUEST_INTERFACE_GENERATOR,
+                  (void custom_remote_request, dc_impl::object_request_issue))
+  BOOST_PP_REPEAT(6, REQUEST_INTERFACE_GENERATOR,
+                  (typename dc_impl::function_ret_type<__GLRPC_FRESULT>::type
+                       remote_request,
+                   (STANDARD_CALL | FLUSH_PACKET)))
+  BOOST_PP_REPEAT(6, FUTURE_REQUEST_INTERFACE_GENERATOR,
+                  (request_future<__GLRPC_FRESULT> future_remote_request,
+                   (STANDARD_CALL)))
 
+#undef RPC_INTERFACE_GENERATOR
+#undef BROADCAST_INTERFACE_GENERATOR
+#undef REQUEST_INTERFACE_GENERATOR
+#undef CUSTOM_REQUEST_INTERFACE_GENERATOR
+#undef FUTURE_REQUEST_INTERFACE_GENERATOR
+/* Now generate the interface functions which allow me to call this
+dc_dist_object directly The internal calls are similar to the ones
+above. The only difference is that is that instead of 'obj_id', the
+parameter passed to the issue processor is "control_obj_id" which
+identifies the current RMI class.
+*/
+#define RPC_INTERFACE_GENERATOR(Z, N, FNAME_AND_CALL)                          \
+  template <typename F BOOST_PP_COMMA_IF(N)                                    \
+                BOOST_PP_ENUM_PARAMS(N, typename T)>                           \
+  void BOOST_PP_TUPLE_ELEM(3, 0, FNAME_AND_CALL)(                              \
+      procid_t target,                                                         \
+      F remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N, GENARGS, _)) {   \
+    ASSERT_LT(target, dc_.senders.size());                                     \
+    if ((BOOST_PP_TUPLE_ELEM(3, 2, FNAME_AND_CALL) & CONTROL_PACKET) == 0)     \
+      inc_calls_sent(target);                                                  \
+    BOOST_PP_CAT(                                                              \
+        BOOST_PP_TUPLE_ELEM(3, 1, FNAME_AND_CALL),                             \
+        N)<dc_dist_object<T>,                                                  \
+           F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(                        \
+               N, T)>::exec(this, dc_.senders[target],                         \
+                            BOOST_PP_TUPLE_ELEM(3, 2, FNAME_AND_CALL), target, \
+                            control_obj_id,                                    \
+                            remote_function BOOST_PP_COMMA_IF(N)               \
+                                BOOST_PP_ENUM(N, GENI, _));                    \
+  }
 
+  BOOST_PP_REPEAT(6, RPC_INTERFACE_GENERATOR,
+                  (internal_call, dc_impl::object_call_issue, STANDARD_CALL))
+  BOOST_PP_REPEAT(6, RPC_INTERFACE_GENERATOR,
+                  (internal_control_call, dc_impl::object_call_issue,
+                   (STANDARD_CALL | CONTROL_PACKET)))
 
-  #undef RPC_INTERFACE_GENERATOR
-  #undef BROADCAST_INTERFACE_GENERATOR
-  #undef REQUEST_INTERFACE_GENERATOR
-  #undef CUSTOM_REQUEST_INTERFACE_GENERATOR
-  #undef FUTURE_REQUEST_INTERFACE_GENERATOR
-  /* Now generate the interface functions which allow me to call this
-  dc_dist_object directly The internal calls are similar to the ones
-  above. The only difference is that is that instead of 'obj_id', the
-  parameter passed to the issue processor is "control_obj_id" which
-  identifies the current RMI class.
-  */
-  #define RPC_INTERFACE_GENERATOR(Z,N,FNAME_AND_CALL) \
-  template<typename F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(N, typename T)> \
-  void  BOOST_PP_TUPLE_ELEM(3,0,FNAME_AND_CALL) (procid_t target, F remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N,GENARGS ,_) ) {  \
-    ASSERT_LT(target, dc_.senders.size()); \
-    if ((BOOST_PP_TUPLE_ELEM(3,2,FNAME_AND_CALL) & CONTROL_PACKET) == 0) inc_calls_sent(target); \
-    BOOST_PP_CAT( BOOST_PP_TUPLE_ELEM(3,1,FNAME_AND_CALL),N) \
-        <dc_dist_object<T>, F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(N, T)> \
-          ::exec(this, dc_.senders[target],  BOOST_PP_TUPLE_ELEM(3,2,FNAME_AND_CALL), target,control_obj_id, remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N,GENI ,_) ); \
-  }   \
-
-  BOOST_PP_REPEAT(6, RPC_INTERFACE_GENERATOR, (internal_call,dc_impl::object_call_issue, STANDARD_CALL) )
-  BOOST_PP_REPEAT(6, RPC_INTERFACE_GENERATOR, (internal_control_call,dc_impl::object_call_issue, (STANDARD_CALL | CONTROL_PACKET)) )
-
-
-  #define REQUEST_INTERFACE_GENERATOR(Z,N,ARGS) \
-  template<typename F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(N, typename T)> \
-    BOOST_PP_TUPLE_ELEM(3,0,ARGS) (procid_t target, F remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N,GENARGS ,_) ) {  \
-    ASSERT_LT(target, dc_.senders.size()); \
-    request_future<__GLRPC_FRESULT> reply;      \
-    if ((BOOST_PP_TUPLE_ELEM(3,2,ARGS) & CONTROL_PACKET) == 0) inc_calls_sent(target); \
-    BOOST_PP_CAT( BOOST_PP_TUPLE_ELEM(3,1,ARGS),N) \
-        <dc_dist_object<T>, F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(N, T)> \
-          ::exec(this, dc_.senders[target],  reply.get_handle(), BOOST_PP_TUPLE_ELEM(3,2,ARGS), target,control_obj_id, remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N,GENI ,_) ); \
-    return reply(); \
-  }   \
+#define REQUEST_INTERFACE_GENERATOR(Z, N, ARGS)                               \
+  template <typename F BOOST_PP_COMMA_IF(N)                                   \
+                BOOST_PP_ENUM_PARAMS(N, typename T)>                          \
+  BOOST_PP_TUPLE_ELEM(3, 0, ARGS)                                             \
+  (procid_t target,                                                           \
+   F remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N, GENARGS, _)) {     \
+    ASSERT_LT(target, dc_.senders.size());                                    \
+    request_future<__GLRPC_FRESULT> reply;                                    \
+    if ((BOOST_PP_TUPLE_ELEM(3, 2, ARGS) & CONTROL_PACKET) == 0)              \
+      inc_calls_sent(target);                                                 \
+    BOOST_PP_CAT(BOOST_PP_TUPLE_ELEM(3, 1, ARGS),                             \
+                 N)<dc_dist_object<T>,                                        \
+                    F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(              \
+                        N, T)>::exec(this, dc_.senders[target],               \
+                                     reply.get_handle(),                      \
+                                     BOOST_PP_TUPLE_ELEM(3, 2, ARGS), target, \
+                                     control_obj_id,                          \
+                                     remote_function BOOST_PP_COMMA_IF(N)     \
+                                         BOOST_PP_ENUM(N, GENI, _));          \
+    return reply();                                                           \
+  }
 
   /*
-  Generates the interface functions. 3rd argument is a tuple (interface name, issue name, flags)
+  Generates the interface functions. 3rd argument is a tuple (interface name,
+  issue name, flags)
   */
-  BOOST_PP_REPEAT(6, REQUEST_INTERFACE_GENERATOR, (typename dc_impl::function_ret_type<__GLRPC_FRESULT>::type internal_request, dc_impl::object_request_issue, (STANDARD_CALL)) )
-  BOOST_PP_REPEAT(6, REQUEST_INTERFACE_GENERATOR, (typename dc_impl::function_ret_type<__GLRPC_FRESULT>::type internal_control_request, dc_impl::object_request_issue, (STANDARD_CALL | CONTROL_PACKET)) )
+  BOOST_PP_REPEAT(6, REQUEST_INTERFACE_GENERATOR,
+                  (typename dc_impl::function_ret_type<__GLRPC_FRESULT>::type
+                       internal_request,
+                   dc_impl::object_request_issue, (STANDARD_CALL)))
+  BOOST_PP_REPEAT(6, REQUEST_INTERFACE_GENERATOR,
+                  (typename dc_impl::function_ret_type<__GLRPC_FRESULT>::type
+                       internal_control_request,
+                   dc_impl::object_request_issue,
+                   (STANDARD_CALL | CONTROL_PACKET)))
 
+#undef RPC_INTERFACE_GENERATOR
+#undef REQUEST_INTERFACE_GENERATOR
+#undef GENARC
+#undef GENT
+#undef GENI
+#undef GENARGS
 
-  #undef RPC_INTERFACE_GENERATOR
-  #undef REQUEST_INTERFACE_GENERATOR
-  #undef GENARC
-  #undef GENT
-  #undef GENI
-  #undef GENARGS
-
- /// \endcond
+  /// \endcond
 
 #if DOXYGEN_DOCUMENTATION
 
-/**
- * \brief Performs a non-blocking RPC call to the target machine
- * to run the provided function pointer.
- *
- * remote_call() calls the function "fn" on a target remote machine.
- * "fn" may be public, private or protected within the owner class; there are
- * no access restrictions. Provided arguments are serialized and sent to the
- * target.  Therefore, all arguments are necessarily transmitted by value.
- * If the target function has a return value, the return value is lost.
- *
- * remote_call() is non-blocking and does not wait for the target machine
- * to complete execution of the function. Different remote_calls may be handled
- * by different threads on the target machine and thus the target function
- * should be made thread-safe.
- * Alternatively, see distributed_control::set_sequentialization_key()
- * to force sequentialization of groups of remote calls.
- *
- * If blocking operation is desired, remote_request() may be used.
- * Alternatively, a full_barrier() may also be used to wait for completion of
- * all incomplete RPC calls.
- *
- * Example:
- * \code
- * // A print function is defined in the distributed object
- * class distributed_obj_example {
- *  graphlab::dc_dist_object<distributed_obj_example> rmi;
- *   ... initialization and constructor ...
- *  private:
- *    void print(std::string s) {
- *       std::cout << s << "\n";
- *    }
- *  public:
- *    void print_on_machine_one(std::string s) {
- *      // calls the print function on machine 1 with the argument "s"
- *      rmi.remote_call(1, &distributed_obj_example::print, s);
- *    }
- * }
- * \endcode
- *
- * Note the syntax for obtaining a pointer to a member function.
- *
- * \param targetmachine The ID of the machine to run the function on
- * \param fn The function to run on the target machine. Must be a pointer to
- *            member function in the owning object.
- * \param ... The arguments to send to Fn. Arguments must be serializable.
- *            and must be castable to the target types.
- */
+  /**
+   * \brief Performs a non-blocking RPC call to the target machine
+   * to run the provided function pointer.
+   *
+   * remote_call() calls the function "fn" on a target remote machine.
+   * "fn" may be public, private or protected within the owner class; there are
+   * no access restrictions. Provided arguments are serialized and sent to the
+   * target.  Therefore, all arguments are necessarily transmitted by value.
+   * If the target function has a return value, the return value is lost.
+   *
+   * remote_call() is non-blocking and does not wait for the target machine
+   * to complete execution of the function. Different remote_calls may be
+   * handled by different threads on the target machine and thus the target
+   * function should be made thread-safe. Alternatively, see
+   * distributed_control::set_sequentialization_key() to force sequentialization
+   * of groups of remote calls.
+   *
+   * If blocking operation is desired, remote_request() may be used.
+   * Alternatively, a full_barrier() may also be used to wait for completion of
+   * all incomplete RPC calls.
+   *
+   * Example:
+   * \code
+   * // A print function is defined in the distributed object
+   * class distributed_obj_example {
+   *  graphlab::dc_dist_object<distributed_obj_example> rmi;
+   *   ... initialization and constructor ...
+   *  private:
+   *    void print(std::string s) {
+   *       std::cout << s << "\n";
+   *    }
+   *  public:
+   *    void print_on_machine_one(std::string s) {
+   *      // calls the print function on machine 1 with the argument "s"
+   *      rmi.remote_call(1, &distributed_obj_example::print, s);
+   *    }
+   * }
+   * \endcode
+   *
+   * Note the syntax for obtaining a pointer to a member function.
+   *
+   * \param targetmachine The ID of the machine to run the function on
+   * \param fn The function to run on the target machine. Must be a pointer to
+   *            member function in the owning object.
+   * \param ... The arguments to send to Fn. Arguments must be serializable.
+   *            and must be castable to the target types.
+   */
   void remote_call(procid_t targetmachine, Fn fn, ...);
 
-
-
-/**
- * \brief Performs a non-blocking RPC call to a collection of machines
- * to run the provided function pointer.
- *
- * This function calls the provided function pointer on a collection of
- * machines contained in the iterator range [begin, end).
- * Provided arguments are serialized and sent to the target.
- * Therefore, all arguments are necessarily transmitted by value.
- * If the target function has a return value, the return value is lost.
- *
- * This function is functionally equivalent to:
- *
- * \code
- * while(machine_begin != machine_end) {
- *  remote_call(*machine_begin, fn, ...);
- *  ++machine_begin;
- * }
- * \endcode
- *
- * However, this function makes some optimizations to ensure all arguments
- * are only serialized once instead of \#calls times.
- *
- * This function is non-blocking and does not wait for the target machines
- * to complete execution of the function. Different remote_calls may be handled
- * by different threads on the target machines and thus the target function
- * should be made thread-safe. Alternatively, see
- * distributed_control::set_sequentialization_key() to force sequentialization
- * of groups of remote_calls. A full_barrier()
- * may also be issued to wait for completion of all RPC calls issued prior
- * to the full barrier.
- *
- * Example:
- * \code
- * // A print function is defined in the distributed object
- * class distributed_obj_example {
- *  graphlab::dc_dist_object<distributed_obj_example> rmi;
- *   ... initialization and constructor ...
- *  private:
- *    void print(std::string s) {
- *       std::cout << s << "\n";
- *    }
- *  public:
- *    void print_on_some_machines(std::string s) {
- *      std::vector<procid_t> procs;
- *      procs.push_back(1); procs.push_back(3); procs.push_back(5);
- *
- *      // calls the print function on machine 1,3,5 with the argument "s"
- *      rmi.remote_call(procs.begin(), procs.end(),
- *                      &distributed_obj_example::print, s);
- *    }
- * }
- * \endcode
- *
- *
- * \param machine_begin The beginning of an iterator range containing a list
- *                      machines to call.  Iterator::value_type must be
- *                      castable to procid_t.
- * \param machine_end   The end of an iterator range containing a list
- *                      machines to call.  Iterator::value_type must be
- *                      castable to procid_t.
- * \param fn The function to run on the target machine. Must be a pointer to
- *            member function in the owning object.
- * \param ... The arguments to send to Fn. Arguments must be serializable.
- *            and must be castable to the target types.
- */
+  /**
+   * \brief Performs a non-blocking RPC call to a collection of machines
+   * to run the provided function pointer.
+   *
+   * This function calls the provided function pointer on a collection of
+   * machines contained in the iterator range [begin, end).
+   * Provided arguments are serialized and sent to the target.
+   * Therefore, all arguments are necessarily transmitted by value.
+   * If the target function has a return value, the return value is lost.
+   *
+   * This function is functionally equivalent to:
+   *
+   * \code
+   * while(machine_begin != machine_end) {
+   *  remote_call(*machine_begin, fn, ...);
+   *  ++machine_begin;
+   * }
+   * \endcode
+   *
+   * However, this function makes some optimizations to ensure all arguments
+   * are only serialized once instead of \#calls times.
+   *
+   * This function is non-blocking and does not wait for the target machines
+   * to complete execution of the function. Different remote_calls may be
+   * handled by different threads on the target machines and thus the target
+   * function should be made thread-safe. Alternatively, see
+   * distributed_control::set_sequentialization_key() to force sequentialization
+   * of groups of remote_calls. A full_barrier()
+   * may also be issued to wait for completion of all RPC calls issued prior
+   * to the full barrier.
+   *
+   * Example:
+   * \code
+   * // A print function is defined in the distributed object
+   * class distributed_obj_example {
+   *  graphlab::dc_dist_object<distributed_obj_example> rmi;
+   *   ... initialization and constructor ...
+   *  private:
+   *    void print(std::string s) {
+   *       std::cout << s << "\n";
+   *    }
+   *  public:
+   *    void print_on_some_machines(std::string s) {
+   *      std::vector<procid_t> procs;
+   *      procs.push_back(1); procs.push_back(3); procs.push_back(5);
+   *
+   *      // calls the print function on machine 1,3,5 with the argument "s"
+   *      rmi.remote_call(procs.begin(), procs.end(),
+   *                      &distributed_obj_example::print, s);
+   *    }
+   * }
+   * \endcode
+   *
+   *
+   * \param machine_begin The beginning of an iterator range containing a list
+   *                      machines to call.  Iterator::value_type must be
+   *                      castable to procid_t.
+   * \param machine_end   The end of an iterator range containing a list
+   *                      machines to call.  Iterator::value_type must be
+   *                      castable to procid_t.
+   * \param fn The function to run on the target machine. Must be a pointer to
+   *            member function in the owning object.
+   * \param ... The arguments to send to Fn. Arguments must be serializable.
+   *            and must be castable to the target types.
+   */
   void remote_call(Iterator machine_begin, Iterator machine_end, Fn fn, ...);
 
-
-/**
- * \brief Performs a blocking RPC call to the target machine
- * to run the provided function pointer.
- *
- * remote_request() calls the function "fn" on a target remote machine. Provided
- * arguments are serialized and sent to the target.
- * Therefore, all arguments are necessarily transmitted by value.
- * If the target function has a return value, it is sent back to calling
- * machine.
- *
- * Unlike remote_call(), remote_request() is blocking and waits for the target
- * machine to complete execution of the function. However, different
- * remote_requests may be still be handled by different threads on the target
- * machine.
- *
- * Example:
- * \code
- * // A print function is defined in the distributed object
- * class distributed_obj_example {
- *  graphlab::dc_dist_object<distributed_obj_example> rmi;
- *   ... initialization and constructor ...
- *  private:
- *    int add_one(int i) {
- *      return i + 1;
- *    }
- *  public:
- *    int add_one_from_machine_1(int i) {
- *      // calls the add_one function on machine 1 with the argument i
- *      return rmi.remote_request(1, &distributed_obj_example::add_one, i);
- *    }
- * }
- * \endcode
- *
- * \see graphlab::object_fiber_remote_request
- *      graphlab::dc_dist_object::future_remote_request
- *
- * \param targetmachine The ID of the machine to run the function on
- * \param fn The function to run on the target machine. Must be a pointer to
- *            member function in the owning object.
- * \param ... The arguments to send to Fn. Arguments must be serializable.
- *            and must be castable to the target types.
- *
- * \returns Returns the same return type as the function fn
- */
+  /**
+   * \brief Performs a blocking RPC call to the target machine
+   * to run the provided function pointer.
+   *
+   * remote_request() calls the function "fn" on a target remote machine.
+   * Provided arguments are serialized and sent to the target. Therefore, all
+   * arguments are necessarily transmitted by value. If the target function has
+   * a return value, it is sent back to calling machine.
+   *
+   * Unlike remote_call(), remote_request() is blocking and waits for the target
+   * machine to complete execution of the function. However, different
+   * remote_requests may be still be handled by different threads on the target
+   * machine.
+   *
+   * Example:
+   * \code
+   * // A print function is defined in the distributed object
+   * class distributed_obj_example {
+   *  graphlab::dc_dist_object<distributed_obj_example> rmi;
+   *   ... initialization and constructor ...
+   *  private:
+   *    int add_one(int i) {
+   *      return i + 1;
+   *    }
+   *  public:
+   *    int add_one_from_machine_1(int i) {
+   *      // calls the add_one function on machine 1 with the argument i
+   *      return rmi.remote_request(1, &distributed_obj_example::add_one, i);
+   *    }
+   * }
+   * \endcode
+   *
+   * \see graphlab::object_fiber_remote_request
+   *      graphlab::dc_dist_object::future_remote_request
+   *
+   * \param targetmachine The ID of the machine to run the function on
+   * \param fn The function to run on the target machine. Must be a pointer to
+   *            member function in the owning object.
+   * \param ... The arguments to send to Fn. Arguments must be serializable.
+   *            and must be castable to the target types.
+   *
+   * \returns Returns the same return type as the function fn
+   */
   RetVal remote_request(procid_t targetmachine, Fn fn, ...);
 
-
-
-/**
- * \brief Performs a nonblocking RPC call to the target machine
- * to run the provided function pointer which has an expected return value.
- *
- * future_remote_request() calls the function "fn" on a target remote machine.
- * Provided arguments are serialized and sent to the target.
- * Therefore, all arguments are necessarily transmitted by value.
- * If the target function has a return value, it is sent back to calling
- * machine.
- *
- * future_remote_request() is like remote_request(), but is non-blocking.
- * Instead, it returns immediately a \ref graphlab::request_future object
- * which will allow you wait for the return value.
- *
- * Example:
- * \code
- * // A print function is defined in the distributed object
- * class distributed_obj_example {
- *  graphlab::dc_dist_object<distributed_obj_example> rmi;
- *   ... initialization and constructor ...
- *  private:
- *    int add_one(int i) {
- *      return i + 1;
- *    }
- *  public:
- *    int add_one_from_machine_1(int i) {
- *      // calls the add_one function on machine 1 with the argument i
- *      // this call returns immediately
- *      graphlab::request_future<int> future =
- *          rmi.future_remote_request(1, &distributed_obj_example::add_one, i);
- *
- *      // ... we can do other stuff here
- *      // then when we want the answer
- *      int result = future();
- *      return result;
- *    }
- * }
- * \endcode
- *
- * \see graphlab::object_fiber_remote_request
- *      graphlab::dc_dist_object::remote_request
- *
- * \param targetmachine The ID of the machine to run the function on
- * \param fn The function to run on the target machine. Must be a pointer to
- *            member function in the owning object.
- * \param ... The arguments to send to Fn. Arguments must be serializable.
- *            and must be castable to the target types.
- *
- * \returns Returns a future templated around the same type as the return 
- *          value of the called function
- */
-  request_future<RetVal> future_remote_request(procid_t targetmachine, Fn fn, ...);
-
-
+  /**
+   * \brief Performs a nonblocking RPC call to the target machine
+   * to run the provided function pointer which has an expected return value.
+   *
+   * future_remote_request() calls the function "fn" on a target remote machine.
+   * Provided arguments are serialized and sent to the target.
+   * Therefore, all arguments are necessarily transmitted by value.
+   * If the target function has a return value, it is sent back to calling
+   * machine.
+   *
+   * future_remote_request() is like remote_request(), but is non-blocking.
+   * Instead, it returns immediately a \ref graphlab::request_future object
+   * which will allow you wait for the return value.
+   *
+   * Example:
+   * \code
+   * // A print function is defined in the distributed object
+   * class distributed_obj_example {
+   *  graphlab::dc_dist_object<distributed_obj_example> rmi;
+   *   ... initialization and constructor ...
+   *  private:
+   *    int add_one(int i) {
+   *      return i + 1;
+   *    }
+   *  public:
+   *    int add_one_from_machine_1(int i) {
+   *      // calls the add_one function on machine 1 with the argument i
+   *      // this call returns immediately
+   *      graphlab::request_future<int> future =
+   *          rmi.future_remote_request(1, &distributed_obj_example::add_one,
+   * i);
+   *
+   *      // ... we can do other stuff here
+   *      // then when we want the answer
+   *      int result = future();
+   *      return result;
+   *    }
+   * }
+   * \endcode
+   *
+   * \see graphlab::object_fiber_remote_request
+   *      graphlab::dc_dist_object::remote_request
+   *
+   * \param targetmachine The ID of the machine to run the function on
+   * \param fn The function to run on the target machine. Must be a pointer to
+   *            member function in the owning object.
+   * \param ... The arguments to send to Fn. Arguments must be serializable.
+   *            and must be castable to the target types.
+   *
+   * \returns Returns a future templated around the same type as the return
+   *          value of the called function
+   */
+  request_future<RetVal> future_remote_request(procid_t targetmachine, Fn fn,
+                                               ...);
 
 #endif
-/*****************************************************************************
-                      Implementation of matched send_to / recv_from
- *****************************************************************************/
-
+  /*****************************************************************************
+                        Implementation of matched send_to / recv_from
+   *****************************************************************************/
 
  private:
   std::vector<dc_impl::recv_from_struct> recv_froms;
 
-  void block_and_wait_for_recv(size_t src,
-                             std::string& str,
-                             size_t tag) {
+  void block_and_wait_for_recv(size_t src, std::string& str, size_t tag) {
     recv_froms[src].lock.lock();
     recv_froms[src].data = str;
     recv_froms[src].tag = tag;
@@ -788,7 +816,6 @@ class dc_dist_object : public dc_impl::dc_dist_object_base{
   }
 
  public:
-
   /**
     \copydoc distributed_control::send_to()
   */
@@ -805,11 +832,10 @@ class dc_dist_object : public dc_impl::dc_dist_object_base{
     size_t rtptr = reinterpret_cast<size_t>(&rt);
     if (control == false) {
       internal_call(target, &dc_dist_object<T>::block_and_wait_for_recv,
-                     procid(), strm.str(), rtptr);
-    }
-    else {
+                    procid(), strm.str(), rtptr);
+    } else {
       internal_control_call(target, &dc_dist_object<T>::block_and_wait_for_recv,
-                  procid(), strm.str(), rtptr);
+                            procid(), strm.str(), rtptr);
     }
     // wait for reply
     rt.wait();
@@ -817,14 +843,13 @@ class dc_dist_object : public dc_impl::dc_dist_object_base{
     if (control == false) inc_calls_sent(target);
   }
 
-
   /**
     \copydoc distributed_control::recv_from()
   */
   template <typename U>
   void recv_from(procid_t source, U& t, bool control = false) {
     // wait on the condition variable until I have data
-    dc_impl::recv_from_struct &recvstruct = recv_froms[source];
+    dc_impl::recv_from_struct& recvstruct = recv_froms[source];
     recvstruct.lock.lock();
     while (recvstruct.hasdata == false) {
       recvstruct.cond.wait(recvstruct.lock);
@@ -850,29 +875,21 @@ class dc_dist_object : public dc_impl::dc_dist_object_base{
       // typical object calls. It goes through the DC, but I also want to charge
       // it to this object
       inc_calls_received(source);
-    }
-    else {
+    } else {
       dc_.control_call(source, request_reply_handler, tag, dc_impl::blob());
     }
   }
 
+  /*****************************************************************************
+                        Implementation of Broadcast
+   *****************************************************************************/
 
-
-/*****************************************************************************
-                      Implementation of Broadcast
- *****************************************************************************/
-
-private:
-
+ private:
   std::string broadcast_receive;
 
-  void set_broadcast_receive(const std::string &s) {
-    broadcast_receive = s;
-  }
-
+  void set_broadcast_receive(const std::string& s) { broadcast_receive = s; }
 
  public:
-
   /// \copydoc distributed_control::broadcast()
   template <typename U>
   void broadcast(U& data, bool originator, bool control = false) {
@@ -884,20 +901,18 @@ private:
       strm.flush();
       broadcast_receive = strm.str();
       if (control == false) {
-        for (size_t i = 0;i < numprocs(); ++i) {
+        for (size_t i = 0; i < numprocs(); ++i) {
           if (i != procid()) {
-            internal_request(i,
-                            &dc_dist_object<T>::set_broadcast_receive,
-                            broadcast_receive);
+            internal_request(i, &dc_dist_object<T>::set_broadcast_receive,
+                             broadcast_receive);
           }
         }
-      }
-      else {
-        for (size_t i = 0;i < numprocs(); ++i) {
+      } else {
+        for (size_t i = 0; i < numprocs(); ++i) {
           if (i != procid()) {
             internal_control_request(i,
-                                    &dc_dist_object<T>::set_broadcast_receive,
-                                    broadcast_receive);
+                                     &dc_dist_object<T>::set_broadcast_receive,
+                                     broadcast_receive);
           }
         }
       }
@@ -917,43 +932,35 @@ private:
     barrier();
   }
 
-
-/*****************************************************************************
-      Implementation of Gather, all_gather
- *****************************************************************************/
+  /*****************************************************************************
+        Implementation of Gather, all_gather
+   *****************************************************************************/
 
  private:
   std::vector<std::string> gather_receive;
   atomic<size_t> gatherid;
 
-  void set_gather_receive(procid_t source, const std::string &s, size_t gid) {
-    while(gatherid.value != gid) sched_yield();
+  void set_gather_receive(procid_t source, const std::string& s, size_t gid) {
+    while (gatherid.value != gid) sched_yield();
     gather_receive[source] = s;
   }
- public:
 
+ public:
   /// \copydoc distributed_control::gather()
   template <typename U>
   void gather(std::vector<U>& data, procid_t sendto, bool control = false) {
     // if not root
     if (sendto != procid()) {
-      std::stringstream strm( std::ios::out | std::ios::binary );
+      std::stringstream strm(std::ios::out | std::ios::binary);
       oarchive oarc(strm);
       oarc << data[procid()];
       strm.flush();
       if (control == false) {
-        internal_request(sendto,
-                        &dc_dist_object<T>::set_gather_receive,
-                        procid(),
-                        strm.str(),
-                        gatherid.value);
-      }
-      else {
-        internal_control_request(sendto,
-                                  &dc_dist_object<T>::set_gather_receive,
-                                  procid(),
-                                  strm.str(),
-                                  gatherid.value);
+        internal_request(sendto, &dc_dist_object<T>::set_gather_receive,
+                         procid(), strm.str(), gatherid.value);
+      } else {
+        internal_control_request(sendto, &dc_dist_object<T>::set_gather_receive,
+                                 procid(), strm.str(), gatherid.value);
       }
     }
     barrier();
@@ -974,11 +981,9 @@ private:
     barrier();
   }
 
-/********************************************************************
-             Implementation of all gather
-*********************************************************************/
-
-
+  /********************************************************************
+               Implementation of all gather
+  *********************************************************************/
 
  private:
   // ------- Sense reversing barrier data ----------
@@ -998,9 +1003,11 @@ private:
   std::string ab_alldata;
 
   /**
-    The child calls this function in the parent once the child enters the barrier
+    The child calls this function in the parent once the child enters the
+    barrier
   */
-  void __ab_child_to_parent_barrier_trigger(procid_t source, std::string collect) {
+  void __ab_child_to_parent_barrier_trigger(procid_t source,
+                                            std::string collect) {
     ab_barrier_mut.lock();
     // assert childbase <= source <= childbase + BARRIER_BRANCH_FACTOR
     ASSERT_GE(source, childbase);
@@ -1022,20 +1029,16 @@ private:
     // get my largest child
     logger(LOG_DEBUG, "AB Barrier Release %d", releaseval);
     ab_alldata = allstrings;
-    for (procid_t i = 0;i < numchild; ++i) {
+    for (procid_t i = 0; i < numchild; ++i) {
       if (use_control_calls) {
-        internal_control_call((procid_t)(childbase + i),
-                              &dc_dist_object<T>::__ab_parent_to_child_barrier_release,
-                              releaseval,
-                              ab_alldata,
-                              use_control_calls);
-      }
-      else {
+        internal_control_call(
+            (procid_t)(childbase + i),
+            &dc_dist_object<T>::__ab_parent_to_child_barrier_release,
+            releaseval, ab_alldata, use_control_calls);
+      } else {
         internal_call((procid_t)(childbase + i),
                       &dc_dist_object<T>::__ab_parent_to_child_barrier_release,
-                      releaseval,
-                      ab_alldata,
-                      use_control_calls);
+                      releaseval, ab_alldata, use_control_calls);
       }
     }
     ab_barrier_mut.lock();
@@ -1044,9 +1047,7 @@ private:
     ab_barrier_mut.unlock();
   }
 
-
  public:
-
   /// \copydoc distributed_control::all_gather()
   template <typename U>
   void all_gather(std::vector<U>& data, bool control = false) {
@@ -1060,9 +1061,10 @@ private:
     int ab_barrier_val = ab_barrier_sense;
     ab_barrier_mut.lock();
     // wait for all children to be done
-    while(1) {
+    while (1) {
       if ((ab_barrier_sense == -1 && ab_child_barrier_counter.value == 0) ||
-          (ab_barrier_sense == 1 && ab_child_barrier_counter.value == (int)(numchild))) {
+          (ab_barrier_sense == 1 &&
+           ab_child_barrier_counter.value == (int)(numchild))) {
         // flip the barrier sense
         ab_barrier_sense = -ab_barrier_sense;
         // call child to parent in parent
@@ -1072,28 +1074,27 @@ private:
           charstream strstrm(128);
           oarchive oarc2(strstrm);
           oarc2 << std::string(strm->c_str(), strm->size());
-          for (procid_t i = 0;i < numchild; ++i) {
-            strstrm.write(ab_children_data[i].c_str(), ab_children_data[i].length());
+          for (procid_t i = 0; i < numchild; ++i) {
+            strstrm.write(ab_children_data[i].c_str(),
+                          ab_children_data[i].length());
           }
           strstrm.flush();
           if (control) {
-            internal_control_call(parent,
-                            &dc_dist_object<T>::__ab_child_to_parent_barrier_trigger,
-                            procid(),
-                            std::string(strstrm->c_str(), strstrm->size()));
-          }
-          else {
-            internal_call(parent,
-                          &dc_dist_object<T>::__ab_child_to_parent_barrier_trigger,
-                          procid(),
-                          std::string(strstrm->c_str(), strstrm->size()));
+            internal_control_call(
+                parent,
+                &dc_dist_object<T>::__ab_child_to_parent_barrier_trigger,
+                procid(), std::string(strstrm->c_str(), strstrm->size()));
+          } else {
+            internal_call(
+                parent,
+                &dc_dist_object<T>::__ab_child_to_parent_barrier_trigger,
+                procid(), std::string(strstrm->c_str(), strstrm->size()));
           }
         }
         break;
       }
       ab_barrier_cond.wait(ab_barrier_mut);
     }
-
 
     logger(LOG_DEBUG, "AB barrier phase 1 complete");
     // I am root. send the barrier release downwards
@@ -1103,25 +1104,24 @@ private:
       charstream strstrm(128);
       oarchive oarc2(strstrm);
       oarc2 << std::string(strm->c_str(), strm->size());
-      for (procid_t i = 0;i < numchild; ++i) {
-        strstrm.write(ab_children_data[i].c_str(), ab_children_data[i].length());
+      for (procid_t i = 0; i < numchild; ++i) {
+        strstrm.write(ab_children_data[i].c_str(),
+                      ab_children_data[i].length());
       }
       strstrm.flush();
       ab_alldata = std::string(strstrm->c_str(), strstrm->size());
-      for (procid_t i = 0;i < numchild; ++i) {
+      for (procid_t i = 0; i < numchild; ++i) {
         logger(LOG_DEBUG, "Sending AB release to %d", childbase + i);
-        internal_control_call((procid_t)(childbase + i),
-                             &dc_dist_object<T>::__ab_parent_to_child_barrier_release,
-                             ab_barrier_val,
-                             ab_alldata,
-                             (int)control);
-
+        internal_control_call(
+            (procid_t)(childbase + i),
+            &dc_dist_object<T>::__ab_parent_to_child_barrier_release,
+            ab_barrier_val, ab_alldata, (int)control);
       }
     }
     // wait for the downward message releasing the barrier
     logger(LOG_DEBUG, "AB barrier waiting for %d", ab_barrier_val);
     ab_barrier_mut.lock();
-    while(1) {
+    while (1) {
       if (ab_barrier_release == ab_barrier_val) break;
       ab_barrier_cond.wait(ab_barrier_mut);
     }
@@ -1136,7 +1136,7 @@ private:
     std::stringstream istrm(local_ab_alldata);
     iarchive iarc(istrm);
 
-    for (size_t i = 0;i < numprocs(); ++i) {
+    for (size_t i = 0; i < numprocs(); ++i) {
       std::string s;
       iarc >> s;
 
@@ -1156,7 +1156,9 @@ private:
           break;
         }
         // ok. can't go down the left
-        bool this_is_a_right_branch = (((heappos - 1) % BARRIER_BRANCH_FACTOR) == BARRIER_BRANCH_FACTOR - 1);
+        bool this_is_a_right_branch =
+            (((heappos - 1) % BARRIER_BRANCH_FACTOR) ==
+             BARRIER_BRANCH_FACTOR - 1);
         // if we are a left branch, go to sibling
         if (this_is_a_right_branch == false) {
           size_t sibling = heappos + 1;
@@ -1175,7 +1177,6 @@ private:
         continue;
         // go to sibling
       }
-
     }
   }
 
@@ -1184,24 +1185,25 @@ private:
   void all_reduce2(U& data, PlusEqual plusequal, bool control = false) {
     if (numprocs() == 1) return;
     // get the string representation of the data
-   /* charstream strm(128);
-    oarchive oarc(strm);
-    oarc << data;
-    strm.flush();*/
+    /* charstream strm(128);
+     oarchive oarc(strm);
+     oarc << data;
+     strm.flush();*/
     // upward message
     int ab_barrier_val = ab_barrier_sense;
     ab_barrier_mut.lock();
     // wait for all children to be done
-    while(1) {
+    while (1) {
       if ((ab_barrier_sense == -1 && ab_child_barrier_counter.value == 0) ||
-          (ab_barrier_sense == 1 && ab_child_barrier_counter.value == (int)(numchild))) {
+          (ab_barrier_sense == 1 &&
+           ab_child_barrier_counter.value == (int)(numchild))) {
         // flip the barrier sense
         ab_barrier_sense = -ab_barrier_sense;
         // call child to parent in parent
         ab_barrier_mut.unlock();
         if (procid() != 0) {
           // accumulate my children data
-          for (procid_t i = 0;i < numchild; ++i) {
+          for (procid_t i = 0; i < numchild; ++i) {
             std::stringstream istrm(ab_children_data[i]);
             iarchive iarc(istrm);
             U tmp;
@@ -1214,16 +1216,15 @@ private:
           oarc << data;
           ostrm.flush();
           if (control) {
-            internal_control_call(parent,
-                            &dc_dist_object<T>::__ab_child_to_parent_barrier_trigger,
-                            procid(),
-                            std::string(ostrm->c_str(), ostrm->size()));
-          }
-          else {
-            internal_call(parent,
-                          &dc_dist_object<T>::__ab_child_to_parent_barrier_trigger,
-                          procid(),
-                          std::string(ostrm->c_str(), ostrm->size()));
+            internal_control_call(
+                parent,
+                &dc_dist_object<T>::__ab_child_to_parent_barrier_trigger,
+                procid(), std::string(ostrm->c_str(), ostrm->size()));
+          } else {
+            internal_call(
+                parent,
+                &dc_dist_object<T>::__ab_child_to_parent_barrier_trigger,
+                procid(), std::string(ostrm->c_str(), ostrm->size()));
           }
         }
         break;
@@ -1231,12 +1232,11 @@ private:
       ab_barrier_cond.wait(ab_barrier_mut);
     }
 
-
     logger(LOG_DEBUG, "AB barrier phase 1 complete");
     // I am root. send the barrier release downwards
     if (procid() == 0) {
       ab_barrier_release = ab_barrier_val;
-      for (procid_t i = 0;i < numchild; ++i) {
+      for (procid_t i = 0; i < numchild; ++i) {
         std::stringstream istrm(ab_children_data[i]);
         iarchive iarc(istrm);
         U tmp;
@@ -1249,19 +1249,17 @@ private:
       oarc << data;
       ostrm.flush();
       ab_alldata = std::string(ostrm->c_str(), ostrm->size());
-      for (procid_t i = 0;i < numchild; ++i) {
-        internal_control_call((procid_t)(childbase + i),
-                             &dc_dist_object<T>::__ab_parent_to_child_barrier_release,
-                             ab_barrier_val,
-                             ab_alldata,
-                             (int)control);
-
+      for (procid_t i = 0; i < numchild; ++i) {
+        internal_control_call(
+            (procid_t)(childbase + i),
+            &dc_dist_object<T>::__ab_parent_to_child_barrier_release,
+            ab_barrier_val, ab_alldata, (int)control);
       }
     }
     // wait for the downward message releasing the barrier
     logger(LOG_DEBUG, "AB barrier waiting for %d", ab_barrier_val);
     ab_barrier_mut.lock();
-    while(1) {
+    while (1) {
       if (ab_barrier_release == ab_barrier_val) break;
       ab_barrier_cond.wait(ab_barrier_mut);
     }
@@ -1276,18 +1274,14 @@ private:
       std::stringstream istrm(local_ab_alldata);
       iarchive iarc(istrm);
       iarc >> data;
-    }
-    else {
+    } else {
       ab_barrier_mut.unlock();
     }
   }
 
-
   template <typename U>
   struct default_plus_equal {
-    void operator()(U& u, const U& v) {
-      u += v;
-    }
+    void operator()(U& u, const U& v) { u += v; }
   };
 
   /// \copydoc distributed_control::all_reduce()
@@ -1296,35 +1290,27 @@ private:
     all_reduce2(data, default_plus_equal<U>(), control);
   }
 
-////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////
 
-
-/*****************************************************************************
-                      Implementation of All Scatter
- *****************************************************************************/
+  /*****************************************************************************
+                        Implementation of All Scatter
+   *****************************************************************************/
 
   template <typename U>
   void all_to_all(std::vector<U>& data, bool control = false) {
     ASSERT_EQ(data.size(), numprocs());
-    for (size_t i = 0;i < data.size(); ++i) {
+    for (size_t i = 0; i < data.size(); ++i) {
       if (i != procid()) {
-        std::stringstream strm( std::ios::out | std::ios::binary );
+        std::stringstream strm(std::ios::out | std::ios::binary);
         oarchive oarc(strm);
         oarc << data[i];
         strm.flush();
         if (control == false) {
-          internal_call(i,
-                        &dc_dist_object<T>::set_gather_receive,
-                        procid(),
-                        strm.str(),
-                        gatherid.value);
-        }
-        else {
-          internal_control_call(i,
-                                &dc_dist_object<T>::set_gather_receive,
-                                procid(),
-                                strm.str(),
-                                gatherid.value);
+          internal_call(i, &dc_dist_object<T>::set_gather_receive, procid(),
+                        strm.str(), gatherid.value);
+        } else {
+          internal_control_call(i, &dc_dist_object<T>::set_gather_receive,
+                                procid(), strm.str(), gatherid.value);
         }
       }
     }
@@ -1342,12 +1328,9 @@ private:
     barrier();
   }
 
-
-/*****************************************************************************
-                      Implementation of Barrier
- *****************************************************************************/
-
-
+  /*****************************************************************************
+                        Implementation of Barrier
+   *****************************************************************************/
 
  private:
   // ------- Sense reversing barrier data ----------
@@ -1363,15 +1346,13 @@ private:
   /// condition variable and mutex protecting the barrier variables
   fiber_conditional barrier_cond;
   mutex barrier_mut;
-  procid_t parent;  /// parent node
-  size_t childbase; /// id of my first child
+  procid_t parent;    /// parent node
+  size_t childbase;   /// id of my first child
   procid_t numchild;  /// number of children
 
-
-
-
   /**
-    The child calls this function in the parent once the child enters the barrier
+    The child calls this function in the parent once the child enters the
+    barrier
   */
   void __child_to_parent_barrier_trigger(procid_t source) {
     barrier_mut.lock();
@@ -1391,11 +1372,10 @@ private:
     // send the release downwards
     // get my largest child
     logger(LOG_DEBUG, "Barrier Release %d", releaseval);
-    for (procid_t i = 0;i < numchild; ++i) {
-      internal_control_call((procid_t)(childbase + i),
-                            &dc_dist_object<T>::__parent_to_child_barrier_release,
-                            releaseval);
-
+    for (procid_t i = 0; i < numchild; ++i) {
+      internal_control_call(
+          (procid_t)(childbase + i),
+          &dc_dist_object<T>::__parent_to_child_barrier_release, releaseval);
     }
     barrier_mut.lock();
     barrier_release = releaseval;
@@ -1403,49 +1383,46 @@ private:
     barrier_mut.unlock();
   }
 
-
  public:
-
   /// \copydoc distributed_control::barrier()
   void barrier() {
     // upward message
     int barrier_val = barrier_sense;
     barrier_mut.lock();
     // wait for all children to be done
-    while(1) {
+    while (1) {
       if ((barrier_sense == -1 && child_barrier_counter.value == 0) ||
-          (barrier_sense == 1 && child_barrier_counter.value == (int)(numchild))) {
+          (barrier_sense == 1 &&
+           child_barrier_counter.value == (int)(numchild))) {
         // flip the barrier sense
         barrier_sense = -barrier_sense;
         // call child to parent in parent
         barrier_mut.unlock();
         if (procid() != 0) {
-          internal_control_call(parent,
-                           &dc_dist_object<T>::__child_to_parent_barrier_trigger,
-                           procid());
+          internal_control_call(
+              parent, &dc_dist_object<T>::__child_to_parent_barrier_trigger,
+              procid());
         }
         break;
       }
       barrier_cond.wait(barrier_mut);
     }
 
-
     logger(LOG_DEBUG, "barrier phase 1 complete");
     // I am root. send the barrier release downwards
     if (procid() == 0) {
       barrier_release = barrier_val;
 
-      for (procid_t i = 0;i < numchild; ++i) {
-        internal_control_call((procid_t)(childbase + i),
-                             &dc_dist_object<T>::__parent_to_child_barrier_release,
-                             barrier_val);
-
+      for (procid_t i = 0; i < numchild; ++i) {
+        internal_control_call(
+            (procid_t)(childbase + i),
+            &dc_dist_object<T>::__parent_to_child_barrier_release, barrier_val);
       }
     }
     // wait for the downward message releasing the barrier
     logger(LOG_DEBUG, "barrier waiting for %d", barrier_val);
     barrier_mut.lock();
-    while(1) {
+    while (1) {
       if (barrier_release == barrier_val) break;
       barrier_cond.wait(barrier_mut);
     }
@@ -1454,10 +1431,9 @@ private:
     logger(LOG_DEBUG, "barrier phase 2 complete");
   }
 
-
- /*****************************************************************************
-                      Implementation of Full Barrier
-*****************************************************************************/
+  /*****************************************************************************
+                       Implementation of Full Barrier
+ *****************************************************************************/
  private:
   mutex full_barrier_lock;
   fiber_conditional full_barrier_cond;
@@ -1475,12 +1451,11 @@ private:
   dense_bitset procs_complete;
 
  public:
-
   /// \copydoc distributed_control::full_barrier()
   void full_barrier() {
     // gather a sum of all the calls issued to machine 0
     std::vector<size_t> calls_sent_to_target(numprocs(), 0);
-    for (size_t i = 0;i < numprocs(); ++i) {
+    for (size_t i = 0; i < numprocs(); ++i) {
       calls_sent_to_target[i] = callssent[i].value;
     }
 
@@ -1490,8 +1465,9 @@ private:
     all_gather(all_calls_sent, true);
 
     // get the number of calls I am supposed to receive from each machine
-    calls_to_receive.clear(); calls_to_receive.resize(numprocs(), 0);
-    for (size_t i = 0;i < numprocs(); ++i) {
+    calls_to_receive.clear();
+    calls_to_receive.resize(numprocs(), 0);
+    for (size_t i = 0; i < numprocs(); ++i) {
       calls_to_receive[i] += all_calls_sent[i][procid()];
     }
     // clear the counters
@@ -1501,15 +1477,16 @@ private:
     full_barrier_in_effect = true;
     __asm("mfence");
     // begin one pass to set all which are already completed
-    for (size_t i = 0;i < numprocs(); ++i) {
+    for (size_t i = 0; i < numprocs(); ++i) {
       if (callsreceived[i].value >= calls_to_receive[i]) {
         if (procs_complete.set_bit(i) == false) {
           num_proc_recvs_incomplete.dec();
         }
       } else {
-        logstream(LOG_DEBUG) << "Expecting " << calls_to_receive[i] 
-                             << " calls from " << i << " but only " 
-                             << callsreceived[i].value << "received." << std::endl;
+        logstream(LOG_DEBUG)
+            << "Expecting " << calls_to_receive[i] << " calls from " << i
+            << " but only " << callsreceived[i].value << "received."
+            << std::endl;
       }
     }
 
@@ -1520,25 +1497,24 @@ private:
     }
     full_barrier_lock.unlock();
     full_barrier_in_effect = false;
-//     for (size_t i = 0; i < numprocs(); ++i) {
-//       std::cout << "Received " << global_calls_received[i].value << " from " << i << std::endl;
-//     }
+    //     for (size_t i = 0; i < numprocs(); ++i) {
+    //       std::cout << "Received " << global_calls_received[i].value << "
+    //       from " << i << std::endl;
+    //     }
     barrier();
   }
 
- /* --------------------  Implementation of Gather Statistics -----------------*/
+  /* --------------------  Implementation of Gather Statistics
+   * -----------------*/
  private:
   struct collected_statistics {
     size_t callssent;
     size_t bytessent;
-    collected_statistics(): callssent(0), bytessent(0) { }
-    void save(oarchive &oarc) const {
-      oarc << callssent << bytessent;
-    }
-    void load(iarchive &iarc) {
-      iarc >> callssent >> bytessent;
-    }
+    collected_statistics() : callssent(0), bytessent(0) {}
+    void save(oarchive& oarc) const { oarc << callssent << bytessent; }
+    void load(iarchive& iarc) { iarc >> callssent >> bytessent; }
   };
+
  public:
   /** Gather RPC statistics. All machines must call
    this function at the same time. However, only proc 0 will
@@ -1550,21 +1526,20 @@ private:
     stats[procid()].callssent = calls_sent();
     stats[procid()].bytessent = bytes_sent();
     logstream(LOG_INFO) << procid() << ": calls_sent: ";
-    for (size_t i = 0;i < numprocs(); ++i) {
+    for (size_t i = 0; i < numprocs(); ++i) {
       logstream(LOG_INFO) << callssent[i].value << ", ";
     }
     logstream(LOG_INFO) << std::endl;
     logstream(LOG_INFO) << procid() << ": calls_recv: ";
-    for (size_t i = 0;i < numprocs(); ++i) {
+    for (size_t i = 0; i < numprocs(); ++i) {
       logstream(LOG_INFO) << callsreceived[i].value << ", ";
     }
     logstream(LOG_INFO) << std::endl;
 
-
     gather(stats, 0, true);
     if (procid() == 0) {
       collected_statistics cs;
-      for (size_t i = 0;i < numprocs(); ++i) {
+      for (size_t i = 0; i < numprocs(); ++i) {
         cs.callssent += stats[i].callssent;
         cs.bytessent += stats[i].bytessent;
       }
@@ -1578,6 +1553,5 @@ private:
 #include <graphlab/macros_undef.hpp>
 #include <graphlab/rpc/mem_function_arg_types_undef.hpp>
 #undef BARRIER_BRANCH_FACTOR
-}// namespace graphlab
+}  // namespace graphlab
 #endif
-

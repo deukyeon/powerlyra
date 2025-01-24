@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,37 +20,35 @@
  *
  */
 
-
 #ifndef DC_PACKET_MASK_HPP
 #define DC_PACKET_MASK_HPP
 namespace graphlab {
-  // ---------  Packet header types --------------
+// ---------  Packet header types --------------
 
-  /**
-   * \internal
-   * \ingroup rpc
-   * Used for regular calls which go into a thread pool
-   * for evaluation
-   */
-  const unsigned char STANDARD_CALL = 1;
+/**
+ * \internal
+ * \ingroup rpc
+ * Used for regular calls which go into a thread pool
+ * for evaluation
+ */
+const unsigned char STANDARD_CALL = 1;
 
-  /**
-   * \internal
-    \ingroup rpc
-   * 
-    If control packet flag is set, this packet 
-    does not increment any counters.
-  */
-  const unsigned char CONTROL_PACKET = 16; 
+/**
+ * \internal
+  \ingroup rpc
+ *
+  If control packet flag is set, this packet
+  does not increment any counters.
+*/
+const unsigned char CONTROL_PACKET = 16;
 
-  /**
-   * \internal
-   * \ingroup rpc
-   * 
-   * Used to identify that after sending this 
-   * packet, a flush is required
-   */
-  const unsigned char FLUSH_PACKET = 64;
-}
+/**
+ * \internal
+ * \ingroup rpc
+ *
+ * Used to identify that after sending this
+ * packet, a flush is required
+ */
+const unsigned char FLUSH_PACKET = 64;
+}  // namespace graphlab
 #endif
-

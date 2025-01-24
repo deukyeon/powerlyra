@@ -1,6 +1,5 @@
 #include "extension_graph.hpp"
 
-
 #ifndef GRAPHLAB_EXTENSIONS_HPP
 #define GRAPHLAB_EXTENSIONS_HPP
 #if 1
@@ -10,19 +9,14 @@
 #define main __real_main
 #endif
 
-
 namespace graphlab {
 namespace extension {
 
 // prototype for all implemented extensions
-void pagerank(extension_graph& graph, 
-              const std::string PR_FIELD,
+void pagerank(extension_graph& graph, const std::string PR_FIELD,
               double tolerance);
 
-} // namespace extension
-} // namespace graphlab
+}  // namespace extension
+}  // namespace graphlab
 
-
-
-
-#endif 
+#endif

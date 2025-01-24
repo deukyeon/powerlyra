@@ -6,13 +6,13 @@ namespace dc_impl {
 thread_local_buffer::thread_local_buffer() {
   // allocate the buffers
   dc = distributed_control::get_instance();
-  size_t nprocs = dc->numprocs(); 
+  size_t nprocs = dc->numprocs();
 
-  outbuf.resize(nprocs); 
-  for (size_t i = 0;i < outbuf.size(); ++i) {
+  outbuf.resize(nprocs);
+  for (size_t i = 0; i < outbuf.size(); ++i) {
     outbuf[i] = new inplace_lf_queue2<buffer_elem>;
   }
-  current_archive.resize(nprocs); 
+  current_archive.resize(nprocs);
 
   archive_locks.resize(nprocs);
 
@@ -20,7 +20,6 @@ thread_local_buffer::thread_local_buffer() {
   dc->register_send_buffer(this);
   procid = dc->procid();
 }
-
 
 thread_local_buffer::~thread_local_buffer() {
   dc->unregister_send_buffer(this);
@@ -33,7 +32,7 @@ thread_local_buffer::~thread_local_buffer() {
     }
   }
 
-  for (size_t i = 0;i < outbuf.size(); ++i) {
+  for (size_t i = 0; i < outbuf.size(); ++i) {
     delete outbuf[i];
   }
   outbuf.clear();
@@ -43,18 +42,17 @@ void thread_local_buffer::inc_calls_sent(procid_t target) {
   dc->inc_calls_sent(target);
 }
 
-
 void thread_local_buffer::push_flush() {
   for (size_t i = 0; i < outbuf.size(); ++i) {
     std::pair<buffer_elem*, buffer_elem*> bufs = extract(i);
     if (bufs.first != NULL) {
-      while(bufs.first != bufs.second) {
+      while (bufs.first != bufs.second) {
         buffer_elem* prev = bufs.first;
         dc->write_to_buffer(i, bufs.first->buf, bufs.second->len);
         buffer_elem** next = &bufs.first->next;
         volatile buffer_elem** n = (volatile buffer_elem**)(next);
-        while(__unlikely__((*n) == NULL)) {
-          asm volatile("pause\n": : :"memory");
+        while (__unlikely__((*n) == NULL)) {
+          asm volatile("pause\n" : : : "memory");
         }
         bufs.first = (buffer_elem*)(*n);
         delete prev;
@@ -64,24 +62,13 @@ void thread_local_buffer::push_flush() {
   }
 }
 
+void thread_local_buffer::pull_flush() { dc->flush(); }
 
-void thread_local_buffer::pull_flush() {
-  dc->flush();
-}
+void thread_local_buffer::pull_flush(procid_t p) { dc->flush(p); }
 
-void thread_local_buffer::pull_flush(procid_t p) {
-  dc->flush(p);
-}
+void thread_local_buffer::pull_flush_soon() { dc->flush_soon(); }
 
-
-void thread_local_buffer::pull_flush_soon() {
-  dc->flush_soon();
-}
-
-
-void thread_local_buffer::pull_flush_soon(procid_t p) {
-  dc->flush_soon(p);
-}
+void thread_local_buffer::pull_flush_soon(procid_t p) { dc->flush_soon(p); }
 
 oarchive* thread_local_buffer::acquire(procid_t target) {
   archive_locks[target].lock();
@@ -95,7 +82,6 @@ oarchive* thread_local_buffer::acquire(procid_t target) {
   return &current_archive[target];
 }
 
-
 void thread_local_buffer::add_to_queue(procid_t target, char* ptr, size_t len) {
   buffer_elem* elem = new buffer_elem;
   ASSERT_NE(ptr, NULL);
@@ -108,9 +94,11 @@ void thread_local_buffer::add_to_queue(procid_t target, char* ptr, size_t len) {
   }
 }
 
-void thread_local_buffer::release(procid_t target, bool do_not_count_bytes_sent) {
+void thread_local_buffer::release(procid_t target,
+                                  bool do_not_count_bytes_sent) {
   if (!do_not_count_bytes_sent) {
-    bytes_sent[target] += current_archive[target].off - prev_acquire_archive_size - sizeof(packet_hdr);
+    bytes_sent[target] += current_archive[target].off -
+                          prev_acquire_archive_size - sizeof(packet_hdr);
     inc_calls_sent(target);
   }
 
@@ -118,7 +106,7 @@ void thread_local_buffer::release(procid_t target, bool do_not_count_bytes_sent)
     // shift the buffer into outbuf
     char* ptr = current_archive[target].buf;
     size_t len = current_archive[target].off;
-    current_archive[target].buf = NULL; 
+    current_archive[target].buf = NULL;
     current_archive[target].off = 0;
     archive_locks[target].unlock();
 
@@ -129,8 +117,7 @@ void thread_local_buffer::release(procid_t target, bool do_not_count_bytes_sent)
   }
 }
 
-
-void thread_local_buffer::write(procid_t target, char* c, size_t len, 
+void thread_local_buffer::write(procid_t target, char* c, size_t len,
                                 bool do_not_count_bytes_sent) {
   if (!do_not_count_bytes_sent) {
     bytes_sent[target] += len;
@@ -141,18 +128,19 @@ void thread_local_buffer::write(procid_t target, char* c, size_t len,
     archive_locks[target].lock();
 
     if (current_archive[target].off) {
-      add_to_queue(target, current_archive[target].buf, current_archive[target].off);
+      add_to_queue(target, current_archive[target].buf,
+                   current_archive[target].off);
     }
-    current_archive[target].buf = NULL; 
+    current_archive[target].buf = NULL;
     current_archive[target].off = 0;
     archive_locks[target].unlock();
   }
   add_to_queue(target, c, len);
 }
 
-
-std::pair<buffer_elem*, buffer_elem*> thread_local_buffer::extract(procid_t target) {
-  if (current_archive[target].off > 0 ) {
+std::pair<buffer_elem*, buffer_elem*> thread_local_buffer::extract(
+    procid_t target) {
+  if (current_archive[target].off > 0) {
     if (archive_locks[target].try_lock()) {
       char* ptr = current_archive[target].buf;
       size_t len = current_archive[target].off;
@@ -169,8 +157,8 @@ std::pair<buffer_elem*, buffer_elem*> thread_local_buffer::extract(procid_t targ
         elem->next = NULL;
         outbuf[target]->enqueue(elem);
       }
-    } 
-  } 
+    }
+  }
   std::pair<buffer_elem*, buffer_elem*> ret;
   ret.first = outbuf[target]->dequeue_all();
   if (ret.first != NULL) {
@@ -182,7 +170,5 @@ std::pair<buffer_elem*, buffer_elem*> thread_local_buffer::extract(procid_t targ
   }
 }
 
-
-
-} // dc_impl
-} // graphlab
+}  // namespace dc_impl
+}  // namespace graphlab

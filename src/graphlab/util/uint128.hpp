@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef GRAPHLAB_UINT128_HPP
 #define GRAPHLAB_UINT128_HPP
 #include <stdint.h>
@@ -29,20 +28,20 @@
 #include <graphlab/serialization/serialization_includes.hpp>
 
 namespace graphlab {
-  
+
 /**
- * A 128 bit numeric type. This type is a union of a 16-byte character array (bytes),
- * and struct of two 64-bit integers (ints.high and ints.low).
+ * A 128 bit numeric type. This type is a union of a 16-byte character array
+ * (bytes), and struct of two 64-bit integers (ints.high and ints.low).
  */
 union gl_uint128_t {
   struct {
     uint64_t high;
-    uint64_t low;  
+    uint64_t low;
   } ints;
   char bytes[16];
-  
-  gl_uint128_t() { }
-  
+
+  gl_uint128_t() {}
+
   /**
    * Constructs a 128-bit type from a 64-bit value.
    * It simply clears the "high" 64 bits of the 128-bit integer, and sets
@@ -68,19 +67,18 @@ inline gl_uint128_t fill_128b() {
 /**
  * Prints the 128-bit integer as hexadecimal
  */
-inline std::ostream& operator<<(std::ostream& out, const gl_uint128_t &val) {
+inline std::ostream& operator<<(std::ostream& out, const gl_uint128_t& val) {
   static char hexchar[17] = "0123456789abcdef";
-  
-  for (size_t i = 0;i < 16; ++i) {
+
+  for (size_t i = 0; i < 16; ++i) {
     out << hexchar[(val.bytes[i] >> 4) & 15];
     out << hexchar[val.bytes[i] & 15];
   }
   return out;
 }
 
-}
+}  // namespace graphlab
 
 SERIALIZABLE_POD(graphlab::gl_uint128_t);
 
 #endif
-

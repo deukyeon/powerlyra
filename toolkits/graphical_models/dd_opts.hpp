@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,16 +17,14 @@
  *
  */
 
-
 /**
  *
- * \brief This application performs MAP inference on Markov Nets 
- * provided in standard UAI file format via Dual-Decomposition. 
+ * \brief This application performs MAP inference on Markov Nets
+ * provided in standard UAI file format via Dual-Decomposition.
  *
  *
  *  \authors Dhruv Batra, André Martins, Aroma Mahendru
  */
-
 
 #ifndef __DD_OPTS_HPP__
 #define __DD_OPTS_HPP__
@@ -38,47 +36,45 @@
 #define BUDGET 3
 /////////////////////////////////////////////////////////////////////////
 // Option Struct
-struct Options 
-{
-    // graphlab options
-    std::string exec_type;
-    
-    // input output dirs
-    std::string graph_file;
-    std::string output_dir;
-    std::string history_file;
-    std::string file_format;
-    std::string output_file;
+struct Options {
+  // graphlab options
+  std::string exec_type;
 
-    int verbose;
-    int algorithm;  
-    int maxiter;
+  // input output dirs
+  std::string graph_file;
+  std::string output_dir;
+  std::string history_file;
+  std::string file_format;
+  std::string output_file;
 
-    double dualimprovthres;
-    double pdgapthres;
-    double alpha;
-    double step_size; 
-    double agg_time; 
-    
-    bool debug;
-    
-    // Default values
-    Options(): 
-    exec_type("sync"),
-    output_dir("./"),
-    history_file("\0"),
-    file_format("uai"),
-    output_file("output"),
-    verbose(0),
-    algorithm(0),
-    maxiter(10000),
-    dualimprovthres(1e-12),
-    pdgapthres(1e-1),
-    alpha(1),
-    step_size(1.0),
-    agg_time(1e-4),
-    debug(false)
-    {}
+  int verbose;
+  int algorithm;
+  int maxiter;
+
+  double dualimprovthres;
+  double pdgapthres;
+  double alpha;
+  double step_size;
+  double agg_time;
+
+  bool debug;
+
+  // Default values
+  Options()
+      : exec_type("sync"),
+        output_dir("./"),
+        history_file("\0"),
+        file_format("uai"),
+        output_file("output"),
+        verbose(0),
+        algorithm(0),
+        maxiter(10000),
+        dualimprovthres(1e-12),
+        pdgapthres(1e-1),
+        alpha(1),
+        step_size(1.0),
+        agg_time(1e-4),
+        debug(false) {}
 };
 
 extern Options opts;

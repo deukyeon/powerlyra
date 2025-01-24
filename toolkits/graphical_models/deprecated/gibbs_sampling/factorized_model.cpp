@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,11 +17,7 @@
  *
  */
 
-
 #include "factorized_model.hpp"
-
-
-
 
 #include <graphlab/macros_def.hpp>
 
@@ -34,8 +30,8 @@ factor_t& factorized_model::add_factor(const factor_t& factor) {
   // // normalize the factor
   // _factors.back().normalize();
   factor_id_t factor_id = _factors.size() - 1;
-  for(size_t i = 0; i < factor.num_vars(); ++i) {
-    variable_t var = factor.args().var(i); 
+  for (size_t i = 0; i < factor.num_vars(); ++i) {
+    variable_t var = factor.args().var(i);
     _variables.insert(var);
     // add factor to reverse map
     _var_to_factor[var].insert(factor_id);
@@ -50,8 +46,8 @@ factor_t& factorized_model::add_factor(const domain_t& vars) {
   // // normalize the factor
   // _factors.back().normalize();
   factor_id_t factor_id = _factors.size() - 1;
-  for(size_t i = 0; i < factor.num_vars(); ++i) {
-    variable_t var = factor.args().var(i); 
+  for (size_t i = 0; i < factor.num_vars(); ++i) {
+    variable_t var = factor.args().var(i);
     _variables.insert(var);
     // add factor to reverse map
     _var_to_factor[var].insert(factor_id);
@@ -59,17 +55,13 @@ factor_t& factorized_model::add_factor(const domain_t& vars) {
   return _factors.back();
 }
 
-
-const std::set<factor_id_t>& 
-factorized_model::factor_ids(const variable_t& var) const {
+const std::set<factor_id_t>& factorized_model::factor_ids(
+    const variable_t& var) const {
   typedef std::map<variable_t, std::set<factor_id_t> >::const_iterator iterator;
   iterator iter = _var_to_factor.find(var);
   ASSERT_TRUE(iter != _var_to_factor.end());
   return iter->second;
 }
-
-
-
 
 void factorized_model::load_alchemy(const std::string& filename) {
   // Open an input file stream
@@ -78,7 +70,7 @@ void factorized_model::load_alchemy(const std::string& filename) {
   std::string line;
   size_t line_number = 0;
   // Read the first line which should be "variable:"
-  const bool success = getline(fin,line,line_number++);
+  const bool success = getline(fin, line, line_number++);
   ASSERT_TRUE(success);
   line = trim(line);
   {
@@ -91,16 +83,15 @@ void factorized_model::load_alchemy(const std::string& filename) {
   typedef var_map_type::iterator var_map_iter_type;
   var_map_type var_map;
   size_t unique_var_id = 0;
-  while(fin.good() &&
-        getline(fin, line, line_number++) &&
-        trim(line) != "factors:") {
+  while (fin.good() && getline(fin, line, line_number++) &&
+         trim(line) != "factors:") {
     // Separate into name and size
     line = trim(line);
     ASSERT_GT(line.length(), 0);
     size_t namelen = line.find_last_of('\t');
     size_t varsize = 2;
     // if their is a '\t' character then the variable size follows it
-    if(namelen != std::string::npos) {
+    if (namelen != std::string::npos) {
       std::stringstream istrm(trim(line.substr(namelen)));
       istrm >> varsize;
     }
@@ -121,9 +112,9 @@ void factorized_model::load_alchemy(const std::string& filename) {
     ASSERT_EQ(trim(line), factors_string);
   }
 
-  while(fin.good() && getline(fin, line, line_number++)) {
+  while (fin.good() && getline(fin, line, line_number++)) {
     /// if the line is empty skip it
-    if(trim(line).length() == 0) continue;
+    if (trim(line).length() == 0) continue;
     //      std::cout << "Line: " << line << std::endl;
     // the factor being read may contain the same variable multiple
     // times to account for that, we first read a temporary factors,
@@ -131,23 +122,23 @@ void factorized_model::load_alchemy(const std::string& filename) {
     // it to the factor we actually need
 
     // Process the arguments
-    size_t end_of_variables = line.find("//")-1;
+    size_t end_of_variables = line.find("//") - 1;
     std::vector<variable_t> args;
     std::set<variable_t> args_set;
 
     // Read in all the variables in the factor and store them
-    for(size_t i = 0; i < end_of_variables;
-        i = line.find_first_of('/', i) + 1) {
+    for (size_t i = 0; i < end_of_variables;
+         i = line.find_first_of('/', i) + 1) {
       // Read the next variable as a string
       std::string variable_name =
-        trim(line.substr(i, line.find_first_of('/',i) - i));
+          trim(line.substr(i, line.find_first_of('/', i) - i));
       //        std::cout << "Variable Name: " << variable_name << std::endl;
       // Look up the variable in the variable map
       var_map_iter_type iter = var_map.find(variable_name);
       ASSERT_TRUE(iter != var_map.end());
       variable_t var = iter->second;
       // This argument must be unique
-      if(args_set.count(var) > 0) {
+      if (args_set.count(var) > 0) {
         std::cout << "Line Number: " << line_number << std::endl;
         ASSERT_EQ(args_set.count(var), 0);
       }
@@ -155,21 +146,20 @@ void factorized_model::load_alchemy(const std::string& filename) {
       args_set.insert(var);
       // Save the arguments read from the file
       args.push_back(var);
-    } // end of first pass through variable
+    }  // end of first pass through variable
 
-      // Construct the arguments (which will remap the domain)
+    // Construct the arguments (which will remap the domain)
     domain_t domain(args);
     //      std::cout << "domain: " << domain << std::endl;
     // Build the factor
     factor_t factor(domain);
-      
+
     // Now for the tricky part we need an assignment in the original
     // order
     domain_t orig_domain;
-    for(size_t i = 0; i < args.size(); ++i) {
+    for (size_t i = 0; i < args.size(); ++i) {
       orig_domain += variable_t(i, args[i].size());
     }
-
 
     // Advance to the correct location in the line
     std::istringstream tbl_values;
@@ -180,13 +170,13 @@ void factorized_model::load_alchemy(const std::string& filename) {
       size_t startpos = line.find("//") + 2;
       tbl_values.str(line.substr(startpos, weightpos - startpos));
     }
-      
+
     // Read in the weights
-    for(assignment_t orig_asg = orig_domain.begin();
-        orig_asg < orig_domain.end(); ++orig_asg) {
+    for (assignment_t orig_asg = orig_domain.begin();
+         orig_asg < orig_domain.end(); ++orig_asg) {
       assignment_t asg(domain);
       // Translate the original assignment into the sorted factor assignment
-      for(size_t i = 0; i < domain.num_vars(); ++i) {
+      for (size_t i = 0; i < domain.num_vars(); ++i) {
         size_t variable_id = args[i].id();
         asg.set_asg(variable_id, orig_asg.asg(i));
       }
@@ -194,62 +184,51 @@ void factorized_model::load_alchemy(const std::string& filename) {
       ASSERT_TRUE(tbl_values.good());
       double value = 0;
       tbl_values >> value;
-      // Values are stored in log form      
-      factor.logP(asg.linear_index()) = value;                
+      // Values are stored in log form
+      factor.logP(asg.linear_index()) = value;
     }
     // Save the factor to the factor graph
-    add_factor(factor);                
-  } // End of outer while loop over factors should be end of file
+    add_factor(factor);
+  }  // End of outer while loop over factors should be end of file
 
   ASSERT_FALSE(fin.good());
   fin.close();
-} // end of load alchemy
+}  // end of load alchemy
 
-
-
-  //! Save the factor to a file
-void factorized_model::save(graphlab::oarchive &arc) const {
-  arc << _variables
-      << _factors
-      << _var_to_factor
-      << _var_name;
+//! Save the factor to a file
+void factorized_model::save(graphlab::oarchive& arc) const {
+  arc << _variables << _factors << _var_to_factor << _var_name;
 }
 
-
 //! Load the factor from a file
-void factorized_model::load(graphlab::iarchive &arc) {
-  arc >> _variables
-      >> _factors
-      >> _var_to_factor
-      >> _var_name;
-}  
-
+void factorized_model::load(graphlab::iarchive& arc) {
+  arc >> _variables >> _factors >> _var_to_factor >> _var_name;
+}
 
 //! save the alchemy file
 void factorized_model::save_alchemy(const std::string& filename) const {
   std::ofstream fout(filename.c_str());
   ASSERT_TRUE(fout.good());
   fout << "variables:" << std::endl;
-  foreach(variable_t var, _variables) {
+  foreach (variable_t var, _variables) {
     fout << var.id() << '\t' << var.size() << "\n";
   }
   fout << "factors:" << std::endl;
-  foreach(const factor_t& factor, _factors) {
+  foreach (const factor_t& factor, _factors) {
     domain_t domain = factor.args();
-    for(size_t i = 0; i < domain.num_vars(); ++i) {
+    for (size_t i = 0; i < domain.num_vars(); ++i) {
       fout << domain.var(i).id();
-      if(i + 1 < domain.num_vars()) fout << " / ";
+      if (i + 1 < domain.num_vars()) fout << " / ";
     }
     fout << " // ";
-    for(size_t i = 0; i < factor.size(); ++i) {
+    for (size_t i = 0; i < factor.size(); ++i) {
       fout << factor.logP(i);
-      if(i + 1 < factor.size()) fout << ' ';
+      if (i + 1 < factor.size()) fout << ' ';
     }
     fout << '\n';
   }
   fout.flush();
   fout.close();
 }
-
 
 #include <graphlab/macros_undef.hpp>

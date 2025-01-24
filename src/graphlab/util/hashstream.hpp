@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef GRAPHLAB_HASHSTREAM
 #define GRAPHLAB_HASHSTREAM
 
@@ -29,66 +28,61 @@
 
 namespace graphlab {
 
-  /// \ingroup util_internal
-  namespace hashstream_impl {
-    /// \ingroup util_internal
-    struct hashstream_sink {
-      size_t hash;
-      size_t len;
+/// \ingroup util_internal
+namespace hashstream_impl {
+/// \ingroup util_internal
+struct hashstream_sink {
+  size_t hash;
+  size_t len;
 
-      inline hashstream_sink(size_t unused = 0):hash(0),len(0) { }
+  inline hashstream_sink(size_t unused = 0) : hash(0), len(0) {}
 
-      inline hashstream_sink(const hashstream_sink& other) :
-        hash(other.hash),len(other.len) { }
+  inline hashstream_sink(const hashstream_sink& other)
+      : hash(other.hash), len(other.len) {}
 
-      inline ~hashstream_sink() { }
+  inline ~hashstream_sink() {}
 
-      size_t size() const { return len; }
-      char* c_str() { return NULL; }
-      const char* c_str() const { return NULL; }
+  size_t size() const { return len; }
+  char* c_str() { return NULL; }
+  const char* c_str() const { return NULL; }
 
-      void clear() {
-        len = 0;
-        hash = 0;
-      }
+  void clear() {
+    len = 0;
+    hash = 0;
+  }
 
-      void reserve(size_t new_buffer_size) { }
+  void reserve(size_t new_buffer_size) {}
 
-      typedef char        char_type;
-      struct category: public boost::iostreams::device_tag,
-                       public boost::iostreams::output,
-                       public boost::iostreams::multichar_tag { };
+  typedef char char_type;
+  struct category : public boost::iostreams::device_tag,
+                    public boost::iostreams::output,
+                    public boost::iostreams::multichar_tag {};
 
-      /** the optimal buffer size is 0. */
-      inline std::streamsize optimal_buffer_size() const { return 0; }
+  /** the optimal buffer size is 0. */
+  inline std::streamsize optimal_buffer_size() const { return 0; }
 
-      inline std::streamsize advance(std::streamsize n) {
-        len += n;
-        return n;
-      }
+  inline std::streamsize advance(std::streamsize n) {
+    len += n;
+    return n;
+  }
 
-      inline std::streamsize write(const char* s, std::streamsize n) {
-        for (size_t i = 0;i < (size_t)n; ++i) {
-          hash = hash * 101 + s[i];
-        }
-        len += n;
-        return n;
-      }
+  inline std::streamsize write(const char* s, std::streamsize n) {
+    for (size_t i = 0; i < (size_t)n; ++i) {
+      hash = hash * 101 + s[i];
+    }
+    len += n;
+    return n;
+  }
 
-      inline void swap(hashstream_sink &other) {
-        std::swap(hash, other.hash);
-        std::swap(len, other.len);
-      }
+  inline void swap(hashstream_sink& other) {
+    std::swap(hash, other.hash);
+    std::swap(len, other.len);
+  }
+};
 
-    };
+};  // namespace hashstream_impl
 
-  }; // end of impl;
+typedef boost::iostreams::stream<hashstream_impl::hashstream_sink> hashstream;
 
-
-  typedef boost::iostreams::stream< hashstream_impl::hashstream_sink >
-  hashstream;
-
-
-}; // end of namespace graphlab
+};  // end of namespace graphlab
 #endif
-

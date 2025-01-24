@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,16 +20,14 @@
  *
  */
 
-
 /**
  * Also contains code that is Copyright 2011 Yahoo! Inc.  All rights
- * reserved.  
+ * reserved.
  *
  * Contributed under the iCLA for:
- *    Joseph Gonzalez (jegonzal@yahoo-inc.com) 
+ *    Joseph Gonzalez (jegonzal@yahoo-inc.com)
  *
  */
-
 
 #include <string>
 #include <sstream>
@@ -39,47 +37,41 @@
 #include <graphlab/options/options_map.hpp>
 
 namespace graphlab {
-  
-   
-  void options_map::parse_string(std::string arguments) {
-    std::pair<std::string, options_map> ret;
-    // Break the string appart
-    if(!arguments.empty()) {
-      std::replace(arguments.begin(), arguments.end(), ',', ' ');
-      std::replace(arguments.begin(), arguments.end(), ';', ' ');        
-      std::stringstream arg_strm(arguments);
-      bool ret = parse_options(arg_strm);
-      if (ret == false) {
-        logstream(LOG_FATAL) << "Malformed option. Failed to parse \"" 
-                             << arguments << "\"" << std::endl;
-      }
-    }     
-  }
 
-
-
-  std::ostream& operator<<(std::ostream& out,
-                           const graphlab::options_map& opts) {
-    // save the format flags
-    std::ios_base::fmtflags fmt = out.flags();
-  
-    std::map<std::string,
-             graphlab::options_map::option_values>::const_iterator
-      i = opts.options.begin();
-    while(i != opts.options.end()) {    
-      //out.setf(std::ios::left);
-      out << std::setw(18) << std::left << i->first;    
-      out << std::setw(2) << "= ";    
-      //out.setf(std::ios::right);
-      out << i->second.strval;
-      out << std::endl;
-      ++i;
+void options_map::parse_string(std::string arguments) {
+  std::pair<std::string, options_map> ret;
+  // Break the string appart
+  if (!arguments.empty()) {
+    std::replace(arguments.begin(), arguments.end(), ',', ' ');
+    std::replace(arguments.begin(), arguments.end(), ';', ' ');
+    std::stringstream arg_strm(arguments);
+    bool ret = parse_options(arg_strm);
+    if (ret == false) {
+      logstream(LOG_FATAL) << "Malformed option. Failed to parse \""
+                           << arguments << "\"" << std::endl;
     }
-    // reset the format flags
-    out.flags(fmt);
-    out << std::endl;
-    return out;
   }
+}
 
-}; // end of namespace graphlab
+std::ostream& operator<<(std::ostream& out, const graphlab::options_map& opts) {
+  // save the format flags
+  std::ios_base::fmtflags fmt = out.flags();
 
+  std::map<std::string, graphlab::options_map::option_values>::const_iterator
+      i = opts.options.begin();
+  while (i != opts.options.end()) {
+    // out.setf(std::ios::left);
+    out << std::setw(18) << std::left << i->first;
+    out << std::setw(2) << "= ";
+    // out.setf(std::ios::right);
+    out << i->second.strval;
+    out << std::endl;
+    ++i;
+  }
+  // reset the format flags
+  out.flags(fmt);
+  out << std::endl;
+  return out;
+}
+
+};  // end of namespace graphlab

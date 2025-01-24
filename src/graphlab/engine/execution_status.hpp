@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,53 +20,54 @@
  *
  */
 
-
 #ifndef GRAPHLAB_EXECUTION_STATUS_HPP
 #define GRAPHLAB_EXECUTION_STATUS_HPP
 
 namespace graphlab {
 
-  /**
-   * \brief the reasons for execution completion.
-   *
-   * Because there are several reasons why the graphlab engine might
-   * terminate the exec_status value is returned from the start
-   * function after completing execution. 
-   *
-   */
-  struct execution_status {
-    enum status_enum {
-      UNSET,          /** The default termination reason */      
-      RUNNING,        /** The engine is currently running */
-      TASK_DEPLETION, /**<Execution completed successfully due to
-                              task depletion */      
-      TIMEOUT,        /**< The execution completed after timing
-                              out */
-      
-      FORCED_ABORT,     /**< the engine was stopped by calling force
-                                abort */
-      
-      EXCEPTION        /**< the engine was stopped by an exception */
-    }; // end of enum
-    
-    // Convenience function.
-    static std::string to_string(status_enum es) {
-      switch(es) {
-        case UNSET: return "engine not run!";
-        case RUNNING: return "engine is still running!"; 
-        case TASK_DEPLETION: return "task depletion (natural)";
-        case TIMEOUT: return "timeout";
-        case FORCED_ABORT: return "forced abort";
-        case EXCEPTION: return "exception";
-        default: return "unknown";
-      };
-    } // end of to_string
-  };
+/**
+ * \brief the reasons for execution completion.
+ *
+ * Because there are several reasons why the graphlab engine might
+ * terminate the exec_status value is returned from the start
+ * function after completing execution.
+ *
+ */
+struct execution_status {
+  enum status_enum {
+    UNSET,          /** The default termination reason */
+    RUNNING,        /** The engine is currently running */
+    TASK_DEPLETION, /**<Execution completed successfully due to
+                            task depletion */
+    TIMEOUT,        /**< The execution completed after timing
+                            out */
 
+    FORCED_ABORT, /**< the engine was stopped by calling force
+                          abort */
 
+    EXCEPTION /**< the engine was stopped by an exception */
+  };          // end of enum
 
-}; // end of namespace graphlab
+  // Convenience function.
+  static std::string to_string(status_enum es) {
+    switch (es) {
+      case UNSET:
+        return "engine not run!";
+      case RUNNING:
+        return "engine is still running!";
+      case TASK_DEPLETION:
+        return "task depletion (natural)";
+      case TIMEOUT:
+        return "timeout";
+      case FORCED_ABORT:
+        return "forced abort";
+      case EXCEPTION:
+        return "exception";
+      default:
+        return "unknown";
+    };
+  }  // end of to_string
+};
+
+};  // end of namespace graphlab
 #endif
-
-
-

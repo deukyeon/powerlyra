@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef REQUEST_ISSUE_HPP
 #define REQUEST_ISSUE_HPP
 #include <sstream>
@@ -66,22 +65,23 @@ The format of a "request" packet is in the form of an archive and is as follows
 \li fn::argN_type    -- target function's Nth argument
 
 
-The ID here is a pointer to a ireply_container datastructure. When the remote machine completes
-the function call, it will issue an RPC to the function reply_increment_counter on the originating machine.
-The reply_increment_counter function  store the serialized return value in the ireply_container , as well
-as perform an atomic increment on the ireply_container .
+The ID here is a pointer to a ireply_container datastructure. When the remote
+machine completes the function call, it will issue an RPC to the function
+reply_increment_counter on the originating machine. The reply_increment_counter
+function  store the serialized return value in the ireply_container , as well as
+perform an atomic increment on the ireply_container .
 
 Here is an example of the marshall code for 1 argument
 \code
 namespace request_issue_detail {
-  template < typename BoolType, typename F, typename T0 > 
+  template < typename BoolType, typename F, typename T0 >
   struct dispatch_selector1 {
     static dispatch_type dispatchfn () {
       return dc_impl::NONINTRUSIVE_REQUESTDISPATCH1 < distributed_control, F,
-	T0 >;
+        T0 >;
     }
   };
-  template < typename F, typename T0 > 
+  template < typename F, typename T0 >
   struct dispatch_selector1 <boost::mpl::bool_ < true >, F, T0 > {
     static dispatch_type dispatchfn () {
       return dc_impl::REQUESTDISPATCH1 < distributed_control, F, T0 >;
@@ -89,7 +89,7 @@ namespace request_issue_detail {
   };
 }
 
-template < typename F, typename T0 > 
+template < typename F, typename T0 >
 class remote_request_issue1 {
  public:
   static void exec (dc_send * sender, size_t request_handle,
@@ -99,7 +99,7 @@ class remote_request_issue1 {
     oarchive & arc = *ptr;
     size_t len =
       dc_send::write_packet_header (arc, _get_procid (), flags,
-				    _get_sequentialization_key ());
+                                    _get_sequentialization_key ());
     uint32_t beginoff = arc.off;
     dispatch_type d =
       request_issue_detail::dispatch_selector1 < typename is_rpc_call <
@@ -120,62 +120,79 @@ will contain the name of the function. This is a "portable" call.
 \see portable_issue.hpp
 */
 
-#define GENARGS(Z,N,_)  BOOST_PP_CAT(const T, N) BOOST_PP_CAT(&i, N)
-#define GENT(Z,N,_) BOOST_PP_CAT(T, N)
-#define GENARC(Z,N,_) arc << BOOST_PP_CAT(i, N);
-
+#define GENARGS(Z, N, _) BOOST_PP_CAT(const T, N) BOOST_PP_CAT(&i, N)
+#define GENT(Z, N, _) BOOST_PP_CAT(T, N)
+#define GENARC(Z, N, _) arc << BOOST_PP_CAT(i, N);
 
 /**
-The dispatch_selectorN structs are used to pick between the standard dispatcher and the nonintrusive dispatch
-by checking if the function is a RPC style call or not.
+The dispatch_selectorN structs are used to pick between the standard dispatcher
+and the nonintrusive dispatch by checking if the function is a RPC style call or
+not.
 */
-#define REMOTE_REQUEST_ISSUE_GENERATOR(Z,N,FNAME_AND_CALL) \
-namespace request_issue_detail {      \
-template <typename BoolType, typename F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(N, typename T)> \
-struct BOOST_PP_CAT(dispatch_selector, N){  \
-  static dispatch_type dispatchfn() { return BOOST_PP_CAT(dc_impl::NONINTRUSIVE_REQUESTDISPATCH,N)<distributed_control,F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N, GENT ,_) >; }  \
-};\
-template <typename F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(N, typename T)> \
-struct BOOST_PP_CAT(dispatch_selector, N)<boost::mpl::bool_<true>, F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(N, T)>{  \
-  static dispatch_type dispatchfn() { return BOOST_PP_CAT(dc_impl::REQUESTDISPATCH,N)<distributed_control,F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N, GENT ,_) >; } \
-}; \
-}\
-template<typename F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(N, typename T)> \
-class  BOOST_PP_CAT(FNAME_AND_CALL, N) { \
-  public: \
-  static void exec(dc_send* sender, size_t request_handle, unsigned char flags, procid_t target, F remote_function BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N,GENARGS ,_) ) {  \
-    oarchive* ptr = get_thread_local_buffer(target);  \
-    oarchive& arc = *ptr;                         \
-    size_t len = dc_send::write_packet_header(arc, _get_procid(), flags, _get_sequentialization_key()); \
-    uint32_t beginoff = arc.off; \
-    dispatch_type d = BOOST_PP_CAT(request_issue_detail::dispatch_selector,N)<typename is_rpc_call<F>::type, F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(N, T) >::dispatchfn();   \
-    arc << reinterpret_cast<size_t>(d);       \
-    arc << reinterpret_cast<size_t>(remote_function); \
-    arc << request_handle; \
-    BOOST_PP_REPEAT(N, GENARC, _)                \
-    *(reinterpret_cast<uint32_t*>(arc.buf + len)) = arc.off - beginoff; \
-    release_thread_local_buffer(target, flags & CONTROL_PACKET); \
-    if (flags & FLUSH_PACKET) pull_flush_soon_thread_local_buffer(target); \
-  }\
-};
-
+#define REMOTE_REQUEST_ISSUE_GENERATOR(Z, N, FNAME_AND_CALL)                   \
+  namespace request_issue_detail {                                             \
+  template <typename BoolType, typename F BOOST_PP_COMMA_IF(N)                 \
+                                   BOOST_PP_ENUM_PARAMS(N, typename T)>        \
+  struct BOOST_PP_CAT(dispatch_selector, N) {                                  \
+    static dispatch_type dispatchfn() {                                        \
+      return BOOST_PP_CAT(                                                     \
+          dc_impl::NONINTRUSIVE_REQUESTDISPATCH,                               \
+          N)<distributed_control,                                              \
+             F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N, GENT, _)>;                \
+    }                                                                          \
+  };                                                                           \
+  template <typename F BOOST_PP_COMMA_IF(N)                                    \
+                BOOST_PP_ENUM_PARAMS(N, typename T)>                           \
+  struct BOOST_PP_CAT(dispatch_selector,                                       \
+                      N)<boost::mpl::bool_<true>,                              \
+                         F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(N, T)> {  \
+    static dispatch_type dispatchfn() {                                        \
+      return BOOST_PP_CAT(                                                     \
+          dc_impl::REQUESTDISPATCH,                                            \
+          N)<distributed_control,                                              \
+             F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N, GENT, _)>;                \
+    }                                                                          \
+  };                                                                           \
+  }                                                                            \
+  template <typename F BOOST_PP_COMMA_IF(N)                                    \
+                BOOST_PP_ENUM_PARAMS(N, typename T)>                           \
+  class BOOST_PP_CAT(FNAME_AND_CALL, N) {                                      \
+   public:                                                                     \
+    static void exec(dc_send* sender, size_t request_handle,                   \
+                     unsigned char flags, procid_t target,                     \
+                     F remote_function BOOST_PP_COMMA_IF(N)                    \
+                         BOOST_PP_ENUM(N, GENARGS, _)) {                       \
+      oarchive* ptr = get_thread_local_buffer(target);                         \
+      oarchive& arc = *ptr;                                                    \
+      size_t len = dc_send::write_packet_header(arc, _get_procid(), flags,     \
+                                                _get_sequentialization_key()); \
+      uint32_t beginoff = arc.off;                                             \
+      dispatch_type d = BOOST_PP_CAT(                                          \
+          request_issue_detail::dispatch_selector,                             \
+          N)<typename is_rpc_call<F>::type,                                    \
+             F BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM_PARAMS(N, T)>::dispatchfn(); \
+      arc << reinterpret_cast<size_t>(d);                                      \
+      arc << reinterpret_cast<size_t>(remote_function);                        \
+      arc << request_handle;                                                   \
+      BOOST_PP_REPEAT(N, GENARC, _)                                            \
+      *(reinterpret_cast<uint32_t*>(arc.buf + len)) = arc.off - beginoff;      \
+      release_thread_local_buffer(target, flags& CONTROL_PACKET);              \
+      if (flags & FLUSH_PACKET) pull_flush_soon_thread_local_buffer(target);   \
+    }                                                                          \
+  };
 
 /**
 Generates a function call issue. 3rd argument is the issue name
 */
-BOOST_PP_REPEAT(7, REMOTE_REQUEST_ISSUE_GENERATOR,  remote_request_issue )
-
-
+BOOST_PP_REPEAT(7, REMOTE_REQUEST_ISSUE_GENERATOR, remote_request_issue)
 
 #undef GENARC
 #undef GENT
 #undef GENARGS
 #undef REMOTE_REQUEST_ISSUE_GENERATOR
 
-
-} // namespace dc_impl
-} // namespace graphlab
+}  // namespace dc_impl
+}  // namespace graphlab
 #include <graphlab/rpc/function_arg_types_undef.hpp>
 
 #endif
-

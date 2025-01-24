@@ -31,9 +31,9 @@
 
 #include <graphlab.hpp>
 
-//remove assigned options from arguments
+// remove assigned options from arguments
 std::string get_arg_str_without(int argc, char** argv,
-    std::vector<std::string> remove_opts) {
+                                std::vector<std::string> remove_opts) {
   std::stringstream strm;
   bool skip_next = false;
   for (int i = 1; i < argc; ++i) {
@@ -42,8 +42,8 @@ std::string get_arg_str_without(int argc, char** argv,
       std::string with_equal = remove_opts[j] + "=";
       if (strncmp(with_equal.c_str(), argv[i], with_equal.size()) == 0) {
         skip = true;
-      } else if (strncmp(remove_opts[j].c_str(), argv[i], remove_opts[j].size())
-          == 0) {
+      } else if (strncmp(remove_opts[j].c_str(), argv[i],
+                         remove_opts[j].size()) == 0) {
         skip = true;
         skip_next = true;
       }
@@ -58,16 +58,16 @@ std::string get_arg_str_without(int argc, char** argv,
 }
 
 bool call_graph_laplacian(const std::string& mpi_args,
-    const std::string& filename, const std::string& format,
-    const bool normalized_cut, const bool ratio_cut, const std::string& args) {
+                          const std::string& filename,
+                          const std::string& format, const bool normalized_cut,
+                          const bool ratio_cut, const std::string& args) {
   std::stringstream strm;
-  if(mpi_args.length() > 0)
-    strm << "mpiexec " << mpi_args << " ";
+  if (mpi_args.length() > 0) strm << "mpiexec " << mpi_args << " ";
   strm << "./graph_laplacian ";
   strm << " --graph=" << filename;
   strm << " --format=" << format;
-//  strm << " --normalized-cut=" << normalized_cut;
-//  strm << " --ratio-cut=" << ratio_cut;
+  //  strm << " --normalized-cut=" << normalized_cut;
+  //  strm << " --ratio-cut=" << ratio_cut;
   strm << " " << args;
   std::cout << "CALLING >" << strm.str() << std::endl;
   int sys_ret = system(strm.str().c_str());
@@ -79,23 +79,24 @@ bool call_graph_laplacian(const std::string& mpi_args,
   return true;
 }
 
-void make_initial_vector_file(const std::string& filename, const size_t num_data){
+void make_initial_vector_file(const std::string& filename,
+                              const size_t num_data) {
   std::ofstream ofs((filename + ".init").c_str());
-  for(size_t i=0;i<num_data;++i){
-    ofs << 0.1*((i+1)%10)/10.0 << "\n";
+  for (size_t i = 0; i < num_data; ++i) {
+    ofs << 0.1 * ((i + 1) % 10) / 10.0 << "\n";
   }
   ofs.close();
 }
 
 bool call_svd(const std::string& mpi_args, const std::string& filename,
-    const std::string& svd_dir, const size_t num_clusters, const size_t rank,
-    const size_t num_data, const std::string& args) {
-  make_initial_vector_file(filename, num_data+1);
+              const std::string& svd_dir, const size_t num_clusters,
+              const size_t rank, const size_t num_data,
+              const std::string& args) {
+  make_initial_vector_file(filename, num_data + 1);
   std::stringstream strm;
-  if(mpi_args.length() > 0)
-    strm << "mpiexec " << mpi_args << " ";
+  if (mpi_args.length() > 0) strm << "mpiexec " << mpi_args << " ";
   strm << svd_dir << "svd " + filename + ".glap";
-  strm << " --rows=" << num_data+1;
+  strm << " --rows=" << num_data + 1;
   strm << " --cols=" << num_data;
   strm << " --nsv=" << num_clusters;
   strm << " --nv=" << rank;
@@ -103,8 +104,8 @@ bool call_svd(const std::string& mpi_args, const std::string& filename,
   strm << " --quiet=1";
   strm << " --save_vectors=1";
   strm << " --ortho_repeats=3";
-  //strm << " --id=1";
-  //strm << " --prediction=" << filename + ".";
+  // strm << " --id=1";
+  // strm << " --prediction=" << filename + ".";
   strm << " --prediction=" << filename;
   strm << " --initial_vector=" << filename + ".init";
   strm << " " << args;
@@ -119,11 +120,12 @@ bool call_svd(const std::string& mpi_args, const std::string& filename,
 }
 
 bool call_eigen_vector_normalization(const std::string& mpi_args,
-    const std::string& filename, const size_t num_clusters, const size_t rank,
-    const size_t num_data, const std::string& args) {
+                                     const std::string& filename,
+                                     const size_t num_clusters,
+                                     const size_t rank, const size_t num_data,
+                                     const std::string& args) {
   std::stringstream strm;
-  if(mpi_args.length() > 0)
-    strm << "mpiexec " << mpi_args << " ";
+  if (mpi_args.length() > 0) strm << "mpiexec " << mpi_args << " ";
   strm << "./eigen_vector_normalization";
   strm << " --data=" << filename;
   strm << " --clusters=" << num_clusters;
@@ -141,12 +143,11 @@ bool call_eigen_vector_normalization(const std::string& mpi_args,
 }
 
 bool call_kmeans(const std::string& mpi_args, const std::string& filename,
-    const std::string& kmeans_dir, const size_t num_clusters,
-    const std::string& args) {
-  //call svd
+                 const std::string& kmeans_dir, const size_t num_clusters,
+                 const std::string& args) {
+  // call svd
   std::stringstream strm;
-  if(mpi_args.length() > 0)
-    strm << "mpiexec " << mpi_args << " ";
+  if (mpi_args.length() > 0) strm << "mpiexec " << mpi_args << " ";
   strm << kmeans_dir << "kmeans ";
   strm << " --data " << filename << ".compressed";
   strm << " --clusters " << num_clusters;
@@ -162,7 +163,7 @@ bool call_kmeans(const std::string& mpi_args, const std::string& filename,
   return true;
 }
 
-//select good rank
+// select good rank
 int get_lanczos_rank(const size_t num_clusters, const size_t num_data) {
   size_t rank = 1;
   if (num_data < 1000) {
@@ -180,7 +181,7 @@ int get_lanczos_rank(const size_t num_clusters, const size_t num_data) {
     rank = num_clusters + 100;
   }
   return rank;
-//  return num_clusters + 1;
+  //  return num_clusters + 1;
 }
 
 int main(int argc, char** argv) {
@@ -195,43 +196,44 @@ int main(int argc, char** argv) {
   bool normalized_cut = true;
   bool ratio_cut = false;
   size_t sv = 0;
-  //parse command line
-  graphlab::command_line_options clopts(
-          "Graph partitioning (normalized cut)");
-  clopts.attach_option("graph", graph_dir,
-                       "The graph file. This is not optional. Vertex ids must start from 1 "
-                       "and must not skip any numbers.");
-  clopts.attach_option("format", format,
-                       "The graph file format. If \"weight\" is set, the program will read "
-                       "the data file where each line holds [id1] [id2] [weight].");
+  // parse command line
+  graphlab::command_line_options clopts("Graph partitioning (normalized cut)");
+  clopts.attach_option(
+      "graph", graph_dir,
+      "The graph file. This is not optional. Vertex ids must start from 1 "
+      "and must not skip any numbers.");
+  clopts.attach_option(
+      "format", format,
+      "The graph file format. If \"weight\" is set, the program will read "
+      "the data file where each line holds [id1] [id2] [weight].");
   clopts.attach_option("partitions", num_partitions,
                        "The number of partitions to create");
   clopts.attach_option("svd-dir", svd_dir,
                        "Path to the directory of Graphlab svd");
   clopts.attach_option("kmeans-dir", kmeans_dir,
                        "Path to the directory of Graphlab kmeans");
-  clopts.attach_option("mpi-args", mpi_args,
-                       "If set, will execute mipexec with the given arguments. "
-                       "For example, --mpi-args=\"-n [N machines] --hostfile [host file]\"");
-  clopts.attach_option("sv", sv,
-                       "Number of vectors in each iteration in the Lanczos svd.");
-//  clopts.attach_option("normalized-cut", normalized_cut,
-//                       "do normalized cut");
-//  clopts.attach_option("ratio-cut", ratio_cut,
-//                       "do ratio cut");
-  if (!clopts.parse(argc, argv))
-    return EXIT_FAILURE;
+  clopts.attach_option(
+      "mpi-args", mpi_args,
+      "If set, will execute mipexec with the given arguments. "
+      "For example, --mpi-args=\"-n [N machines] --hostfile [host file]\"");
+  clopts.attach_option(
+      "sv", sv, "Number of vectors in each iteration in the Lanczos svd.");
+  //  clopts.attach_option("normalized-cut", normalized_cut,
+  //                       "do normalized cut");
+  //  clopts.attach_option("ratio-cut", ratio_cut,
+  //                       "do ratio cut");
+  if (!clopts.parse(argc, argv)) return EXIT_FAILURE;
   if (graph_dir == "") {
     std::cout << "--graph is not optional\n";
     return EXIT_FAILURE;
   }
-//  if(normalized_cut == true && ratio_cut == true){
-//    std::cout << "Both normalized-cut and ratio-cut are true. Ratio cut is selected.\n";
-//    normalized_cut = false;
-//  }else if(normalized_cut == false && ratio_cut == false){
-//    std::cout << "Both normalized-cut and ratio-cut are false. Ratio cut is selected.\n";
-//    ratio_cut = true;
-//  }
+  //  if(normalized_cut == true && ratio_cut == true){
+  //    std::cout << "Both normalized-cut and ratio-cut are true. Ratio cut is
+  //    selected.\n"; normalized_cut = false;
+  //  }else if(normalized_cut == false && ratio_cut == false){
+  //    std::cout << "Both normalized-cut and ratio-cut are false. Ratio cut is
+  //    selected.\n"; ratio_cut = true;
+  //  }
   std::vector<std::string> remove_opts;
   remove_opts.push_back("--graph");
   remove_opts.push_back("--format");
@@ -240,18 +242,18 @@ int main(int argc, char** argv) {
   remove_opts.push_back("--partitions");
   remove_opts.push_back("--mpi-args");
   remove_opts.push_back("--sv");
-//  remove_opts.push_back("--normalized-cut");
-//  remove_opts.push_back("--ratio-cut");
+  //  remove_opts.push_back("--normalized-cut");
+  //  remove_opts.push_back("--ratio-cut");
   std::string other_args = get_arg_str_without(argc, argv, remove_opts);
 
-  //construct graph laplacian
+  // construct graph laplacian
   if (call_graph_laplacian(mpi_args, graph_dir, format, normalized_cut,
-      ratio_cut, other_args) == false) {
+                           ratio_cut, other_args) == false) {
     return EXIT_FAILURE;
   }
 
-  //eigen value decomposition
-  //read number of data
+  // eigen value decomposition
+  // read number of data
   size_t num_data = 0;
   const std::string datanum_filename = graph_dir + ".datanum";
   std::ifstream ifs(datanum_filename.c_str());
@@ -260,28 +262,26 @@ int main(int argc, char** argv) {
     return false;
   }
   ifs >> num_data;
-  //determine the rank of Lanczos method
-  if(sv == 0){
+  // determine the rank of Lanczos method
+  if (sv == 0) {
     sv = get_lanczos_rank(num_partitions, num_data);
-  }else{
-    if(sv < num_partitions)
-      sv = num_partitions;
+  } else {
+    if (sv < num_partitions) sv = num_partitions;
   }
   if (call_svd(mpi_args, graph_dir, svd_dir, num_partitions, sv, num_data,
-      other_args) == false) {
+               other_args) == false) {
     return EXIT_FAILURE;
   }
   if (call_eigen_vector_normalization(mpi_args, graph_dir, num_partitions, sv,
-      num_data, other_args) == false) {
+                                      num_data, other_args) == false) {
     return EXIT_FAILURE;
   }
 
-  //kmeans
-  if (call_kmeans(mpi_args, graph_dir, kmeans_dir, num_partitions, other_args)
-      == false) {
+  // kmeans
+  if (call_kmeans(mpi_args, graph_dir, kmeans_dir, num_partitions,
+                  other_args) == false) {
     return EXIT_FAILURE;
   }
 
   return EXIT_SUCCESS;
 }
-

@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,5 +19,5 @@
  *      http://www.graphlab.ml.cmu.edu
  *
  */
- 
+
 #include <graphlab/aggregation/iaggregator.hpp>

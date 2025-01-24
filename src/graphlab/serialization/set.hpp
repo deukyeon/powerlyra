@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef GRAPHLAB_SERIALIZE_SET_HPP
 #define GRAPHLAB_SERIALIZE_SET_HPP
 
@@ -31,27 +30,24 @@
 
 namespace graphlab {
 namespace archive_detail {
-  /** serializes a set  */
-  template <typename OutArcType, typename T>
-  struct serialize_impl<OutArcType, std::set<T>, false > {
-  static void exec(OutArcType& oarc, const std::set<T>& vec){
-    serialize_iterator(oarc,
-                       vec.begin(), vec.end(), vec.size());
+/** serializes a set  */
+template <typename OutArcType, typename T>
+struct serialize_impl<OutArcType, std::set<T>, false> {
+  static void exec(OutArcType& oarc, const std::set<T>& vec) {
+    serialize_iterator(oarc, vec.begin(), vec.end(), vec.size());
   }
-  };
+};
 
-  /** deserializes a set  */
-  template <typename InArcType, typename T>
-  struct deserialize_impl<InArcType, std::set<T>, false > {
-  static void exec(InArcType& iarc, std::set<T>& vec){
+/** deserializes a set  */
+template <typename InArcType, typename T>
+struct deserialize_impl<InArcType, std::set<T>, false> {
+  static void exec(InArcType& iarc, std::set<T>& vec) {
     vec.clear();
-    deserialize_iterator<InArcType, T>(iarc,
-                                       std::inserter(vec,vec.end()));
+    deserialize_iterator<InArcType, T>(iarc, std::inserter(vec, vec.end()));
   }
-  };
+};
 
-} // archive_detail  
-} // graphlab
+}  // namespace archive_detail
+}  // namespace graphlab
 
-#endif 
-
+#endif

@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,6 @@
  *
  */
 
-
 #ifndef CHROMATIC_SAMPLER_HPP
 #define CHROMATIC_SAMPLER_HPP
 
@@ -25,24 +24,21 @@
 
 #include "mrf.hpp"
 
-class gibbs_update :
-  public graphlab::iupdate_functor<mrf_graph_type, gibbs_update> {
+class gibbs_update
+    : public graphlab::iupdate_functor<mrf_graph_type, gibbs_update> {
   typedef graphlab::iupdate_functor<mrf_graph_type, gibbs_update> base;
   void operator()(base::icontext_type& context);
-}; // end of class gibbs update
+};  // end of class gibbs update
 
 /** Get the update counts for a vertex */
-inline size_t get_nsamples(const mrf_vertex_data& vdata) { 
-  return vdata.nsamples; 
+inline size_t get_nsamples(const mrf_vertex_data& vdata) {
+  return vdata.nsamples;
 }
 
-
 //! Run the chromatic sampler for a fixed ammount of time
-void run_chromatic_sampler(graphlab::core<mrf_graph_type, gibbs_update>& core, 
+void run_chromatic_sampler(graphlab::core<mrf_graph_type, gibbs_update>& core,
                            const std::string& chromatic_results_fn,
                            const std::vector<double>& runtime,
                            const bool draw_images);
-
-
 
 #endif

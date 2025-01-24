@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,12 +19,12 @@
  *      http://www.graphlab.ml.cmu.edu
  *
  */
- 
+
 /**
  * @file java_any.cpp
  * @author Jiunn Haur Lim <jiunnhal@cmu.edu>
- */ 
- 
+ */
+
 #include <graphlab.hpp>
 #include "java_any.hpp"
 #include "org_graphlab_Core.hpp"
@@ -36,77 +36,67 @@ using namespace graphlab;
 // java_any instance members
 //---------------------------------------------------------------
 
-java_any::java_any(JNIEnv *env, jobject &obj){
+java_any::java_any(JNIEnv *env, jobject &obj) {
   // create a new ref so that it doesn't get garbage collected
   mobj = env->NewGlobalRef(obj);
 }
 
-java_any::java_any() : mobj(NULL){}
+java_any::java_any() : mobj(NULL) {}
 
-jobject &java_any::obj() {
-  return mobj;
-}
+jobject &java_any::obj() { return mobj; }
 
-const jobject &java_any::obj() const {
-  return mobj;
-}
+const jobject &java_any::obj() const { return mobj; }
 
-java_any::java_any(const java_any& other){
-    
+java_any::java_any(const java_any &other) {
   // other doesn't have an existing ref
-  if (NULL == other.mobj){
+  if (NULL == other.mobj) {
     this->mobj = NULL;
     return;
   }
-  
+
   // create a new ref
   JNIEnv *env = proxy_updater::core::get_jni_env();
   this->mobj = env->NewGlobalRef(other.mobj);
-  
 }
 
-java_any &java_any::operator=(const java_any& other){
-    
+java_any &java_any::operator=(const java_any &other) {
   // prevent self assignment
   if (this == &other) return *this;
-  
+
   JNIEnv *env = proxy_updater::core::get_jni_env();
   jobject obj = NULL;
-  
+
   // if other has a java object, create a new ref
-  if (NULL != other.mobj){
+  if (NULL != other.mobj) {
     obj = env->NewGlobalRef(other.mobj);
   }
-  
+
   // if this has a java object, delete ref
-  if (NULL != this->mobj){
+  if (NULL != this->mobj) {
     env->DeleteGlobalRef(this->mobj);
   }
-    
+
   // assign!
   this->mobj = obj;
-  
+
   return *this;
-  
 }
 
-void java_any::set_obj(jobject obj){
-
+void java_any::set_obj(jobject obj) {
   JNIEnv *env = proxy_updater::core::get_jni_env();
-  
-  if (NULL != mobj){
+
+  if (NULL != mobj) {
     // delete current ref
     env->DeleteGlobalRef(mobj);
     mobj = NULL;
   }
-  
-  if (NULL != obj){
+
+  if (NULL != obj) {
     mobj = env->NewGlobalRef(obj);
   }
-  
 }
 
-java_any::~java_any(){
+java_any::~java_any() {
   if (NULL == mobj) return;
   // delete reference to allow garbage collection
   JNIEnv *env = proxy_updater::core::get_jni_env();
@@ -115,7 +105,6 @@ java_any::~java_any(){
 }
 
 bool java_any::handle_exception(JNIEnv *env) const {
-  
   // check for exception
   jthrowable exc = env->ExceptionOccurred();
   if (!exc) return false;
@@ -123,10 +112,7 @@ bool java_any::handle_exception(JNIEnv *env) const {
   env->ExceptionDescribe();
   env->ExceptionClear();
   proxy_updater::core::throw_exception(
-        env,
-        "java/lang/IllegalArgumentException",
-        "thrown from C code.");
-  
+      env, "java/lang/IllegalArgumentException", "thrown from C code.");
+
   return true;
-  
 }

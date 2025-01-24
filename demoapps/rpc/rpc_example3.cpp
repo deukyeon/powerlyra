@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,9 +20,6 @@
  *
  */
 
-
-
-
 #include <iostream>
 #include <string>
 #include <map>
@@ -30,32 +27,29 @@
 #include <graphlab/rpc/dc.hpp>
 using namespace graphlab;
 
-struct teststruct: public IS_POD_TYPE{
+struct teststruct : public IS_POD_TYPE {
   int a;
   double b;
 };
 
-
-void print(std::map<int, teststruct> &data1,  
-           std::string data2) {
+void print(std::map<int, teststruct> &data1, std::string data2) {
   std::cout << "1.a = " << data1[1].a << std::endl;
   std::cout << "10.b = " << data1[10].b << std::endl;
   std::cout << "string = " << data2 << std::endl;
 }
 
-
-
-int main(int argc, char ** argv) {
+int main(int argc, char **argv) {
   // init MPI
   mpi_tools::init(argc, argv);
   distributed_control dc;
 
   if (dc.numprocs() != 2) {
-    std::cout<< "RPC Example 3: Asynchronous RPC with Struct POD Serialization\n";
+    std::cout
+        << "RPC Example 3: Asynchronous RPC with Struct POD Serialization\n";
     std::cout << "Run with exactly 2 MPI nodes.\n";
     return 0;
-  }  
-    
+  }
+
   if (dc.procid() == 0) {
     std::map<int, teststruct> data;
     data[1].a = 10;
@@ -66,4 +60,3 @@ int main(int argc, char ** argv) {
 
   mpi_tools::finalize();
 }
-

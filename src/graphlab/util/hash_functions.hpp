@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,21 +20,17 @@
  *
  */
 
-
 #ifndef GRAPHLAB_HASH_FUNCTIONS_HPP
 #define GRAPHLAB_HASH_FUNCTIONS_HPP
 
 namespace graphlab {
-  /**
-  \ingroup util_internal
-  A hash function to maps a value to itself
-  */
-  class identity_hash{
-  public:
-    size_t operator()(const size_t &t) const{
-      return t;
-    }
-  };
-}
+/**
+\ingroup util_internal
+A hash function to maps a value to itself
+*/
+class identity_hash {
+ public:
+  size_t operator()(const size_t &t) const { return t; }
+};
+}  // namespace graphlab
 #endif
-

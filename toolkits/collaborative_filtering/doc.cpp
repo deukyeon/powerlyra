@@ -1,5 +1,5 @@
-/* 
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,7 +29,7 @@ The GraphLab Matrix Factorization toolkit can be used for a wide range
 of applications in collaborative filtering and recommendation
 systems. Matrix factorization can be cast as a graph processing by
 interpreting the typically sparse matrix as a graph and then treating
-the vertices as rows and columns.  
+the vertices as rows and columns.
 
 In this library we have implemented the following initial algorithms:
 
@@ -43,5 +43,4 @@ In this library we have implemented the following initial algorithms:
 
 
 
-*/ 
-
+*/

@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef GRAPHLAB_BINARY_PARSER_HPP
 #define GRAPHLAB_BINARY_PARSER_HPP
 
@@ -29,94 +28,88 @@
 
 namespace graphlab {
 
-  /**
-   * \ingroup util_internal
-   * A thin wrapper around ifstream to provide simplicity of reading
-   * of binary data.
-   * \see binary_output_stream
-   */
-  class binary_input_stream : public std::ifstream {
-    typedef std::ifstream base_type;
-    using base_type::bad;
-  public:
-    binary_input_stream(const char* fname) :
-      base_type(fname, std::ios::binary | std::ios::in) {
-      assert(bad() == false);
-    }
-    
-    /**
-     * Read an arbitrary type.
-     */
-    template<typename T> T read() {
-      T t;
-      base_type::read(reinterpret_cast<char*>(&t), sizeof(T));
-      if(bad()) {
-        std::cout << "Error reading file!" << std::endl;
-        assert(false);
-      }
-      return t;
-    }
-    /**
-     * Read an arbitrary type.
-     */
-    template<typename T> void read(T& ret) {
-      base_type::read(reinterpret_cast<char*>(&ret), sizeof(T));
-      if(bad()) {
-        std::cout << "Error reading file!" << std::endl;
-        assert(false);
-      }
-    }
+/**
+ * \ingroup util_internal
+ * A thin wrapper around ifstream to provide simplicity of reading
+ * of binary data.
+ * \see binary_output_stream
+ */
+class binary_input_stream : public std::ifstream {
+  typedef std::ifstream base_type;
+  using base_type::bad;
 
-    /**
-     * Read an arbitrary type.
-     */
-    template<typename T> void read_vector(std::vector<T>& ret) {
-      if(ret.empty()) return;
-      base_type::read(reinterpret_cast<char*>(&(ret[0])), 
-                      sizeof(T) * ret.size());
-      if(bad()) {
-        std::cout << "Error reading file!" << std::endl;
-        assert(false);
-      }
-    }
-  };
-
-
+ public:
+  binary_input_stream(const char* fname)
+      : base_type(fname, std::ios::binary | std::ios::in) {
+    assert(bad() == false);
+  }
 
   /**
-   * \ingroup util_internal
-   * A thin wrapper around ifstream to provide simplicity of writing
-   * of binary data.
-   * \see binary_input_stream
+   * Read an arbitrary type.
    */
-  class binary_output_stream : public std::ofstream {
+  template <typename T>
+  T read() {
+    T t;
+    base_type::read(reinterpret_cast<char*>(&t), sizeof(T));
+    if (bad()) {
+      std::cout << "Error reading file!" << std::endl;
+      assert(false);
+    }
+    return t;
+  }
+  /**
+   * Read an arbitrary type.
+   */
+  template <typename T>
+  void read(T& ret) {
+    base_type::read(reinterpret_cast<char*>(&ret), sizeof(T));
+    if (bad()) {
+      std::cout << "Error reading file!" << std::endl;
+      assert(false);
+    }
+  }
+
+  /**
+   * Read an arbitrary type.
+   */
+  template <typename T>
+  void read_vector(std::vector<T>& ret) {
+    if (ret.empty()) return;
+    base_type::read(reinterpret_cast<char*>(&(ret[0])), sizeof(T) * ret.size());
+    if (bad()) {
+      std::cout << "Error reading file!" << std::endl;
+      assert(false);
+    }
+  }
+};
+
+/**
+ * \ingroup util_internal
+ * A thin wrapper around ifstream to provide simplicity of writing
+ * of binary data.
+ * \see binary_input_stream
+ */
+class binary_output_stream : public std::ofstream {
   typedef std::ofstream base_type;
-    using std::ofstream::bad;
-  public:
-    binary_output_stream(const char* fname) : 
-    std::ofstream(fname, std::ios::binary | std::ios::out) {
-      assert(bad() == false);
+  using std::ofstream::bad;
+
+ public:
+  binary_output_stream(const char* fname)
+      : std::ofstream(fname, std::ios::binary | std::ios::out) {
+    assert(bad() == false);
+  }
+
+  //! Write the arbitrary data type to file
+  template <typename T>
+  void write(T t) {
+    base_type::write(reinterpret_cast<char*>(&t), sizeof(T));
+    if (bad()) {
+      std::cout << "Error writing file!" << std::endl;
+      assert(false);
     }
-    
-    //! Write the arbitrary data type to file
-    template<typename T> void write(T t) {
-      base_type::write(reinterpret_cast<char*>(&t), sizeof(T));
-      if(bad()) {
-        std::cout << "Error writing file!" << std::endl;
-        assert(false);
-      }
-    }
-  }; // end of binary_output_stream
+  }
+};  // end of binary_output_stream
 
-  
-
-}
-
-
-
+}  // namespace graphlab
 
 #endif
-
-
-
-

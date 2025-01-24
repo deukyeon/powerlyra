@@ -20,7 +20,6 @@
  *
  */
 
-
 #include <graphlab/logger/logger.hpp>
 #include <cstdarg>
 #include <cstdio>
@@ -35,23 +34,15 @@ file_logger& global_logger() {
   return l;
 }
 
-
-
-
-void streambuffdestructor(void* v){
+void streambuffdestructor(void* v) {
   logger_impl::streambuff_tls_entry* t =
-    reinterpret_cast<logger_impl::streambuff_tls_entry*>(v);
+      reinterpret_cast<logger_impl::streambuff_tls_entry*>(v);
   delete t;
 }
 
-const char* messages[] = {  "DEBUG:    ",
-                            "DEBUG:    ",
-                            "INFO:     ",
-                            "INFO:     ",
-                            "WARNING:  ",
-                            "ERROR:    ",
-                            "FATAL:    "};
-
+const char* messages[] = {
+    "DEBUG:    ", "DEBUG:    ", "INFO:     ", "INFO:     ",
+    "WARNING:  ", "ERROR:    ", "FATAL:    "};
 
 file_logger::file_logger() {
   log_file = "";
@@ -86,84 +77,78 @@ bool file_logger::set_log_file(std::string file) {
   return true;
 }
 
+#define RESET 0
+#define BRIGHT 1
+#define DIM 2
+#define UNDERLINE 3
+#define BLINK 4
+#define REVERSE 7
+#define HIDDEN 8
 
+#define BLACK 0
+#define RED 1
+#define GREEN 2
+#define YELLOW 3
+#define BLUE 4
+#define MAGENTA 5
+#define CYAN 6
+#define WHITE 7
 
-#define RESET   0
-#define BRIGHT    1
-#define DIM   2
-#define UNDERLINE   3
-#define BLINK   4
-#define REVERSE   7
-#define HIDDEN    8
-
-#define BLACK     0
-#define RED   1
-#define GREEN   2
-#define YELLOW    3
-#define BLUE    4
-#define MAGENTA   5
-#define CYAN    6
-#define WHITE   7
-
-void textcolor(FILE* handle, int attr, int fg)
-{
+void textcolor(FILE* handle, int attr, int fg) {
   char command[13];
   /* Command is the control command to the terminal */
   sprintf(command, "%c[%d;%dm", 0x1B, attr, fg + 30);
   fprintf(handle, "%s", command);
 }
 
-void reset_color(FILE* handle)
-{
+void reset_color(FILE* handle) {
   char command[20];
   /* Command is the control command to the terminal */
   sprintf(command, "%c[0m", 0x1B);
   fprintf(handle, "%s", command);
 }
 
-
-
-void file_logger::_log(int lineloglevel,const char* file,const char* function,
-                       int line,const char* fmt, va_list ap ){
+void file_logger::_log(int lineloglevel, const char* file, const char* function,
+                       int line, const char* fmt, va_list ap) {
   // if the logger level fits
-  if (lineloglevel >= log_level){
+  if (lineloglevel >= log_level) {
     // get just the filename. this line found on a forum on line.
     // claims to be from google.
-    file = ((strrchr(file, '/') ? : file- 1) + 1);
+    file = ((strrchr(file, '/') ?: file - 1) + 1);
 
     char str[1024];
 
     // write the actual header
-    int byteswritten = snprintf(str,1024, "%s%s(%s:%d): ",
-                                messages[lineloglevel],file,function,line);
+    int byteswritten =
+        snprintf(str, 1024, "%s%s(%s:%d): ", messages[lineloglevel], file,
+                 function, line);
     // write the actual logger
 
-    byteswritten += vsnprintf(str + byteswritten,1024 - byteswritten,fmt,ap);
+    byteswritten += vsnprintf(str + byteswritten, 1024 - byteswritten, fmt, ap);
 
     str[byteswritten] = '\n';
-    str[byteswritten+1] = 0;
+    str[byteswritten + 1] = 0;
     // write the output
     if (fout.good()) {
       pthread_mutex_lock(&mut);
-      fout << str;;
+      fout << str;
+      ;
       pthread_mutex_unlock(&mut);
     }
     if (log_to_console) {
 #ifdef COLOROUTPUT
       if (lineloglevel == LOG_FATAL) {
         textcolor(stderr, BRIGHT, RED);
-      }
-      else if (lineloglevel == LOG_ERROR) {
+      } else if (lineloglevel == LOG_ERROR) {
         textcolor(stderr, BRIGHT, RED);
-      }
-      else if (lineloglevel == LOG_WARNING) {
+      } else if (lineloglevel == LOG_WARNING) {
         textcolor(stderr, BRIGHT, MAGENTA);
-      }
-      else if (lineloglevel == LOG_EMPH) {
+      } else if (lineloglevel == LOG_EMPH) {
         textcolor(stderr, BRIGHT, GREEN);
       }
 #endif
-      std::cerr << str;;
+      std::cerr << str;
+      ;
 #ifdef COLOROUTPUT
       reset_color(stderr);
 #endif
@@ -171,32 +156,31 @@ void file_logger::_log(int lineloglevel,const char* file,const char* function,
   }
 }
 
-
-
-void file_logger::_logbuf(int lineloglevel,const char* file,const char* function,
-                          int line,const char* buf, int len) {
+void file_logger::_logbuf(int lineloglevel, const char* file,
+                          const char* function, int line, const char* buf,
+                          int len) {
   // if the logger level fits
-  if (lineloglevel >= log_level){
+  if (lineloglevel >= log_level) {
     // get just the filename. this line found on a forum on line.
     // claims to be from google.
-    file = ((strrchr(file, '/') ? : file- 1) + 1);
+    file = ((strrchr(file, '/') ?: file - 1) + 1);
 
     // length of the 'head' of the string
-    size_t headerlen = snprintf(NULL,0,"%s%s(%s:%d): ",
-                                messages[lineloglevel],file,function,line);
+    size_t headerlen = snprintf(
+        NULL, 0, "%s%s(%s:%d): ", messages[lineloglevel], file, function, line);
 
-    if (headerlen> 2047) {
+    if (headerlen > 2047) {
       std::cerr << "Header length exceed buffer length!";
-    }
-    else {
+    } else {
       char str[2048];
-      const char *newline="\n";
+      const char* newline = "\n";
       // write the actual header
-      int byteswritten = snprintf(str,2047,"%s%s(%s:%d): ",
-                                  messages[lineloglevel],file,function,line);
-      _lograw(lineloglevel,str, byteswritten);
-      _lograw(lineloglevel,buf, len);
-      _lograw(lineloglevel,newline, (int)strlen(newline));
+      int byteswritten =
+          snprintf(str, 2047, "%s%s(%s:%d): ", messages[lineloglevel], file,
+                   function, line);
+      _lograw(lineloglevel, str, byteswritten);
+      _lograw(lineloglevel, buf, len);
+      _lograw(lineloglevel, newline, (int)strlen(newline));
     }
   }
 }
@@ -204,7 +188,7 @@ void file_logger::_logbuf(int lineloglevel,const char* file,const char* function
 void file_logger::_lograw(int lineloglevel, const char* buf, int len) {
   if (fout.good()) {
     pthread_mutex_lock(&mut);
-    fout.write(buf,len);
+    fout.write(buf, len);
     pthread_mutex_unlock(&mut);
   }
   if (log_to_console) {
@@ -212,21 +196,17 @@ void file_logger::_lograw(int lineloglevel, const char* buf, int len) {
     pthread_mutex_lock(&mut);
     if (lineloglevel == LOG_FATAL) {
       textcolor(stderr, BRIGHT, RED);
-    }
-    else if (lineloglevel == LOG_ERROR) {
+    } else if (lineloglevel == LOG_ERROR) {
       textcolor(stderr, BRIGHT, RED);
-    }
-    else if (lineloglevel == LOG_WARNING) {
+    } else if (lineloglevel == LOG_WARNING) {
       textcolor(stderr, BRIGHT, MAGENTA);
-    }
-    else if (lineloglevel == LOG_DEBUG) {
+    } else if (lineloglevel == LOG_DEBUG) {
       textcolor(stderr, BRIGHT, YELLOW);
-    }
-    else if (lineloglevel == LOG_EMPH) {
+    } else if (lineloglevel == LOG_EMPH) {
       textcolor(stderr, BRIGHT, GREEN);
     }
 #endif
-    std::cerr.write(buf,len);
+    std::cerr.write(buf, len);
 #ifdef COLOROUTPUT
 
     pthread_mutex_unlock(&mut);
@@ -235,12 +215,13 @@ void file_logger::_lograw(int lineloglevel, const char* buf, int len) {
   }
 }
 
-file_logger& file_logger::start_stream(int lineloglevel,const char* file,
-                                       const char* function, int line, bool do_start) {
+file_logger& file_logger::start_stream(int lineloglevel, const char* file,
+                                       const char* function, int line,
+                                       bool do_start) {
   // get the stream buffer
   logger_impl::streambuff_tls_entry* streambufentry =
-        reinterpret_cast<logger_impl::streambuff_tls_entry*>(
-                              pthread_getspecific(streambuffkey));
+      reinterpret_cast<logger_impl::streambuff_tls_entry*>(
+          pthread_getspecific(streambuffkey));
   // create the key if it doesn't exist
   if (streambufentry == NULL) {
     streambufentry = new logger_impl::streambuff_tls_entry;
@@ -249,7 +230,7 @@ file_logger& file_logger::start_stream(int lineloglevel,const char* file,
   std::stringstream& streambuffer = streambufentry->streambuffer;
   bool& streamactive = streambufentry->streamactive;
 
-  if (lineloglevel >= log_level){
+  if (lineloglevel >= log_level) {
     // get the stream buffer
     // if do not start the stream, just quit
     if (do_start == false) {
@@ -257,11 +238,11 @@ file_logger& file_logger::start_stream(int lineloglevel,const char* file,
       return *this;
     }
 
-    file = ((strrchr(file, '/') ? : file- 1) + 1);
+    file = ((strrchr(file, '/') ?: file - 1) + 1);
 
     if (streambuffer.str().length() == 0) {
-      streambuffer << messages[lineloglevel] << file
-                   << "(" << function << ":" <<line<<"): ";
+      streambuffer << messages[lineloglevel] << file << "(" << function << ":"
+                   << line << "): ";
     }
     streamactive = true;
     streamloglevel = lineloglevel;
@@ -270,4 +251,3 @@ file_logger& file_logger::start_stream(int lineloglevel,const char* file,
   }
   return *this;
 }
-

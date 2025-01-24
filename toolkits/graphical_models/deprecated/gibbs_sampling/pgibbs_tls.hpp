@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,11 +17,8 @@
  *
  */
 
-
 #ifndef PGIBBS_TLS_HPP
 #define PGIBBS_TLS_HPP
-
-
 
 /**
  *
@@ -35,9 +32,7 @@
 
 #include <pthread.h>
 
-
 #include "factorized_model.hpp"
-
 
 // //! Key used to get the pgibbs tls
 // extern pthread_key_t pgibbs_tls_key;
@@ -50,10 +45,6 @@ struct pgibbs_tls {
   factor_t tmp_belief;
 };
 
-
 pgibbs_tls& get_pgibbs_tls();
-
-
-
 
 #endif

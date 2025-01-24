@@ -5,7 +5,7 @@ using namespace graphlab::extension;
 int main(int argc, char** argv) {
   extension_graph graph;
   if (argc < 2) {
-    std::cout << argv[0] << " [input prefix] optional:[output prefix]\n"; 
+    std::cout << argv[0] << " [input prefix] optional:[output prefix]\n";
     return 0;
   }
   graph.load_structure(argv[1], "snap");

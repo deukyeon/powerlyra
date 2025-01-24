@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,69 +30,66 @@
 #include <graphlab/graph/ingress/distributed_ingress_base.hpp>
 #include <graphlab/graph/distributed_graph.hpp>
 
-
 #include <graphlab/macros_def.hpp>
 namespace graphlab {
-  template<typename VertexData, typename EdgeData>
-  class distributed_graph;
+template <typename VertexData, typename EdgeData>
+class distributed_graph;
 
-  /**
-   * \brief Ingress object assigning vertices using randoming hash function.
-   */
-  template<typename VertexData, typename EdgeData>
-  class distributed_random_ec_ingress : 
-    public distributed_ingress_base<VertexData, EdgeData> {
-  public:
-    typedef distributed_graph<VertexData, EdgeData> graph_type;
-    /// The type of the vertex data stored in the graph 
-    typedef VertexData vertex_data_type;
-    /// The type of the edge data stored in the graph 
-    typedef EdgeData   edge_data_type;
-    
-    typedef distributed_ingress_base<VertexData, EdgeData> base_type;
-    
-    typedef typename base_type::edge_buffer_record edge_buffer_record;
-    typedef typename base_type::vertex_buffer_record vertex_buffer_record;
+/**
+ * \brief Ingress object assigning vertices using randoming hash function.
+ */
+template <typename VertexData, typename EdgeData>
+class distributed_random_ec_ingress
+    : public distributed_ingress_base<VertexData, EdgeData> {
+ public:
+  typedef distributed_graph<VertexData, EdgeData> graph_type;
+  /// The type of the vertex data stored in the graph
+  typedef VertexData vertex_data_type;
+  /// The type of the edge data stored in the graph
+  typedef EdgeData edge_data_type;
 
-   
-  public:
-    distributed_random_ec_ingress(distributed_control& dc, graph_type& graph) :
-    base_type(dc, graph) {
-    } // end of constructor
+  typedef distributed_ingress_base<VertexData, EdgeData> base_type;
 
-    ~distributed_random_ec_ingress() { }
-    
+  typedef typename base_type::edge_buffer_record edge_buffer_record;
+  typedef typename base_type::vertex_buffer_record vertex_buffer_record;
 
-    /** Add an edge to the ingress object using random assignment. */
-    void add_vertex(vertex_id_type vid, std::vector<vertex_id_type>& adjacency_list,
-                  const VertexData& vdata) {      
-      const procid_t owning_proc = graph_hash::hash_vertex(vid) % base_type::rpc.numprocs();
-      
-      const vertex_buffer_record record(vid, vdata);    
+ public:
+  distributed_random_ec_ingress(distributed_control& dc, graph_type& graph)
+      : base_type(dc, graph) {}  // end of constructor
+
+  ~distributed_random_ec_ingress() {}
+
+  /** Add an edge to the ingress object using random assignment. */
+  void add_vertex(vertex_id_type vid,
+                  std::vector<vertex_id_type>& adjacency_list,
+                  const VertexData& vdata) {
+    const procid_t owning_proc =
+        graph_hash::hash_vertex(vid) % base_type::rpc.numprocs();
+
+    const vertex_buffer_record record(vid, vdata);
 
 #ifdef _OPENMP
-      base_type::vertex_exchange.send(owning_proc, record, omp_get_thread_num());
+    base_type::vertex_exchange.send(owning_proc, record, omp_get_thread_num());
 #else
-      base_type::vertex_exchange.send(owning_proc, record);
+    base_type::vertex_exchange.send(owning_proc, record);
 #endif
-      
-      for(size_t i = 0 ; i < adjacency_list.size(); i++) {
-        vertex_id_type target = adjacency_list[i];
-        if(vid == target) { 
-            continue;
-        }
-        const edge_buffer_record record(vid, target);
-#ifdef _OPENMP
-        base_type::edge_exchange.send(owning_proc, record, omp_get_thread_num());
-#else
-        base_type::edge_exchange.send(owning_proc, record);
-#endif
+
+    for (size_t i = 0; i < adjacency_list.size(); i++) {
+      vertex_id_type target = adjacency_list[i];
+      if (vid == target) {
+        continue;
       }
-      
-    } // end of add vertex
-  }; // end of distributed_random_ingress
-}; // end of namespace graphlab
-#include <graphlab/macros_undef.hpp>
+      const edge_buffer_record record(vid, target);
+#ifdef _OPENMP
+      base_type::edge_exchange.send(owning_proc, record, omp_get_thread_num());
+#else
+      base_type::edge_exchange.send(owning_proc, record);
+#endif
+    }
 
+  }  // end of add vertex
+};   // end of distributed_random_ingress
+};   // end of namespace graphlab
+#include <graphlab/macros_undef.hpp>
 
 #endif

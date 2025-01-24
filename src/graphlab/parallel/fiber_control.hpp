@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef GRAPHLAB_FIBER_CONTROL_HPP
 #define GRAPHLAB_FIBER_CONTROL_HPP
 
@@ -40,7 +39,6 @@ namespace graphlab {
  */
 class fiber_control {
  public:
-
   typedef fixed_dense_bitset<64> affinity_type;
   static affinity_type all_affinity();
 
@@ -52,29 +50,28 @@ class fiber_control {
     size_t id;
     affinity_type affinity;
     std::vector<unsigned char> affinity_array;
-    void* fls; // fiber local storage
+    void* fls;  // fiber local storage
     fiber* next;
     intptr_t initial_trampoline_args;
-    pthread_mutex_t* deschedule_lock; // if descheduled is set, we will
-                                      // atomically deschedule and unlock
-                                      // this mutex
-    bool descheduled; // flag. set if this fiber is to be descheduled.
-                      // This is a temporary flag, and is only used to notify
-                      // the context switch to deschedule this thread.
-                      // lock must be acquired for this to be modified
+    pthread_mutex_t* deschedule_lock;  // if descheduled is set, we will
+                                       // atomically deschedule and unlock
+                                       // this mutex
+    bool descheduled;  // flag. set if this fiber is to be descheduled.
+                       // This is a temporary flag, and is only used to notify
+                       // the context switch to deschedule this thread.
+                       // lock must be acquired for this to be modified
 
-    bool terminate;   // flag. set if this fiber is to be destroyed.
-                      // This is a temporary flag, and is only used to notify
-                      // the context switch to destroy this thread.
+    bool terminate;  // flag. set if this fiber is to be destroyed.
+                     // This is a temporary flag, and is only used to notify
+                     // the context switch to destroy this thread.
 
-    bool scheduleable;     // Managed by the queue management routines.
-                      // Set if the fiber is inside the scheduling queue
-                      // or is running in a thread.
-                      // lock must be acquired for this to be modified.
-    bool priority;  // flag. If set, rescheduling this fiber
-                    // will cause it to be placed at the head of the queue
+    bool scheduleable;  // Managed by the queue management routines.
+                        // Set if the fiber is inside the scheduling queue
+                        // or is running in a thread.
+                        // lock must be acquired for this to be modified.
+    bool priority;      // flag. If set, rescheduling this fiber
+                        // will cause it to be placed at the head of the queue
   };
-
 
  private:
   size_t nworkers;
@@ -89,7 +86,7 @@ class fiber_control {
 
   // The scheduler is a simple queue. One for each worker
   struct thread_schedule {
-    thread_schedule():waiting(false) { }
+    thread_schedule() : waiting(false) {}
     mutex active_lock;
     conditional active_cond;
     volatile bool waiting;
@@ -105,7 +102,6 @@ class fiber_control {
 
   thread_group workers;
 
-
   // locks must be acquired outside the call
   void active_queue_insert_head(size_t workerid, fiber* value);
   void active_queue_insert_tail(size_t workerid, fiber* value);
@@ -116,14 +112,14 @@ class fiber_control {
   static bool tls_created;
   struct tls {
     fiber_control* parent;
-    fiber* prev_fiber; // the fiber we context switch from
-    fiber* cur_fiber; // the fiber we are context switching to
-    fiber* garbage; // A fiber to delete after the context switch
+    fiber* prev_fiber;  // the fiber we context switch from
+    fiber* cur_fiber;   // the fiber we are context switching to
+    fiber* garbage;     // A fiber to delete after the context switch
     size_t workerid;
     boost::context::fcontext_t base_context;
   };
 
-  static pthread_key_t tlskey; // points to the tls structure above
+  static pthread_key_t tlskey;  // points to the tls structure above
   static void tls_deleter(void* tls);
 
   /// internal function to create the TLS for the worker threads
@@ -147,10 +143,9 @@ class fiber_control {
   size_t pick_fiber_worker(fiber* fib);
 
   // delete copy constructor
-  fiber_control(fiber_control&) {};
-  
- public:
+  fiber_control(fiber_control&){};
 
+ public:
   /// Private constructor
   fiber_control(size_t nworkers, size_t affinity_base);
 
@@ -160,37 +155,28 @@ class fiber_control {
    * Returns a fiber ID. IDs are not sequential.
    * \note The ID is really a pointer to a fiber_control::fiber object.
    */
-  size_t launch(boost::function<void (void)> fn, 
-                size_t stacksize = 8192, 
+  size_t launch(boost::function<void(void)> fn, size_t stacksize = 8192,
                 affinity_type worker_affinity = all_affinity());
-
 
   /**
    * Waits for all functions to join
    */
   void join();
 
-
   /**
    * Returns the number of workers
    */
-  size_t num_workers() {
-    return nworkers;
-  }
+  size_t num_workers() { return nworkers; }
 
   /**
    * Returns the number of threads that have yet to join
    */
-  inline size_t num_threads() {
-    return fibers_active.value;
-  }
+  inline size_t num_threads() { return fibers_active.value; }
 
   /**
    * Returns the total number threads ever created
    */
-  inline size_t total_threads_created() {
-    return fiber_id_counter.value;
-  }
+  inline size_t total_threads_created() { return fiber_id_counter.value; }
   /**
    * Sets the TLS deletion function. The deletion function will be called
    * on every non-NULL TLS value.
@@ -225,7 +211,6 @@ class fiber_control {
    */
   static void yield();
 
-
   /**
    * Yields to another fiber of the same affinity.
    * Note that this function will only work within a fiber.
@@ -233,23 +218,20 @@ class fiber_control {
    */
   static void fast_yield();
 
-
   /**
    * Returns true if the current worker has other fiber waiting on its queue
    */
   static bool worker_has_fibers_on_queue();
 
-
   /**
-   * Returns true if the current worker has other priority fibers waiting on 
+   * Returns true if the current worker has other priority fibers waiting on
    * its queue
    */
   static bool worker_has_priority_fibers_on_queue();
 
-
   /// True if the singleton instance was created
-  static bool instance_created; 
-  static size_t instance_construct_params_nworkers; 
+  static bool instance_created;
+  static size_t instance_construct_params_nworkers;
   static size_t instance_construct_params_affinity_base;
 
   /**
@@ -259,12 +241,11 @@ class fiber_control {
    * \param nworkers Number of worker threads to spawn. If set to 0,
    *                 the number of workers will be automatically determined
    *                 based on the number of cores the system has.
-   * \param affinity_base First worker will have CPU affinity equal to 
+   * \param affinity_base First worker will have CPU affinity equal to
    *                      affinity_base. Second will be affinity_base + 1, etc.
    *                      Defaults to 0.
    */
-  static void instance_set_parameters(size_t nworkers,
-                                      size_t affinity_base);
+  static void instance_set_parameters(size_t nworkers, size_t affinity_base);
 
   /**
    * Gets a reference to the main fiber control singleton
@@ -280,7 +261,6 @@ class fiber_control {
    */
   static size_t get_tid();
 
-
   /**
    * Returns true if the calling thread is in a fiber, false otherwise.
    */
@@ -292,7 +272,6 @@ class fiber_control {
    * If called from outside a fiber, returns (size_t)(-1)
    */
   static size_t get_worker_id();
-
 
   /**
    * Atomically deschedules the current thread and unlocks the mutex.
@@ -345,7 +324,6 @@ class fiber_control {
   static void schedule_tid(size_t tid, bool priority = true);
 };
 
-}
+}  // namespace graphlab
 
 #endif
-

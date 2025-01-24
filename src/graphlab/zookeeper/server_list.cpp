@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <graphlab/zookeeper/zookeeper_common.hpp>
@@ -31,36 +30,31 @@ extern "C" {
 #include <zookeeper/zookeeper.h>
 }
 
-namespace graphlab{
+namespace graphlab {
 namespace zookeeper {
 
-server_list::server_list(std::vector<std::string> zkhosts,
-                         std::string _prefix,
-                         std::string _serveridentifier) :
-    prefix(_prefix), serveridentifier(_serveridentifier), callback(NULL) {
+server_list::server_list(std::vector<std::string> zkhosts, std::string _prefix,
+                         std::string _serveridentifier)
+    : prefix(_prefix), serveridentifier(_serveridentifier), callback(NULL) {
   // construct hosts list
   std::string hosts = boost::algorithm::join(zkhosts, ",");
   prefix = normalize_path(prefix);
   if (prefix[0] != '/') prefix = "/" + prefix;
-  handle = zookeeper_init(hosts.c_str(), watcher, 10000, NULL, (void*)this, 0);
+  handle = zookeeper_init(hosts.c_str(), watcher, 10000, NULL, (void *)this, 0);
   // create the prefix if it does not already exist
-  if (prefix != "/") create_dir(handle,
-                                prefix.substr(0, prefix.length() - 1),
-                                "zk_server_list");
+  if (prefix != "/")
+    create_dir(handle, prefix.substr(0, prefix.length() - 1), "zk_server_list");
 
   assert(handle != NULL);
-
 }
 
 server_list::~server_list() {
   if (handle != NULL) zookeeper_close(handle);
 }
 
-
-
-
 std::vector<std::string> server_list::get_all_servers(std::string name_space) {
-  boost::algorithm::trim(name_space); assert(name_space.length() > 0);
+  boost::algorithm::trim(name_space);
+  assert(name_space.length() > 0);
   struct String_vector children;
   children.count = 0;
   children.data = NULL;
@@ -80,35 +74,35 @@ std::vector<std::string> server_list::get_all_servers(std::string name_space) {
 
 /// Joins a namespace
 void server_list::join(std::string name_space) {
-  boost::algorithm::trim(name_space); assert(name_space.length() > 0);
-  create_dir(handle,
-             prefix + name_space,
-             "zk_server_list");
+  boost::algorithm::trim(name_space);
+  assert(name_space.length() > 0);
+  create_dir(handle, prefix + name_space, "zk_server_list");
   std::string path = normalize_path(prefix + name_space) + serveridentifier;
   int stat = create_ephemeral_node(handle, path, "");
   if (stat == ZNODEEXISTS) {
-    std::cerr << "Server " << serveridentifier << " already exists!" << std::endl;
+    std::cerr << "Server " << serveridentifier << " already exists!"
+              << std::endl;
   }
   if (stat != ZOK) assert(false);
 }
 
 void server_list::leave(std::string name_space) {
-  boost::algorithm::trim(name_space); assert(name_space.length() > 0);
+  boost::algorithm::trim(name_space);
+  assert(name_space.length() > 0);
   std::string path = normalize_path(prefix + name_space) + serveridentifier;
   delete_node(handle, path, "zk_server_list leave");
   // also try to delete its parents if they become empty
   delete_dir(handle, prefix + name_space, "zk_server_list leave cleanup");
-  if (prefix != "/") delete_dir(handle,
-                                prefix.substr(0, prefix.length() - 1),
-                                "zk_server_list leave cleanup");
+  if (prefix != "/")
+    delete_dir(handle, prefix.substr(0, prefix.length() - 1),
+               "zk_server_list leave cleanup");
 }
-
 
 // ------------- watch implementation ---------------
 
-
 std::vector<std::string> server_list::watch_changes(std::string name_space) {
-  boost::algorithm::trim(name_space); assert(name_space.length() > 0);
+  boost::algorithm::trim(name_space);
+  assert(name_space.length() > 0);
   struct String_vector children;
   children.count = 0;
   children.data = NULL;
@@ -130,21 +124,21 @@ std::vector<std::string> server_list::watch_changes(std::string name_space) {
   ret = String_vector_to_vector(&children);
   free_String_vector(&children);
   return ret;
-
 }
 
 void server_list::stop_watching(std::string name_space) {
-  boost::algorithm::trim(name_space); assert(name_space.length() > 0);
+  boost::algorithm::trim(name_space);
+  assert(name_space.length() > 0);
   std::string path = prefix + name_space;
   watchlock.lock();
   watches.erase(path);
   watchlock.unlock();
 }
 
-void server_list::set_callback(boost::function<void(server_list*,
-                                                    std::string name_space,
-                                                    std::vector<std::string> server)
-                                              > fn) {
+void server_list::set_callback(
+    boost::function<void(server_list *, std::string name_space,
+                         std::vector<std::string> server)>
+        fn) {
   watchlock.lock();
   callback = fn;
   watchlock.unlock();
@@ -173,20 +167,14 @@ void server_list::issue_callback(std::string path) {
   watchlock.unlock();
 }
 
-void server_list::watcher(zhandle_t *zh,
-                          int type,
-                          int state,
-                          const char *path,
+void server_list::watcher(zhandle_t *zh, int type, int state, const char *path,
                           void *watcherCtx) {
-  server_list* slist = reinterpret_cast<server_list*>(watcherCtx);
+  server_list *slist = reinterpret_cast<server_list *>(watcherCtx);
   if (type == ZOO_CHILD_EVENT) {
     std::string strpath = path;
     slist->issue_callback(path);
   }
 }
 
-
-
-
-} // namespace zookeeper
-} // namespace graphlab
+}  // namespace zookeeper
+}  // namespace graphlab

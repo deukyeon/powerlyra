@@ -39,15 +39,14 @@ typedef float vertex_data_type;
 typedef graphlab::empty edge_data_type;
 
 // The graph type is determined by the vertex and edge data types
-typedef graphlab::distributed_graph<vertex_data_type, edge_data_type> graph_type;
+typedef graphlab::distributed_graph<vertex_data_type, edge_data_type>
+    graph_type;
 
 /*
  * A simple function used by graph.transform_vertices(init_vertex);
  * to initialize the vertes data.
  */
 void init_vertex(graph_type::vertex_type& vertex) { vertex.data() = 1; }
-
-
 
 /*
  * The factorized page rank update function extends ivertex_program
@@ -69,16 +68,16 @@ void init_vertex(graph_type::vertex_type& vertex) { vertex.data() = 1; }
  * representation.  If a vertex program does not exted
  * graphlab::IS_POD_TYPE it must implement load and save functions.
  */
-class pagerank :
-  public graphlab::ivertex_program<graph_type, float>,
-  public graphlab::IS_POD_TYPE {
+class pagerank : public graphlab::ivertex_program<graph_type, float>,
+                 public graphlab::IS_POD_TYPE {
   float last_change;
-public:
+
+ public:
   /* Gather the weighted rank of the adjacent page   */
   float gather(icontext_type& context, const vertex_type& vertex,
                edge_type& edge) const {
     return ((1.0 - RESET_PROB) / edge.source().num_out_edges()) *
-      edge.source().data();
+           edge.source().data();
   }
 
   /* Use the total rank of adjacent pages to update this page */
@@ -92,8 +91,10 @@ public:
   /* The scatter edges depend on whether the pagerank has converged */
   edge_dir_type scatter_edges(icontext_type& context,
                               const vertex_type& vertex) const {
-    if (last_change > TOLERANCE) return graphlab::OUT_EDGES;
-    else return graphlab::NO_EDGES;
+    if (last_change > TOLERANCE)
+      return graphlab::OUT_EDGES;
+    else
+      return graphlab::NO_EDGES;
   }
 
   /* The scatter function just signal adjacent pages */
@@ -101,8 +102,7 @@ public:
                edge_type& edge) const {
     context.signal(edge.target());
   }
-}; // end of factorized_pagerank update functor
-
+};  // end of factorized_pagerank update functor
 
 /*
  * We want to save the final graph so we define a write which will be
@@ -115,9 +115,7 @@ struct pagerank_writer {
     return strm.str();
   }
   std::string save_edge(graph_type::edge_type e) { return ""; }
-}; // end of pagerank writer
-
-
+};  // end of pagerank writer
 
 int main(int argc, char** argv) {
   // Initialize control plain using mpi
@@ -130,12 +128,10 @@ int main(int argc, char** argv) {
   std::string graph_dir;
   std::string format = "adj";
   std::string exec_type = "synchronous";
-  clopts.attach_option("graph", graph_dir,
-                       "The graph file. Required ");
+  clopts.attach_option("graph", graph_dir, "The graph file. Required ");
   clopts.add_positional("graph");
-  clopts.attach_option("format", format,
-                       "The graph file format");
-  clopts.attach_option("engine", exec_type, 
+  clopts.attach_option("format", format, "The graph file format");
+  clopts.attach_option("engine", exec_type,
                        "The engine type synchronous or asynchronous");
   clopts.attach_option("tol", TOLERANCE,
                        "The permissible change at convergence.");
@@ -144,7 +140,7 @@ int main(int argc, char** argv) {
                        "If set, will save the resultant pagerank to a "
                        "sequence of files with prefix saveprefix");
 
-  if(!clopts.parse(argc, argv)) {
+  if (!clopts.parse(argc, argv)) {
     dc.cout() << "Error in parsing command line arguments." << std::endl;
     return EXIT_FAILURE;
   }
@@ -156,7 +152,7 @@ int main(int argc, char** argv) {
 
   // Build the graph ----------------------------------------------------------
   graph_type graph(dc, clopts);
-  dc.cout() << "Loading graph in format: "<< format << std::endl;
+  dc.cout() << "Loading graph in format: " << format << std::endl;
   graph.load_format(graph_dir, format);
   // must call finalize before querying the graph
   graph.finalize();
@@ -171,21 +167,18 @@ int main(int argc, char** argv) {
   engine.signal_all();
   engine.start();
   const float runtime = engine.elapsed_seconds();
-  dc.cout() << "Finished Running engine in " << runtime
-            << " seconds." << std::endl;
+  dc.cout() << "Finished Running engine in " << runtime << " seconds."
+            << std::endl;
 
   // Save the final graph -----------------------------------------------------
   if (saveprefix != "") {
     graph.save(saveprefix, pagerank_writer(),
-               false,    // do not gzip
-               true,     // save vertices
-               false);   // do not save edges
+               false,   // do not gzip
+               true,    // save vertices
+               false);  // do not save edges
   }
 
   // Tear-down communication layer and quit -----------------------------------
   graphlab::mpi_tools::finalize();
   return EXIT_SUCCESS;
-} // End of main
-
-
-
+}  // End of main

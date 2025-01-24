@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #include <stdio.h>
 #include <string.h>
 #include <cassert>
@@ -32,39 +31,37 @@
 
 #include <graphlab/macros_def.hpp>
 
-static void *callback(enum mg_event event,
-                      struct mg_connection *conn,
+static void *callback(enum mg_event event, struct mg_connection *conn,
                       const struct mg_request_info *request_info) {
   if (event == MG_NEW_REQUEST) {
     assert(request_info != NULL);
-    
-    const std::string url = (request_info->uri == NULL)?
-      std::string("/") : std::string(request_info->uri) ;
-    const std::string query = (request_info->query_string == NULL)?
-      std::string("") : std::string(request_info->query_string) ;
+
+    const std::string url = (request_info->uri == NULL)
+                                ? std::string("/")
+                                : std::string(request_info->uri);
+    const std::string query = (request_info->query_string == NULL)
+                                  ? std::string("")
+                                  : std::string(request_info->query_string);
 
     std::string response = "<p>URL: (" + url + ")</p> <ul>";
 
- 
-
-    std::map<std::string, std::string> map = graphlab::web_util::parse_query(query);
+    std::map<std::string, std::string> map =
+        graphlab::web_util::parse_query(query);
     typedef std::map<std::string, std::string>::value_type pair_type;
-    foreach(pair_type pair, map) 
+    foreach (pair_type pair, map)
       response += "<li> " + pair.first + " -- " + pair.second + "</li>";
     response += "</ul>";
-    
-
 
     mg_printf(conn,
               "HTTP/1.1 200 OK\r\n"
               "Content-Type: text/html\r\n"
-              "Content-Length: %d\r\n"        // Always set Content-Length
+              "Content-Length: %d\r\n"  // Always set Content-Length
               "\r\n"
               "%s",
               int(response.size()), response.c_str());
- 
+
     // Mark as processed
-    return (void*)(1);
+    return (void *)(1);
   } else {
     return NULL;
   }
@@ -81,15 +78,6 @@ int main(void) {
   return 0;
 }
 
-
-
-
-
-
-
-
-
-
 //// Using lib event
 
 // #include <sys/types.h>
@@ -105,7 +93,7 @@ int main(void) {
 // {
 //   struct evbuffer *buf;
 //   buf = evbuffer_new();
-  
+
 //   if (buf == NULL)
 //     err(1, "failed to create response buffer");
 //   for(size_t i = 0; i < 1000; ++i) {

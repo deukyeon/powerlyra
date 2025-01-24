@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef GRAPHLAB_DC_COMPILE_PARAMETERS_HPP
 #define GRAPHLAB_DC_COMPILE_PARAMETERS_HPP
 
@@ -53,14 +52,14 @@
 /**************************************************************************/
 
 /*
- * The architecture of the sending subsystem is that there is 1 main send thread.
- * Which polls a collection of thread local queues.
+ * The architecture of the sending subsystem is that there is 1 main send
+ * thread. Which polls a collection of thread local queues.
  *
  * Each thread local send queues comprises of 1 queue for each target machine.
  * Each queue comprises of 2 parts:
  *  - An array of "full" buffers
  *  - One not-full buffer.
- */ 
+ */
 
 /**
  * \ingroup RPC
@@ -71,14 +70,12 @@
  */
 #define SEND_POLL_TIMEOUT 10000
 
-
 /**
  * \ingroup rpc
  * \def INITIAL_BUFFER_SIZE
  * Each buffer is allocated to this size at the start
  */
 #define INITIAL_BUFFER_SIZE 65536
-
 
 /**
  * \ingroup rpc
@@ -89,10 +86,10 @@
 
 /**
  * \ingroup RPC
- * \def NUM_FULL_BUFFER_LIMIT 
+ * \def NUM_FULL_BUFFER_LIMIT
  * Number of full buffers in the send queue before a flush is explicitly called.
  */
-#define NUM_FULL_BUFFER_LIMIT 32 
+#define NUM_FULL_BUFFER_LIMIT 32
 
 /**************************************************************************/
 /*                                                                        */
@@ -112,8 +109,8 @@
  * \def RPC_DO_NOT_BREAK_BLOCKS
  *
  * If this option is turned on,
- * collections of messages recieved in a buffer 
- * will all be executed by the same thread. 
+ * collections of messages recieved in a buffer
+ * will all be executed by the same thread.
  * This decreases latency and increases throughput
  * but at a cost of parallelism.
  * Also, if turned on together with RPC_BLOCK_STRIPING,
@@ -121,11 +118,10 @@
  */
 #define RPC_DO_NOT_BREAK_BLOCKS
 
-
 /**
  * \ingroup RPC
  * \def RPC_BLOCK_STRIPING
- * Incoming buffers are striped across threads 
+ * Incoming buffers are striped across threads
  * to be processed. If this is turned on together with
  * RPC_DO_NOT_BREAK_BLOCKS, the sequentialization key is
  * ignored.
@@ -144,6 +140,5 @@
  * a send is performed.
  */
 #define DEFAULT_BUFFERED_EXCHANGE_SIZE FULL_BUFFER_SIZE_LIMIT
-
 
 #endif

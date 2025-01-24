@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef REPLY_INCREMENT_COUNTER_HPP
 #define REPLY_INCREMENT_COUNTER_HPP
 #include <string>
@@ -35,35 +34,36 @@ namespace dc_impl {
 /**
 \ingroup rpc
 \internal
-A wrapper around a char array. This structure 
+A wrapper around a char array. This structure
 is incapable of freeing itself and must be managed externally
 */
 struct blob {
-  /// Constructs a blob containing a pointer to a character array with length len
-  blob(char* c, size_t len):c(c),len(len) { };
-  blob():c(NULL), len(0){ };
-  
-  char *c;  ///< stored pointer 
-  size_t len; ///< stored length
-  
-  
+  /// Constructs a blob containing a pointer to a character array with length
+  /// len
+  blob(char* c, size_t len) : c(c), len(len){};
+  blob() : c(NULL), len(0){};
+
+  char* c;     ///< stored pointer
+  size_t len;  ///< stored length
+
   /// serialize the char array
   void save(oarchive& oarc) const {
     oarc << len;
     if (len > 0) serialize(oarc, c, len);
   }
-  
-  /// deserializes a char array. If there is already a char array here, it will be freed
- void load(iarchive& iarc) {
+
+  /// deserializes a char array. If there is already a char array here, it will
+  /// be freed
+  void load(iarchive& iarc) {
     if (c) ::free(c);
     c = NULL;
     iarc >> len;
     if (len > 0) {
-      c = (char*) malloc(len);
+      c = (char*)malloc(len);
       deserialize(iarc, c, len);
     }
   }
-  
+
   /// Free the stored char array.
   void free() {
     if (c) {
@@ -74,30 +74,28 @@ struct blob {
   }
 };
 
-
 /**
  *\internal
  * \ingroup rpc
  * Abstract class for where the result of a request go into.
  */
 struct ireply_container {
-  ireply_container() { }
-  virtual ~ireply_container() { }
+  ireply_container() {}
+  virtual ~ireply_container() {}
   virtual void wait() = 0;
   virtual void receive(procid_t source, blob b) = 0;
   virtual bool ready() const = 0;
   virtual blob& get_blob() = 0;
 };
 
-
 /**
 \internal
 \ingroup rpc
 The most basic container for replies. Only waits for one reply,
 and uses a mutex/condition variable pair to lock and wait on the reply value.
-\see ireply_container 
+\see ireply_container
 */
-struct basic_reply_container: public ireply_container{
+struct basic_reply_container : public ireply_container {
   blob val;
   mutex mut;
   conditional cond;
@@ -105,11 +103,9 @@ struct basic_reply_container: public ireply_container{
   /**
    * Constructs a reply object which waits for 'retcount' replies.
    */
-  basic_reply_container():valready(false) { }
-  
-  ~basic_reply_container() { 
-    val.free();
-  }
+  basic_reply_container() : valready(false) {}
+
+  ~basic_reply_container() { val.free(); }
 
   void receive(procid_t source, blob b) {
     mut.lock();
@@ -119,27 +115,21 @@ struct basic_reply_container: public ireply_container{
     mut.unlock();
   }
   /**
-   * Waits for all replies to complete. It is up to the 
+   * Waits for all replies to complete. It is up to the
    * reply implementation to decrement the counter.
    */
   inline void wait() {
     mut.lock();
-    while(!valready) cond.wait(mut);
+    while (!valready) cond.wait(mut);
     mut.unlock();
   }
 
-  inline bool ready() const {
-    return valready;
-  }
+  inline bool ready() const { return valready; }
 
-  blob& get_blob() {
-    return val;
-  }
+  blob& get_blob() { return val; }
 };
 
-
-} // namespace dc_impl
-
+}  // namespace dc_impl
 
 /**
  * \internal
@@ -153,15 +143,13 @@ struct basic_reply_container: public ireply_container{
  * Once the target machine finishes evaluating the function, it issues a
  * call to the request_reply_handler function, passing the original address
  * into the ptr argument. The request_reply_handler then reinterprets the ptr
- * argument as an ireply_container object and calls the receive() function 
+ * argument as an ireply_container object and calls the receive() function
  * on it.
  * \see ireply_container
  */
-void request_reply_handler(distributed_control &dc, procid_t src, 
-                             size_t ptr, dc_impl::blob ret);
+void request_reply_handler(distributed_control& dc, procid_t src, size_t ptr,
+                           dc_impl::blob ret);
 
-
-} // namespace graphlab
+}  // namespace graphlab
 
 #endif
-

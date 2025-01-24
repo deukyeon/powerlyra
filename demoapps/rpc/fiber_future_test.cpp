@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #include <iostream>
 #include <graphlab/util/timer.hpp>
 #include <graphlab/util/mpi_tools.hpp>
@@ -32,14 +31,13 @@ using namespace graphlab;
 
 atomic<size_t> complete_count;
 
-size_t some_remote_function(size_t a) {
-  return a;
-}
+size_t some_remote_function(size_t a) { return a; }
 
 void test_fiber(size_t sequential_count) {
-  for (size_t i = 0;i < sequential_count; ++i) {
-    request_future<size_t> ret = fiber_remote_request(1, some_remote_function, 1);
-    complete_count.inc(ret()); 
+  for (size_t i = 0; i < sequential_count; ++i) {
+    request_future<size_t> ret =
+        fiber_remote_request(1, some_remote_function, 1);
+    complete_count.inc(ret());
   }
 }
 
@@ -50,15 +48,15 @@ int main(int argc, char** argv) {
   // with fibers
   if (dc.procid() == 0) {
     fiber_group group(8192);
-    for (int i = 0;i < 1600000; ++i) {
+    for (int i = 0; i < 1600000; ++i) {
       group.launch(boost::bind(test_fiber, 1));
       if (i % 100000 == 0) std::cout << i << "\n";
     }
     group.join();
-    std::cout << "completed requests: " << complete_count.value << " in " << ti.current_time() << "\n";  
+    std::cout << "completed requests: " << complete_count.value << " in "
+              << ti.current_time() << "\n";
   }
 
   dc.barrier();
   mpi_tools::finalize();
 }
-

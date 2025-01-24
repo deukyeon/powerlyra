@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef GRAPHLAB_VERSION_HPP
 #define GRAPHLAB_VERSION_HPP
 
@@ -31,4 +30,3 @@
 #define GRAPHLAB_VERSION_REVISION 0
 
 #endif
-

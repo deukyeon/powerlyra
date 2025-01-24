@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,6 @@
  *      http://www.graphlab.ml.cmu.edu
  *
  */
-
 
 #ifndef DC_SEND_HPP
 #define DC_SEND_HPP
@@ -44,11 +43,11 @@ character stream containing the contents of the packet.
 The class should accumulate the data in an iovec structure
 and relinquish it on get_outgoing_data()
 */
-class dc_send{
+class dc_send {
  public:
-  dc_send() { }
-  
-  virtual ~dc_send() { }
+  dc_send() {}
+
+  virtual ~dc_send() {}
 
   virtual void register_send_buffer(thread_local_buffer* buffer) = 0;
   virtual void unregister_send_buffer(thread_local_buffer* buffer) = 0;
@@ -58,17 +57,16 @@ class dc_send{
     Packets marked CONTROL_PACKET should not be counted
   */
   virtual size_t bytes_sent() = 0;
- 
+
   /**
    * flushes immediately
-   */ 
+   */
   virtual void flush() = 0;
 
   /**
    * Requests a flush as soon as possible
    */
   virtual void flush_soon() = 0;
-
 
   /**
    * Writes a string to an internal buffer to be flushed later.
@@ -77,9 +75,7 @@ class dc_send{
    */
   virtual void write_to_buffer(char* c, size_t len) = 0;
 
-  virtual size_t set_option(std::string opt, size_t val) {
-    return 0;
-  }
+  virtual size_t set_option(std::string opt, size_t val) { return 0; }
 
   /**
    * Returns length if there is data, 0 otherwise. This function
@@ -88,19 +84,18 @@ class dc_send{
    */
   virtual size_t get_outgoing_data(circular_iovec_buffer& outdata) = 0;
 
-
   /**
    * Utility function: writes a packet header into an archive.
    * but returns an offset to the location of the length entry allowing it to
    * be filled in later.
    */
-  inline static size_t write_packet_header(oarchive& oarc, 
-                                           procid_t src, 
-                                           unsigned char packet_type_mask, 
-                                           unsigned char sequentialization_key) {
+  inline static size_t write_packet_header(
+      oarchive& oarc, procid_t src, unsigned char packet_type_mask,
+      unsigned char sequentialization_key) {
     size_t base = oarc.off;
     oarc.advance(sizeof(packet_hdr));
-    packet_hdr* hdr = reinterpret_cast<packet_hdr*>(oarc.buf + (oarc.off - sizeof(packet_hdr)));
+    packet_hdr* hdr = reinterpret_cast<packet_hdr*>(
+        oarc.buf + (oarc.off - sizeof(packet_hdr)));
     hdr->len = 0;
     hdr->src = src;
     hdr->packet_type_mask = packet_type_mask;
@@ -108,9 +103,7 @@ class dc_send{
     return base;
   }
 };
-  
 
-} // namespace dc_impl
-} // namespace graphlab
+}  // namespace dc_impl
+}  // namespace graphlab
 #endif
-

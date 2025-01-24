@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef DC_RECEIVE_HPP
 #define DC_RECEIVE_HPP
 #include <graphlab/rpc/dc_internal_types.hpp>
@@ -28,7 +27,7 @@
 #include <graphlab/parallel/atomic.hpp>
 namespace graphlab {
 namespace dc_impl {
-  
+
 /**
 \ingroup rpc
 \internal
@@ -38,12 +37,12 @@ Data entering from a single socket will be passed to this
 function through the incoming_data function call.
 
 This class must understand the packet header and issue the right
-calls in the owning dc. 
+calls in the owning dc.
 */
 class dc_receive {
  public:
-  dc_receive() { };
-  virtual ~dc_receive() { };
+  dc_receive(){};
+  virtual ~dc_receive(){};
 
   /**
     gets a buffer. The buffer length is returned in retbuflength
@@ -52,7 +51,7 @@ class dc_receive {
     incoming_data will never be called.
   */
   virtual char* get_buffer(size_t& retbuflength) = 0;
-  
+
   /**
     Commits a buffer obtained using get_buffer.
     c will be the result of a previous call to get_buffer() or advance_buffer()
@@ -60,9 +59,8 @@ class dc_receive {
     up to 'wrotelength' bytes. A new empty buffer should be returned
     and the size is returned in retbuflength
   */
-  virtual char* advance_buffer(char* c, size_t wrotelength, 
-                              size_t& retbuflength) = 0;
-  
+  virtual char* advance_buffer(char* c, size_t wrotelength,
+                               size_t& retbuflength) = 0;
 
   /**
    * Last call sent to any instance of dc_receive.
@@ -71,8 +69,6 @@ class dc_receive {
   virtual void shutdown() = 0;
 };
 
-
-} // namespace dc_impl
-} // namespace graphlab
+}  // namespace dc_impl
+}  // namespace graphlab
 #endif
-

@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,9 +24,7 @@
 #include <string>
 #include <fstream>
 
-
 #include <graphlab.hpp>
-
 
 /**
  * \brief The type used to measure distances in the graph.
@@ -38,20 +36,17 @@ typedef float distance_type;
  */
 struct vertex_data : graphlab::IS_POD_TYPE {
   distance_type dist;
-  vertex_data(distance_type dist = std::numeric_limits<distance_type>::max()) :
-    dist(dist) { }
-}; // end of vertex data
-
-
+  vertex_data(distance_type dist = std::numeric_limits<distance_type>::max())
+      : dist(dist) {}
+};  // end of vertex data
 
 /**
  * \brief The distance associated with the edge.
  */
 struct edge_data : graphlab::IS_POD_TYPE {
   distance_type dist;
-  edge_data(distance_type dist = 1) : dist(dist) { }
-}; // end of edge data
-
+  edge_data(distance_type dist = 1) : dist(dist) {}
+};  // end of edge data
 
 /**
  * \brief The graph type encodes the distances between vertices and
@@ -59,30 +54,27 @@ struct edge_data : graphlab::IS_POD_TYPE {
  */
 typedef graphlab::distributed_graph<vertex_data, edge_data> graph_type;
 
-
 /**
  * \brief Get the other vertex in the edge.
  */
-inline graph_type::vertex_type
-get_other_vertex(const graph_type::edge_type& edge,
-                 const graph_type::vertex_type& vertex) {
-  return vertex.id() == edge.source().id()? edge.target() : edge.source();
+inline graph_type::vertex_type get_other_vertex(
+    const graph_type::edge_type& edge, const graph_type::vertex_type& vertex) {
+  return vertex.id() == edge.source().id() ? edge.target() : edge.source();
 }
-
 
 /**
  * \brief Use directed or undireced edges.
  */
 bool DIRECTED_SSSP = false;
 
-
 /**
  * \brief This class is used as the gather type.
  */
 struct min_distance_type : graphlab::IS_POD_TYPE {
   distance_type dist;
-  min_distance_type(distance_type dist = 
-                    std::numeric_limits<distance_type>::max()) : dist(dist) { }
+  min_distance_type(
+      distance_type dist = std::numeric_limits<distance_type>::max())
+      : dist(dist) {}
   min_distance_type& operator+=(const min_distance_type& other) {
     dist = std::min(dist, other.dist);
     return *this;
@@ -91,52 +83,46 @@ struct min_distance_type : graphlab::IS_POD_TYPE {
 
 struct max_distance_type : graphlab::IS_POD_TYPE {
   distance_type dist;
-  max_distance_type(distance_type dist = 
-                    std::numeric_limits<distance_type>::min()) : dist(dist) { }
+  max_distance_type(
+      distance_type dist = std::numeric_limits<distance_type>::min())
+      : dist(dist) {}
   max_distance_type& operator+=(const max_distance_type& other) {
     dist = std::max(dist, other.dist);
     return *this;
   }
 };
 
-
-
 /**
  * \brief The single source shortest path vertex program.
  */
-class sssp :
-  public graphlab::ivertex_program<graph_type, 
-                                   graphlab::empty,
-                                   min_distance_type>,
-  public graphlab::IS_POD_TYPE {
+class sssp : public graphlab::ivertex_program<graph_type, graphlab::empty,
+                                              min_distance_type>,
+             public graphlab::IS_POD_TYPE {
   distance_type min_dist;
   bool changed;
-public:
 
-
+ public:
   void init(icontext_type& context, const vertex_type& vertex,
             const min_distance_type& msg) {
     min_dist = msg.dist;
-  } 
+  }
 
   /**
    * \brief We use the messaging model to compute the SSSP update
    */
-  edge_dir_type gather_edges(icontext_type& context, 
-                             const vertex_type& vertex) const { 
+  edge_dir_type gather_edges(icontext_type& context,
+                             const vertex_type& vertex) const {
     return graphlab::NO_EDGES;
-  }; // end of gather_edges 
+  };  // end of gather_edges
 
-
-  // /** 
+  // /**
   //  * \brief Collect the distance to the neighbor
   //  */
-  // min_distance_type gather(icontext_type& context, const vertex_type& vertex, 
+  // min_distance_type gather(icontext_type& context, const vertex_type& vertex,
   //                          edge_type& edge) const {
-  //   return min_distance_type(edge.data() + 
+  //   return min_distance_type(edge.data() +
   //                            get_other_vertex(edge, vertex).data());
   // } // end of gather function
-
 
   /**
    * \brief If the distance is smaller then update
@@ -144,7 +130,7 @@ public:
   void apply(icontext_type& context, vertex_type& vertex,
              const graphlab::empty& empty) {
     changed = false;
-    if(vertex.data().dist > min_dist) {
+    if (vertex.data().dist > min_dist) {
       changed = true;
       vertex.data().dist = min_dist;
     }
@@ -153,15 +139,16 @@ public:
   /**
    * \brief Determine if SSSP should run on all edges or just in edges
    */
-  edge_dir_type scatter_edges(icontext_type& context, 
-                             const vertex_type& vertex) const {
-    if(changed)
-      return DIRECTED_SSSP? graphlab::OUT_EDGES : graphlab::ALL_EDGES; 
-    else return graphlab::NO_EDGES;
-  }; // end of scatter_edges
+  edge_dir_type scatter_edges(icontext_type& context,
+                              const vertex_type& vertex) const {
+    if (changed)
+      return DIRECTED_SSSP ? graphlab::OUT_EDGES : graphlab::ALL_EDGES;
+    else
+      return graphlab::NO_EDGES;
+  };  // end of scatter_edges
 
   /**
-   * \brief The scatter function just signal adjacent pages 
+   * \brief The scatter function just signal adjacent pages
    */
   void scatter(icontext_type& context, const vertex_type& vertex,
                edge_type& edge) const {
@@ -171,12 +158,9 @@ public:
       const min_distance_type msg(newd);
       context.signal(other, msg);
     }
-  } // end of scatter
+  }  // end of scatter
 
-}; // end of shortest path vertex program
-
-
-
+};  // end of shortest path vertex program
 
 /**
  * \brief We want to save the final graph so we define a write which will be
@@ -185,15 +169,14 @@ public:
 struct shortest_path_writer {
   std::string save_vertex(const graph_type::vertex_type& vtx) {
     std::stringstream strm;
-    if(vtx.data().dist != std::numeric_limits<distance_type>::max() )
-        strm << vtx.id() << "\t" << vtx.data().dist << "\n";
+    if (vtx.data().dist != std::numeric_limits<distance_type>::max())
+      strm << vtx.id() << "\t" << vtx.data().dist << "\n";
     return strm.str();
   }
   std::string save_edge(graph_type::edge_type e) { return ""; }
-}; // end of shortest_path_writer
+};  // end of shortest_path_writer
 
-
-struct max_deg_vertex_reducer: public graphlab::IS_POD_TYPE {
+struct max_deg_vertex_reducer : public graphlab::IS_POD_TYPE {
   size_t degree;
   graphlab::vertex_id_type vid;
   max_deg_vertex_reducer& operator+=(const max_deg_vertex_reducer& other) {
@@ -214,7 +197,7 @@ max_deg_vertex_reducer find_max_deg_vertex(const graph_type::vertex_type vtx) {
 max_distance_type map_dist(const graph_type::vertex_type& v) {
   if (v.data().dist == std::numeric_limits<distance_type>::max())
     return std::numeric_limits<distance_type>::min();
-  
+
   max_distance_type dist(v.data().dist);
   return dist;
 }
@@ -226,8 +209,8 @@ int main(int argc, char** argv) {
   global_logger().set_log_level(LOG_INFO);
 
   // Parse command line options -----------------------------------------------
-  graphlab::command_line_options 
-    clopts("Single Source Shortest Path Algorithm.");
+  graphlab::command_line_options clopts(
+      "Single Source Shortest Path Algorithm.");
   std::string graph_dir;
   std::string format = "adj";
   std::string exec_type = "synchronous";
@@ -238,22 +221,18 @@ int main(int argc, char** argv) {
                        "The graph file.  If none is provided "
                        "then a toy graph will be created");
   clopts.add_positional("graph");
-  clopts.attach_option("format", format,
-                       "graph format");
-  clopts.attach_option("source", sources,
-                       "The source vertices");
+  clopts.attach_option("format", format, "graph format");
+  clopts.attach_option("source", sources, "The source vertices");
   clopts.attach_option("max_degree_source", max_degree_source,
                        "Add the vertex with maximum degree as a source");
 
   clopts.add_positional("source");
 
-  clopts.attach_option("directed", DIRECTED_SSSP,
-                       "Treat edges as directed.");
+  clopts.attach_option("directed", DIRECTED_SSSP, "Treat edges as directed.");
 
-  clopts.attach_option("engine", exec_type, 
+  clopts.attach_option("engine", exec_type,
                        "The engine type synchronous or asynchronous");
- 
-  
+
   clopts.attach_option("powerlaw", powerlaw,
                        "Generate a synthetic powerlaw out-degree graph. ");
   std::string saveprefix;
@@ -261,21 +240,20 @@ int main(int argc, char** argv) {
                        "If set, will save the resultant pagerank to a "
                        "sequence of files with prefix saveprefix");
 
-  if(!clopts.parse(argc, argv)) {
+  if (!clopts.parse(argc, argv)) {
     dc.cout() << "Error in parsing command line arguments." << std::endl;
     return EXIT_FAILURE;
   }
-
 
   // Build the graph ----------------------------------------------------------
   dc.cout() << "Loading graph." << std::endl;
   graphlab::timer timer;
   graph_type graph(dc, clopts);
-  if(powerlaw > 0) { // make a synthetic graph
+  if (powerlaw > 0) {  // make a synthetic graph
     dc.cout() << "Loading synthetic Powerlaw graph." << std::endl;
     graph.load_synthetic_powerlaw(powerlaw, false, 2, 100000000);
-  } else if (graph_dir.length() > 0) { // Load the graph from a file
-    dc.cout() << "Loading graph in format: "<< format << std::endl;
+  } else if (graph_dir.length() > 0) {  // Load the graph from a file
+    dc.cout() << "Loading graph in format: " << format << std::endl;
     graph.load_format(graph_dir, format);
   } else {
     dc.cout() << "graph or powerlaw option must be specified" << std::endl;
@@ -283,16 +261,14 @@ int main(int argc, char** argv) {
     return EXIT_FAILURE;
   }
   const double loading = timer.current_time();
-  dc.cout() << "Loading graph. Finished in " 
-            << loading << std::endl;
+  dc.cout() << "Loading graph. Finished in " << loading << std::endl;
 
   // must call finalize before querying the graph
   dc.cout() << "Finalizing graph." << std::endl;
   timer.start();
   graph.finalize();
   const double finalizing = timer.current_time();
-  dc.cout() << "Finalizing graph. Finished in " 
-            << finalizing << std::endl;
+  dc.cout() << "Finalizing graph. Finished in " << finalizing << std::endl;
 
   // NOTE: ingress time = loading time + finalizing time
   const double ingress = loading + finalizing;
@@ -304,33 +280,32 @@ int main(int argc, char** argv) {
             << " #edges:" << graph.num_edges() << std::endl;
 
   dc.cout() << "Sources : ";
-  for(std::vector<unsigned int>::iterator it = sources.begin(); it != sources.end(); ++it) {
-	dc.cout() << *it << " ";
+  for (std::vector<unsigned int>::iterator it = sources.begin();
+       it != sources.end(); ++it) {
+    dc.cout() << *it << " ";
   }
   dc.cout() << std::endl;
-  if(sources.empty()) {
+  if (sources.empty()) {
     if (max_degree_source == false) {
-      dc.cout()
-        << "No source vertex provided. Adding vertex 0 as source" 
-        << std::endl;
+      dc.cout() << "No source vertex provided. Adding vertex 0 as source"
+                << std::endl;
       sources.push_back(0);
     }
   }
 
   if (max_degree_source) {
-    max_deg_vertex_reducer v = graph.map_reduce_vertices<max_deg_vertex_reducer>(find_max_deg_vertex);
-    dc.cout()
-      << "No source vertex provided.  Using highest degree vertex " << v.vid << " as source."
-      << std::endl;
+    max_deg_vertex_reducer v =
+        graph.map_reduce_vertices<max_deg_vertex_reducer>(find_max_deg_vertex);
+    dc.cout() << "No source vertex provided.  Using highest degree vertex "
+              << v.vid << " as source." << std::endl;
     sources.push_back(v.vid);
   }
-
 
   // Running The Engine -------------------------------------------------------
   graphlab::omni_engine<sssp> engine(dc, graph, exec_type, clopts);
 
   // Signal all the vertices in the source set
-  for(size_t i = 0; i < sources.size(); ++i) {
+  for (size_t i = 0; i < sources.size(); ++i) {
     dc.cout() << "Using Source " << sources[i] << std::endl;
     engine.signal(sources[i], min_distance_type(0));
   }
@@ -340,31 +315,26 @@ int main(int argc, char** argv) {
   const double runtime = timer.current_time();
   dc.cout() << "----------------------------------------------------------"
             << std::endl
-            << "Final Runtime (seconds):   " << runtime 
-            << std::endl
+            << "Final Runtime (seconds):   " << runtime << std::endl
             << "Updates executed: " << engine.num_updates() << std::endl
-            << "Update Rate (updates/second): " 
+            << "Update Rate (updates/second): "
             << engine.num_updates() / runtime << std::endl;
 
-  const max_distance_type max_dist = 
+  const max_distance_type max_dist =
       graph.map_reduce_vertices<max_distance_type>(map_dist);
   std::cout << "Max distance: " << max_dist.dist << std::endl;
 
   // Save the final graph -----------------------------------------------------
   if (saveprefix != "") {
     graph.save(saveprefix, shortest_path_writer(),
-               false,    // do not gzip
-               true,     // save vertices
-               false);   // do not save edges
+               false,   // do not gzip
+               true,    // save vertices
+               false);  // do not save edges
   }
 
   // Tear-down communication layer and quit -----------------------------------
   graphlab::mpi_tools::finalize();
   return EXIT_SUCCESS;
-} // End of main
-
+}  // End of main
 
 // We render this entire program in the documentation
-
-
-

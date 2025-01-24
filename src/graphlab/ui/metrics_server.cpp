@@ -1,5 +1,5 @@
-/* 
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,9 +37,7 @@
 
 #include <graphlab/macros_def.hpp>
 
-
 namespace graphlab {
-
 
 static mg_context* metric_context = NULL;
 
@@ -48,20 +46,14 @@ static rwlock& callback_lock() {
   return clock;
 }
 
-
 static std::map<std::string, http_redirect_callback_type>& callbacks() {
   static std::map<std::string, http_redirect_callback_type> cback;
   return cback;
 }
 
-
-
-
-static void* process_request(enum mg_event event,
-                             struct mg_connection* conn,
+static void* process_request(enum mg_event event, struct mg_connection* conn,
                              const struct mg_request_info* info) {
   if (event == MG_NEW_REQUEST) {
-
     // get the URL being requested
     std::string url;
     if (info->uri != NULL) url = info->uri;
@@ -73,7 +65,7 @@ static void* process_request(enum mg_event event,
       std::string qs = info->query_string;
       std::vector<std::string> terms = strsplit(qs, "&", true);
       // now for each term..
-      foreach(std::string& term, terms) {
+      foreach (std::string& term, terms) {
         // get the variable name
         std::vector<std::string> key_val = strsplit(term, "=", true);
         if (key_val.size() > 0) {
@@ -81,83 +73,81 @@ static void* process_request(enum mg_event event,
           // since mg_get_var does http escape sequence decoding
           std::string key = key_val[0];
           char val_target[8192];
-          int ret = mg_get_var(qs.c_str(), qs.length(), 
-                               key.c_str(), val_target, 8192);
+          int ret = mg_get_var(qs.c_str(), qs.length(), key.c_str(), val_target,
+                               8192);
           if (ret >= 0) variable_map[key] = val_target;
         }
       }
     }
     callback_lock().readlock();
     // now redirect to the callback handlers. if we find one
-    std::map<std::string, http_redirect_callback_type>::iterator iter = 
-                                                       callbacks().find(url);
+    std::map<std::string, http_redirect_callback_type>::iterator iter =
+        callbacks().find(url);
 
     if (iter != callbacks().end()) {
-      std::pair<std::string, std::string> returnval = iter->second(variable_map);
+      std::pair<std::string, std::string> returnval =
+          iter->second(variable_map);
 
       callback_lock().rdunlock();
 
       std::string ctype = returnval.first;
       std::string body = returnval.second;
       mg_printf(conn,
-              "HTTP/1.1 200 OK\r\n"
-              "Access-Control-Allow-Origin: *\r\n"
-              "Access-Control-Allow-Methods: GET\r\n"
-              "Content-Type: %s\r\n"
-              "Content-Length: %d\r\n" 
-              "\r\n",
-              ctype.c_str(), (int) body.length());
+                "HTTP/1.1 200 OK\r\n"
+                "Access-Control-Allow-Origin: *\r\n"
+                "Access-Control-Allow-Methods: GET\r\n"
+                "Content-Type: %s\r\n"
+                "Content-Length: %d\r\n"
+                "\r\n",
+                ctype.c_str(), (int)body.length());
       mg_write(conn, body.c_str(), body.length());
-    }
-    else {
+    } else {
       std::map<std::string, http_redirect_callback_type>::iterator iter404 =
-                                                          callbacks().find("404");
+          callbacks().find("404");
       std::pair<std::string, std::string> returnval;
-      if (iter404 != callbacks().end()) returnval = iter404->second(variable_map);
-      
+      if (iter404 != callbacks().end())
+        returnval = iter404->second(variable_map);
+
       callback_lock().rdunlock();
 
       std::string ctype = returnval.first;
       std::string body = returnval.second;
 
       mg_printf(conn,
-              "HTTP/1.1 404 Not Found\r\n"
-              "Access-Control-Allow-Origin: *\r\n"
-              "Content-Type: %s\r\n"
-              "Content-Length: %d\r\n" 
-              "\r\n",
-              ctype.c_str(), (int)body.length());
+                "HTTP/1.1 404 Not Found\r\n"
+                "Access-Control-Allow-Origin: *\r\n"
+                "Content-Type: %s\r\n"
+                "Content-Length: %d\r\n"
+                "\r\n",
+                ctype.c_str(), (int)body.length());
       mg_write(conn, body.c_str(), body.length());
     }
 
     return (void*)"";
-  }
-  else {
+  } else {
     return NULL;
   }
 }
 
-
 /*
    Simple 404 handler. Just reuturns a string "Page Not Found"
    */
-std::pair<std::string, std::string> 
-four_oh_four(std::map<std::string, std::string>& varmap) {
-  return std::make_pair(std::string("text/html"), 
+std::pair<std::string, std::string> four_oh_four(
+    std::map<std::string, std::string>& varmap) {
+  return std::make_pair(std::string("text/html"),
                         std::string("Page Not Found"));
 }
-
 
 /*
   Echo handler. Returns a html with get keys and values
  */
-std::pair<std::string, std::string> 
-echo(std::map<std::string, std::string>& varmap) {
+std::pair<std::string, std::string> echo(
+    std::map<std::string, std::string>& varmap) {
   std::stringstream ret;
   std::map<std::string, std::string>::iterator iter = varmap.begin();
   ret << "<html>\n";
   while (iter != varmap.end()) {
-    ret << iter->first << " = " << iter->second << "<br>\n"; 
+    ret << iter->first << " = " << iter->second << "<br>\n";
     ++iter;
   }
   ret << "</html>\n";
@@ -165,14 +155,14 @@ echo(std::map<std::string, std::string>& varmap) {
   return std::make_pair(std::string("text/html"), ret.str());
 }
 
-std::pair<std::string, std::string> 
-index_page(std::map<std::string, std::string>& varmap) {
+std::pair<std::string, std::string> index_page(
+    std::map<std::string, std::string>& varmap) {
   std::stringstream ret;
   ret << "<html>\n";
   ret << "<h3>Registered Handlers:</h3>\n";
   callback_lock().readlock();
-  std::map<std::string, http_redirect_callback_type>::const_iterator iter = 
-                            callbacks().begin();
+  std::map<std::string, http_redirect_callback_type>::const_iterator iter =
+      callbacks().begin();
   while (iter != callbacks().end()) {
     // don't put in the index page callback
     if (iter->first != "") {
@@ -186,7 +176,6 @@ index_page(std::map<std::string, std::string>& varmap) {
   return std::make_pair(std::string("text/html"), ret.str());
 }
 
-
 static void fill_builtin_callbacks() {
   callbacks()["404"] = four_oh_four;
   callbacks()["echo"] = echo;
@@ -194,8 +183,7 @@ static void fill_builtin_callbacks() {
   callbacks()["index.html"] = index_page;
 }
 
-
-void add_metric_server_callback(std::string page, 
+void add_metric_server_callback(std::string page,
                                 http_redirect_callback_type callback) {
   callback_lock().writelock();
   callbacks()[page] = callback;
@@ -204,11 +192,13 @@ void add_metric_server_callback(std::string page,
 
 void launch_metric_server() {
   if (distributed_control::get_instance_procid() == 0) {
-    const char *options[] = {"listening_ports", "8090", NULL};
-    metric_context = mg_start(process_request, (void*)(&(callbacks())), options);
-    if(metric_context == NULL) {
+    const char* options[] = {"listening_ports", "8090", NULL};
+    metric_context =
+        mg_start(process_request, (void*)(&(callbacks())), options);
+    if (metric_context == NULL) {
       logstream(LOG_ERROR) << "Unable to launch metrics server on port 8090. "
-                           << "Metrics server will not be available" << std::endl;
+                           << "Metrics server will not be available"
+                           << std::endl;
       return;
     }
     fill_builtin_callbacks();
@@ -216,26 +206,29 @@ void launch_metric_server() {
     char hostname[1024];
     std::string strhostname;
     if (gethostname(hostname, 1024) == 0) strhostname = hostname;
-    logstream(LOG_EMPH) << "Metrics server now listening on " 
-                   << "http://" << strhostname << ":8090" << std::endl;
+    logstream(LOG_EMPH) << "Metrics server now listening on "
+                        << "http://" << strhostname << ":8090" << std::endl;
   }
 }
 
 void stop_metric_server() {
-  if (distributed_control::get_instance_procid() == 0 && metric_context != NULL) {
+  if (distributed_control::get_instance_procid() == 0 &&
+      metric_context != NULL) {
     std::cout << "Metrics server stopping." << std::endl;
     mg_stop(metric_context);
   }
 }
 
 void stop_metric_server_on_eof() {
-  if (distributed_control::get_instance_procid() == 0 && metric_context != NULL) {
+  if (distributed_control::get_instance_procid() == 0 &&
+      metric_context != NULL) {
     char buff[128];
     // wait for ctrl-d
     logstream(LOG_EMPH) << "Hit Ctrl-D to stop the metrics server" << std::endl;
-    while (fgets(buff, 128, stdin) != NULL );
-    stop_metric_server();  
+    while (fgets(buff, 128, stdin) != NULL)
+      ;
+    stop_metric_server();
   }
 }
 
-} // namespace graphlab
+}  // namespace graphlab

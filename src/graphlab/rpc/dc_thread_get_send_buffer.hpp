@@ -3,7 +3,7 @@
 
 /*
  * This implements a bunch of internal functions which should really reside
- * as static functions in distributed_control. But 
+ * as static functions in distributed_control. But
  *
  */
 #include <graphlab/serialization/oarchive.hpp>
@@ -33,7 +33,7 @@ inline oarchive* get_thread_local_buffer(procid_t target) {
  * \internal
  * Releases the thread local send buffer for the given target
  */
-inline void release_thread_local_buffer(procid_t target, 
+inline void release_thread_local_buffer(procid_t target,
                                         bool do_not_count_bytes_sent) {
   void* ptr = pthread_getspecific(thrlocal_send_buffer_key);
   thread_local_buffer* p = (thread_local_buffer*)(ptr);
@@ -44,16 +44,12 @@ inline void release_thread_local_buffer(procid_t target,
  * \internal
  * Writes a sequence of bytes to the local send buffer
  */
-inline void write_thread_local_buffer(procid_t target, 
-                                      char* c,
-                                      size_t len,
+inline void write_thread_local_buffer(procid_t target, char* c, size_t len,
                                       bool do_not_count_bytes_sent) {
   void* ptr = pthread_getspecific(thrlocal_send_buffer_key);
   thread_local_buffer* p = (thread_local_buffer*)(ptr);
   p->write(target, c, len, do_not_count_bytes_sent);
 }
-
-
 
 /**
  * \internal
@@ -82,8 +78,6 @@ inline void pull_flush_soon_thread_local_buffer(procid_t proc) {
   if (p) p->pull_flush_soon(proc);
 }
 
-
-
 /**
  * \internal
  */
@@ -92,8 +86,6 @@ inline void pull_flush_soon_thread_local_buffer() {
   thread_local_buffer* p = (thread_local_buffer*)(ptr);
   if (p) p->pull_flush_soon();
 }
-
-
 
 /**
  * Gets the current procid.
@@ -116,10 +108,11 @@ inline procid_t _get_procid() {
  * dc.hpp
  */
 inline procid_t _get_sequentialization_key() {
-  size_t oldval = reinterpret_cast<size_t>(pthread_getspecific(dc_impl::thrlocal_sequentialization_key));
+  size_t oldval = reinterpret_cast<size_t>(
+      pthread_getspecific(dc_impl::thrlocal_sequentialization_key));
   return (unsigned char)oldval;
 }
 
-}
-}
+}  // namespace dc_impl
+}  // namespace graphlab
 #endif

@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,36 +22,29 @@
 
 /**
  * Also contains code that is Copyright 2011 Yahoo! Inc.  All rights
- * reserved.  
+ * reserved.
  *
  * Contributed under the iCLA for:
- *    Joseph Gonzalez (jegonzal@yahoo-inc.com) 
+ *    Joseph Gonzalez (jegonzal@yahoo-inc.com)
  *
  */
-
-
-
-
 
 #ifndef GRAPHLAB_CACHE_LINE_PAD
 #define GRAPHLAB_CACHE_LINE_PAD
 
 namespace graphlab {
-    /**
-     * Used to prevent false cache sharing by padding T
-     */
-    template <typename T> struct cache_line_pad  {
-      T value;
-      char pad[64 - (sizeof(T) % 64)];      
-      cache_line_pad(const T& value = T()) : value(value) { }
-      T& operator=(const T& other) { return value = other; }      
-      operator T() const { return value; }
-    }; // end of cache_line_pad
+/**
+ * Used to prevent false cache sharing by padding T
+ */
+template <typename T>
+struct cache_line_pad {
+  T value;
+  char pad[64 - (sizeof(T) % 64)];
+  cache_line_pad(const T& value = T()) : value(value) {}
+  T& operator=(const T& other) { return value = other; }
+  operator T() const { return value; }
+};  // end of cache_line_pad
 
-}; // end of namespace
-
-
-
-
+};  // namespace graphlab
 
 #endif

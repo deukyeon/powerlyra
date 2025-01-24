@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,14 +17,11 @@
  *
  */
 
-
 #include <graphlab/factors/discrete_variable.hpp>
 
-std::ostream& operator<<(std::ostream& out, 
+std::ostream& operator<<(std::ostream& out,
                          const graphlab::discrete_variable& var) {
   // return out << "v_" << var.id()
   //            << " in {0:" << var.size()-1 << "}";
   return out << var.id();
 }
-
-

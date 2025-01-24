@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,26 +26,20 @@
 #include <string>
 #include <map>
 
-
 namespace graphlab {
-  namespace web_util {
+namespace web_util {
 
-    /**
-     * \brief decode a url by converting escape characters
-     */
-    std::string url_decode(const std::string& url); 
+/**
+ * \brief decode a url by converting escape characters
+ */
+std::string url_decode(const std::string& url);
 
-    /**
-     * \brief convert a query string into a map
-     */
-    std::map<std::string, std::string> parse_query(const std::string& query);
+/**
+ * \brief convert a query string into a map
+ */
+std::map<std::string, std::string> parse_query(const std::string& query);
 
-  } // end of namespace web_util
- 
-}; // end of namespace GraphLab
+}  // end of namespace web_util
+
+};  // namespace graphlab
 #endif
-
-
-
-
-

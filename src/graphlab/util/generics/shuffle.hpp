@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef GRAPHLAB_INPLACE_SHUFFLE_HPP
 #define GRAPHLAB_INPLACE_SHUFFLE_HPP
 #include <algorithm>
@@ -32,8 +31,6 @@
 #include <omp.h>
 #endif
 
-
-
 namespace graphlab {
 /**
  * Shuffles a random access container inplace such at
@@ -42,18 +39,17 @@ namespace graphlab {
  * Both the container and the targets vector will be modified.
  */
 template <typename Iterator, typename sizetype>
-void inplace_shuffle(Iterator begin,
-                     Iterator end, 
+void inplace_shuffle(Iterator begin, Iterator end,
                      std::vector<sizetype> &targets) {
   size_t len = std::distance(begin, end);
   assert(len == targets.size());
-  
-  for (size_t i = 0;i < len; ++i) {
+
+  for (size_t i = 0; i < len; ++i) {
     // begin the permutation cycle
     if (i != targets[i]) {
       typename std::iterator_traits<Iterator>::value_type v = *(begin + i);
       size_t j = i;
-      while(j != targets[j]) {
+      while (j != targets[j]) {
         size_t next = targets[j];
         if (next != i) {
           *(begin + j) = *(begin + next);
@@ -76,17 +72,16 @@ void inplace_shuffle(Iterator begin,
  * targets must be the same size as the container
  */
 template <typename Container, typename sizetype>
-void outofplace_shuffle(Container &c,
-                        const std::vector<sizetype> &targets) {  
+void outofplace_shuffle(Container &c, const std::vector<sizetype> &targets) {
   Container result(targets.size());
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-  for (ssize_t i = 0;i < ssize_t(targets.size()); ++i) {
+  for (ssize_t i = 0; i < ssize_t(targets.size()); ++i) {
     result[i] = c[targets[i]];
   }
   std::swap(c, result);
 }
 
-}
+}  // namespace graphlab
 #endif

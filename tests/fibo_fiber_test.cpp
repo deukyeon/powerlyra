@@ -12,8 +12,8 @@ struct fibonacci_compute_promise {
 };
 
 void fibonacci(fibonacci_compute_promise* promise) {
-  //std::cout << promise->argument << "\n";
-  if (promise->argument == 1 ||  promise->argument == 2) {
+  // std::cout << promise->argument << "\n";
+  if (promise->argument == 1 || promise->argument == 2) {
     promise->result = 1;
   } else {
     // recursive case
@@ -50,10 +50,9 @@ void fibonacci(fibonacci_compute_promise* promise) {
   promise->lock->unlock();
 }
 
-
 int main(int argc, char** argv) {
-
-  timer ti; ti.start();
+  timer ti;
+  ti.start();
 
   fibonacci_compute_promise promise;
   mutex lock;
@@ -67,5 +66,6 @@ int main(int argc, char** argv) {
   std::cout << "Fib(" << promise.argument << ") = " << promise.result << "\n";
 
   std::cout << "Completion in " << ti.current_time() << "s\n";
-  std::cout << fiber_control::get_instance().total_threads_created() << " threads created\n";
+  std::cout << fiber_control::get_instance().total_threads_created()
+            << " threads created\n";
 }

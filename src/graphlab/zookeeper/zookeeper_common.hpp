@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef GRAPHLAB_ZOOKEEPER_COMMON_HPP
 #define GRAPHLAB_ZOOKEEPER_COMMON_HPP
 #include <vector>
@@ -30,8 +29,7 @@ extern "C" {
 #include <zookeeper/zookeeper.h>
 }
 
-
-namespace graphlab{
+namespace graphlab {
 namespace zookeeper {
 
 /// frees a zookeeper String_vector
@@ -42,9 +40,7 @@ std::vector<std::string> String_vector_to_vector(
     const struct String_vector* strings);
 
 /// print a few zookeeper error status
-void print_stat(int stat,
-                const std::string& prefix,
-                const std::string& path);
+void print_stat(int stat, const std::string& prefix, const std::string& path);
 
 /// adds a trailing / to the path name if there is not one already
 std::string normalize_path(std::string prefix);
@@ -58,41 +54,35 @@ int delete_dir(zhandle_t* handle, const std::string& path,
                const std::string& stat_message = "");
 
 /// Creates a zookeeper ephemeral node
-int create_ephemeral_node(zhandle_t* handle,
-                 const std::string& path,
-                 const std::string& value,
-                 const std::string& stat_message = "");
+int create_ephemeral_node(zhandle_t* handle, const std::string& path,
+                          const std::string& value,
+                          const std::string& stat_message = "");
 
 /// Deletes a zookeeper ephemeral node
-int delete_node(zhandle_t* handle,
-                const std::string& path,
+int delete_node(zhandle_t* handle, const std::string& path,
                 const std::string& stat_message = "");
 
 /// Deletes a zookeeper sequence node
-int delete_sequence_node(zhandle_t* handle,
-                         const std::string& path,
+int delete_sequence_node(zhandle_t* handle, const std::string& path,
                          const int version,
                          const std::string& stat_message = "");
 
-/// Gets the effective node name for a sequence node of a particular sequence number
-std::string get_sequence_node_path(const std::string& path,
-                                   const int version);
-
+/// Gets the effective node name for a sequence node of a particular sequence
+/// number
+std::string get_sequence_node_path(const std::string& path, const int version);
 
 /// Creates a zookeeper ephemeral sequence nodea
 /// Returns a pair of (status, version)
-std::pair<int, int> create_ephemeral_sequence_node(zhandle_t* handle,
-                                                   const std::string& path,
-                                                   const std::string& value,
-                                                   const std::string& stat_message = "");
+std::pair<int, int> create_ephemeral_sequence_node(
+    zhandle_t* handle, const std::string& path, const std::string& value,
+    const std::string& stat_message = "");
 
 /// Gets the value in a node. output is a pair of (success, value)
-std::pair<bool, std::string> get_node_value(zhandle_t* handle,
-                                            const std::string& node,
-                                            const std::string& stat_message = "");
+std::pair<bool, std::string> get_node_value(
+    zhandle_t* handle, const std::string& node,
+    const std::string& stat_message = "");
 
-
-} // graphlab
-} // zookeeper
+}  // namespace zookeeper
+}  // namespace graphlab
 
 #endif

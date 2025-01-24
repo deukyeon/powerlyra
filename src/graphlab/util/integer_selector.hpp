@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,38 +20,35 @@
  *
  */
 
-
 #ifndef GRAPHLAB_INTEGER_SELECTOR_HPP
 #define GRAPHLAB_INTEGER_SELECTOR_HPP
 #include <stdint.h>
 namespace graphlab {
-  
-  template <int len>
-  struct u_integer_selector {
-    // invalid
-  };
 
-  template <>
-  struct u_integer_selector<1> {
-    typedef uint8_t integer_type;
-  };
+template <int len>
+struct u_integer_selector {
+  // invalid
+};
 
-  template <>
-  struct u_integer_selector<2> {
-    typedef uint16_t integer_type;
-  };
+template <>
+struct u_integer_selector<1> {
+  typedef uint8_t integer_type;
+};
 
-  template <>
-  struct u_integer_selector<4> {
-    typedef uint32_t integer_type;
-  };
+template <>
+struct u_integer_selector<2> {
+  typedef uint16_t integer_type;
+};
 
-  template <>
-  struct u_integer_selector<8> {
-    typedef uint64_t integer_type;
-  };
+template <>
+struct u_integer_selector<4> {
+  typedef uint32_t integer_type;
+};
 
-}
+template <>
+struct u_integer_selector<8> {
+  typedef uint64_t integer_type;
+};
+
+}  // namespace graphlab
 #endif
-
-

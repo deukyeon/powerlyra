@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,6 @@
  *      http://www.graphlab.ml.cmu.edu
  *
  */
-
 
 #ifndef GRAPHLAB_LOCAL_CHANDY_MISRA_HPP
 #define GRAPHLAB_LOCAL_CHANDY_MISRA_HPP
@@ -42,11 +41,8 @@ class chandy_misra {
    * bit 3: owner 1 request
    */
   std::vector<unsigned char> forkset;
-  enum { OWNER_BIT = 1,
-         DIRTY_BIT = 2,
-         REQUEST_0 = 4,
-         REQUEST_1 = 8 };
-  enum {OWNER_SOURCE = 0, OWNER_TARGET = 1};
+  enum { OWNER_BIT = 1, DIRTY_BIT = 2, REQUEST_0 = 4, REQUEST_1 = 8 };
+  enum { OWNER_SOURCE = 0, OWNER_TARGET = 1 };
   inline unsigned char request_bit(bool owner) {
     return owner ? REQUEST_1 : REQUEST_0;
   }
@@ -58,8 +54,7 @@ class chandy_misra {
     unsigned char state;
     bool atomic_eat() {
       if (num_edges == forks_acquired.value) {
-        return atomic_compare_and_swap(state, 
-                                       (unsigned char)HUNGRY, 
+        return atomic_compare_and_swap(state, (unsigned char)HUNGRY,
                                        (unsigned char)EATING);
       }
       return false;
@@ -69,56 +64,47 @@ class chandy_misra {
   /*
    * Possible values for the philosopher state
    */
-  enum {
-    THINKING = 0,
-    HUNGRY = 1,
-    EATING = 2
-  };
+  enum { THINKING = 0, HUNGRY = 1, EATING = 2 };
 
   /** Places a request for the fork. Requires fork to be locked */
   inline void request_for_fork(size_t forkid, bool nextowner) {
     forkset[forkid] |= request_bit(nextowner);
   }
 
-  inline bool fork_owner(size_t forkid) {
-    return forkset[forkid] & OWNER_BIT;
-  }
+  inline bool fork_owner(size_t forkid) { return forkset[forkid] & OWNER_BIT; }
 
   inline bool fork_dirty(size_t forkid) {
     return !!(forkset[forkid] & DIRTY_BIT);
   }
 
-  inline void dirty_fork(size_t forkid) {
-    forkset[forkid] |= DIRTY_BIT;
-  }
-  
+  inline void dirty_fork(size_t forkid) { forkset[forkid] |= DIRTY_BIT; }
+
   /** changes the fork owner if it is dirty, and the other side
    *  has requested for it. Fork must be locked.
    * Returns true if fork moved. false otherwise.
    */
-  inline bool advance_fork_state_on_lock(size_t forkid,
-                                        vertex_id_type source,
-                                        vertex_id_type target) {
-    
+  inline bool advance_fork_state_on_lock(size_t forkid, vertex_id_type source,
+                                         vertex_id_type target) {
     unsigned char currentowner = forkset[forkid] & OWNER_BIT;
     // edge_ids for the request bits
     unsigned char my_request_bit = request_bit(currentowner);
     unsigned char other_request_bit = request_bit(!currentowner);
 
-    bool current_owner_is_eating =
-        (currentowner == OWNER_SOURCE && philosopherset[source].state == EATING) ||
-        (currentowner == OWNER_TARGET && philosopherset[target].state == EATING);
-    bool current_owner_is_hungry =
-        (currentowner == OWNER_SOURCE && philosopherset[source].state == HUNGRY) ||
-        (currentowner == OWNER_TARGET && philosopherset[target].state == HUNGRY);
-        
+    bool current_owner_is_eating = (currentowner == OWNER_SOURCE &&
+                                    philosopherset[source].state == EATING) ||
+                                   (currentowner == OWNER_TARGET &&
+                                    philosopherset[target].state == EATING);
+    bool current_owner_is_hungry = (currentowner == OWNER_SOURCE &&
+                                    philosopherset[source].state == HUNGRY) ||
+                                   (currentowner == OWNER_TARGET &&
+                                    philosopherset[target].state == HUNGRY);
+
     // if the current owner is not eating, and the
     // fork is dirty and other side has placed a request
-    if (current_owner_is_eating == false &&
-        (forkset[forkid] & DIRTY_BIT) &&
+    if (current_owner_is_eating == false && (forkset[forkid] & DIRTY_BIT) &&
         (forkset[forkid] & other_request_bit)) {
       //  change the owner and clean the fork)
-      
+
       forkset[forkid] = (!currentowner);
       if (current_owner_is_hungry) {
         forkset[forkid] |= my_request_bit;
@@ -127,21 +113,18 @@ class chandy_misra {
     }
     return false;
   }
-  
-  
-  inline bool advance_fork_state_on_unlock(size_t forkid,
-                                         vertex_id_type source,
-                                         vertex_id_type target) {
-    
+
+  inline bool advance_fork_state_on_unlock(size_t forkid, vertex_id_type source,
+                                           vertex_id_type target) {
     unsigned char currentowner = forkset[forkid] & OWNER_BIT;
     // edge_ids for the request bits
     unsigned char my_request_bit = request_bit(currentowner);
     unsigned char other_request_bit = request_bit(!currentowner);
-    
+
     // if the current owner is not eating, and the
     // fork is dirty and other side has placed a request
     if ((forkset[forkid] & DIRTY_BIT) &&
-      (forkset[forkid] & other_request_bit)) {
+        (forkset[forkid] & other_request_bit)) {
       //  change the owner and clean the fork)
       // keep my request bit if any
       forkset[forkid] = (forkset[forkid] & my_request_bit) | (!currentowner);
@@ -149,43 +132,38 @@ class chandy_misra {
     }
     return false;
   }
-  
+
   void compute_initial_fork_arrangement() {
-    for (vertex_id_type i = 0;i < graph.num_vertices(); ++i) {
-      philosopherset[i].num_edges = graph.num_in_edges(i) +
-                                    graph.num_out_edges(i);
+    for (vertex_id_type i = 0; i < graph.num_vertices(); ++i) {
+      philosopherset[i].num_edges =
+          graph.num_in_edges(i) + graph.num_out_edges(i);
       philosopherset[i].state = THINKING;
-      foreach(typename GraphType::edge_type edge, graph.in_edges(i)) {
+      foreach (typename GraphType::edge_type edge, graph.in_edges(i)) {
         if (edge.source() > edge.target()) {
           forkset[graph.edge_id(edge)] = DIRTY_BIT | 1;
-        }
-        else {
+        } else {
           forkset[graph.edge_id(edge)] = DIRTY_BIT;
         }
       }
     }
   }
 
-
   /**
    * We already have v1, we want to acquire v2.
    * When this function returns, both v1 and v2 locks are acquired
    */
-  void try_acquire_edge_with_backoff(vertex_id_type v1,
-                                     vertex_id_type v2) {
+  void try_acquire_edge_with_backoff(vertex_id_type v1, vertex_id_type v2) {
     if (v1 < v2) {
       philosopherset[v2].lock.lock();
-    }
-    else if (!philosopherset[v2].lock.try_lock()) {
-        philosopherset[v1].lock.unlock();
-        philosopherset[v2].lock.lock();
-        philosopherset[v1].lock.lock();
+    } else if (!philosopherset[v2].lock.try_lock()) {
+      philosopherset[v1].lock.unlock();
+      philosopherset[v2].lock.lock();
+      philosopherset[v1].lock.lock();
     }
   }
 
-  
  public:
-  inline chandy_misra(GraphType &graph):graph(graph) {
+  inline chandy_misra(GraphType &graph) : graph(graph) {
     forkset.resize(graph.num_edges(), 0);
     philosopherset.resize(graph.num_vertices());
     compute_initial_fork_arrangement();
@@ -199,43 +177,43 @@ class chandy_misra {
     vertex_id_type retval = vertex_id_type(-1);
     philosopherset[p_id].lock.lock();
     philosopherset[p_id].forks_acquired.value = 0;
-    //philosopher is now hungry!
+    // philosopher is now hungry!
     ASSERT_EQ((int)philosopherset[p_id].state, (int)THINKING);
     philosopherset[p_id].state = HUNGRY;
 
     // now try to get all the forks. lock one edge at a time
     // using the backoff strategy
-    //std::cout << "vertex " << p_id << std::endl;
-    //std::cout << "in edges: " << std::endl;
-    foreach(typename GraphType::edge_type edge, graph.in_edges(p_id)) {
+    // std::cout << "vertex " << p_id << std::endl;
+    // std::cout << "in edges: " << std::endl;
+    foreach (typename GraphType::edge_type edge, graph.in_edges(p_id)) {
       try_acquire_edge_with_backoff(edge.target(), edge.source());
-      //std::cout << "\t" << graph.edge_id(edge) << ": " << edge.source() << "->" << edge.target() << std::endl;
+      // std::cout << "\t" << graph.edge_id(edge) << ": " << edge.source() <<
+      // "->" << edge.target() << std::endl;
       size_t edgeid = graph.edge_id(edge);
       // if fork is owned by other edge, try to take it
       if (fork_owner(edgeid) == OWNER_SOURCE) {
         request_for_fork(edgeid, OWNER_TARGET);
-        
+
         philosopherset[p_id].forks_acquired.inc(
-                advance_fork_state_on_lock(edgeid, edge.source(), edge.target()));
-      }
-      else {
+            advance_fork_state_on_lock(edgeid, edge.source(), edge.target()));
+      } else {
         philosopherset[p_id].forks_acquired.inc();
       }
       philosopherset[edge.source()].lock.unlock();
     }
-    //std::cout << "out edges: " << std::endl;
-    foreach(typename GraphType::edge_type edge, graph.out_edges(p_id)) {
-      //std::cout << "\t" << graph.edge_id(edge) << ": " << edge.source() << "->" << edge.target() << std::endl;
+    // std::cout << "out edges: " << std::endl;
+    foreach (typename GraphType::edge_type edge, graph.out_edges(p_id)) {
+      // std::cout << "\t" << graph.edge_id(edge) << ": " << edge.source() <<
+      // "->" << edge.target() << std::endl;
       try_acquire_edge_with_backoff(edge.source(), edge.target());
       size_t edgeid = graph.edge_id(edge);
- 
+
       // if fork is owned by other edge, try to take it
       if (fork_owner(edgeid) == OWNER_TARGET) {
         request_for_fork(edgeid, OWNER_SOURCE);
         philosopherset[p_id].forks_acquired.inc(
             advance_fork_state_on_lock(edgeid, edge.source(), edge.target()));
-      }
-      else {
+      } else {
         philosopherset[p_id].forks_acquired.inc();
       }
       philosopherset[edge.target()].lock.unlock();
@@ -253,47 +231,48 @@ class chandy_misra {
   inline std::vector<vertex_id_type> philosopher_stops_eating(size_t p_id) {
     std::vector<vertex_id_type> retval;
     philosopherset[p_id].lock.lock();
-    //philosopher is now hungry!
+    // philosopher is now hungry!
     ASSERT_EQ((int)philosopherset[p_id].state, (int)EATING);
     // now forks are dirty
-    foreach(typename GraphType::edge_type edge, graph.in_edges(p_id)) {
-      //try_acquire_edge_with_backoff(edge.target(), edge.source());
+    foreach (typename GraphType::edge_type edge, graph.in_edges(p_id)) {
+      // try_acquire_edge_with_backoff(edge.target(), edge.source());
       size_t edgeid = graph.edge_id(edge);
       vertex_id_type other = edge.source();
       dirty_fork(edgeid);
       philosopherset[other].forks_acquired.inc(
-        advance_fork_state_on_unlock(edgeid, edge.source(), edge.target()));
+          advance_fork_state_on_unlock(edgeid, edge.source(), edge.target()));
       if (philosopherset[other].atomic_eat()) {
         // signal eating on other
         retval.push_back(other);
       }
-      //philosopherset[edge.source()].lock.unlock();
+      // philosopherset[edge.source()].lock.unlock();
     }
 
-    foreach(typename GraphType::edge_type edge, graph.out_edges(p_id)) {
-      //try_acquire_edge_with_backoff(edge.source(), edge.target());
+    foreach (typename GraphType::edge_type edge, graph.out_edges(p_id)) {
+      // try_acquire_edge_with_backoff(edge.source(), edge.target());
       size_t edgeid = graph.edge_id(edge);
       vertex_id_type other = edge.target();
       dirty_fork(edgeid);
       philosopherset[other].forks_acquired.inc(
-                  advance_fork_state_on_unlock(edgeid, edge.source(), edge.target()));
+          advance_fork_state_on_unlock(edgeid, edge.source(), edge.target()));
       if (philosopherset[other].atomic_eat()) {
         // signal eating on other
         retval.push_back(other);
       }
-      //philosopherset[other].lock.unlock();
+      // philosopherset[other].lock.unlock();
     }
     philosopherset[p_id].state = THINKING;
-    
+
     philosopherset[p_id].lock.unlock();
     return retval;
   }
 
   void no_locks_consistency_check() {
     // make sure all forks are dirty
-    for (size_t i = 0;i < forkset.size(); ++i) ASSERT_TRUE(fork_dirty(i));
+    for (size_t i = 0; i < forkset.size(); ++i) ASSERT_TRUE(fork_dirty(i));
     // all philosophers are THINKING
-    for (size_t i = 0;i < philosopherset.size(); ++i) ASSERT_TRUE(philosopherset[i].state == THINKING);
+    for (size_t i = 0; i < philosopherset.size(); ++i)
+      ASSERT_TRUE(philosopherset[i].state == THINKING);
   }
 
   void complete_consistency_check() {
@@ -301,36 +280,35 @@ class chandy_misra {
       // count the number of forks I own
       size_t numowned = 0;
       size_t numowned_clean = 0;
-      foreach(typename GraphType::edge_type edge, graph.in_edges(v)) {
+      foreach (typename GraphType::edge_type edge, graph.in_edges(v)) {
         size_t edgeid = graph.edge_id(edge);
         if (fork_owner(edgeid) == OWNER_TARGET) {
           numowned++;
           if (!fork_dirty(edgeid)) numowned_clean++;
         }
       }
-      foreach(typename GraphType::edge_type edge, graph.out_edges(v)) {
+      foreach (typename GraphType::edge_type edge, graph.out_edges(v)) {
         size_t edgeid = graph.edge_id(edge);
         if (fork_owner(edgeid) == OWNER_SOURCE) {
           numowned++;
           if (!fork_dirty(edgeid)) numowned_clean++;
         }
       }
-      
+
       if (philosopherset[v].state == THINKING) {
         ASSERT_EQ(numowned_clean, 0);
-      }
-      else if (philosopherset[v].state == HUNGRY) {
+      } else if (philosopherset[v].state == HUNGRY) {
         ASSERT_EQ(philosopherset[v].forks_acquired.value, numowned);
-      }
-      else if (philosopherset[v].state == EATING) {
-        ASSERT_EQ(philosopherset[v].forks_acquired.value, philosopherset[v].num_edges);
+      } else if (philosopherset[v].state == EATING) {
+        ASSERT_EQ(philosopherset[v].forks_acquired.value,
+                  philosopherset[v].num_edges);
         ASSERT_EQ(philosopherset[v].forks_acquired.value, numowned);
       }
     }
   }
 };
 
-}
+}  // namespace graphlab
 
 #include <graphlab/macros_undef.hpp>
 

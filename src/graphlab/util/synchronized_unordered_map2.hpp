@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,13 +20,11 @@
  *
  */
 
-
 #ifndef SYNCHRONIZED_UNORDERED_MAP2
 #define SYNCHRONIZED_UNORDERED_MAP2
 #include <vector>
 #include <boost/unordered_map.hpp>
 #include <graphlab/parallel/pthread_tools.hpp>
-
 
 namespace graphlab {
 /*
@@ -47,97 +45,98 @@ class synchronized_unordered_map2 {
   typedef size_t key_type;
 
  private:
-   std::vector<container> data;
-   std::vector<rwlock> lock;
-   size_t nblocks;
+  std::vector<container> data;
+  std::vector<rwlock> lock;
+  size_t nblocks;
+
  public:
-   synchronized_unordered_map2(size_t numblocks):data(numblocks),
-                                                lock(numblocks),
-                                                nblocks(numblocks) {
-    for (size_t i = 0;i < numblocks; ++i) {
+  synchronized_unordered_map2(size_t numblocks)
+      : data(numblocks), lock(numblocks), nblocks(numblocks) {
+    for (size_t i = 0; i < numblocks; ++i) {
       data[i].max_load_factor(1.0);
     }
   }
 
-   std::pair<bool, Data*> find(size_t key) {
+  std::pair<bool, Data*> find(size_t key) {
     size_t b = key % nblocks;
-     iterator iter = data[b].find(key);
-     std::pair<bool, Data*> ret = std::make_pair(iter != data[b].end(), &(iter->second));
-     return ret;
-   }
+    iterator iter = data[b].find(key);
+    std::pair<bool, Data*> ret =
+        std::make_pair(iter != data[b].end(), &(iter->second));
+    return ret;
+  }
 
-   /**
-   return std::pair<found, iterator>
-   if not found, iterator is invalid
-   */
-   std::pair<bool, const Data*> find(size_t key) const {
-     size_t b = key % nblocks;
-     const_iterator iter = data[b].find(key);
-     std::pair<bool, const Data*> ret = std::make_pair(iter != data[b].end(), &(iter->second));
-     return ret;
-   }
+  /**
+  return std::pair<found, iterator>
+  if not found, iterator is invalid
+  */
+  std::pair<bool, const Data*> find(size_t key) const {
+    size_t b = key % nblocks;
+    const_iterator iter = data[b].find(key);
+    std::pair<bool, const Data*> ret =
+        std::make_pair(iter != data[b].end(), &(iter->second));
+    return ret;
+  }
 
-   // care must be taken that  you do not access an erased iterator
-   void erase(size_t key) {
-     size_t b = key % nblocks;
-     data[b].erase(key);
-   }
+  // care must be taken that  you do not access an erased iterator
+  void erase(size_t key) {
+    size_t b = key % nblocks;
+    data[b].erase(key);
+  }
 
-   template<typename Predicate>
-   void erase_if(size_t key, Predicate pred) {
-     size_t b = key % nblocks;
-     iterator iter = data[b].find(key);
+  template <typename Predicate>
+  void erase_if(size_t key, Predicate pred) {
+    size_t b = key % nblocks;
+    iterator iter = data[b].find(key);
 
-     if (iter != data[b].end() && pred(iter->second))  data[b].erase(key);
-   }
+    if (iter != data[b].end() && pred(iter->second)) data[b].erase(key);
+  }
 
-   value_type& insert(size_t key, const value_type &val) {
-     size_t b = key % nblocks;
-     data[b][key] = val;
-     value_type& ret = data[b][key];
-     return ret;
-   }
+  value_type& insert(size_t key, const value_type& val) {
+    size_t b = key % nblocks;
+    data[b][key] = val;
+    value_type& ret = data[b][key];
+    return ret;
+  }
 
-   void read_critical_section(size_t key) {
+  void read_critical_section(size_t key) {
     size_t b = key % nblocks;
     lock[b].readlock();
-   }
-   void write_critical_section(size_t key) {
+  }
+  void write_critical_section(size_t key) {
     size_t b = key % nblocks;
     lock[b].writelock();
-   }
-   void release_critical_section(size_t key) {
+  }
+  void release_critical_section(size_t key) {
     size_t b = key % nblocks;
     lock[b].unlock();
-   }
-    /**
-    returns std::pair<success, iterator>
-    on success, iterator will point to the entry
-    on failure, iterator will point to an existing entry
-    */
-   std::pair<bool, Data*> insert_with_failure_detect(size_t key, const value_type &val) {
-     std::pair<bool, Data*> ret ;
+  }
+  /**
+  returns std::pair<success, iterator>
+  on success, iterator will point to the entry
+  on failure, iterator will point to an existing entry
+  */
+  std::pair<bool, Data*> insert_with_failure_detect(size_t key,
+                                                    const value_type& val) {
+    std::pair<bool, Data*> ret;
 
-     size_t b = key % nblocks;
-     //search for it
-     iterator iter = data[b].find(key);
-     // if it not in the table, write and return
-     if (iter == data[b].end()) {
+    size_t b = key % nblocks;
+    // search for it
+    iterator iter = data[b].find(key);
+    // if it not in the table, write and return
+    if (iter == data[b].end()) {
       data[b][key] = val;
-      ret = std::make_pair(true,  &(data[b].find(key)->second));
-     }
-     else {
-      ret = std::make_pair(false,  &(iter->second));
-     }
-     return ret;
-   }
+      ret = std::make_pair(true, &(data[b].find(key)->second));
+    } else {
+      ret = std::make_pair(false, &(iter->second));
+    }
+    return ret;
+  }
 
-   void clear() {
-     for (size_t i = 0;i < data.size(); ++i) {
-       data[i].clear();
-     }
-   }
+  void clear() {
+    for (size_t i = 0; i < data.size(); ++i) {
+      data[i].clear();
+    }
+  }
 };
-}
+}  // namespace graphlab
 #endif
-

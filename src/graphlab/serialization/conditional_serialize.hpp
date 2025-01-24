@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef GRAPHLAB_SERIALIZATION_CONDITIONAL_SERIALIZE_HPP
 #define GRAPHLAB_SERIALIZATION_CONDITIONAL_SERIALIZE_HPP
 #include <graphlab/serialization/oarchive.hpp>
@@ -32,10 +31,11 @@ struct conditional_serialize {
   bool hasval;
   T val;
 
-  conditional_serialize(): hasval(false) { }
-  conditional_serialize(T& val): hasval(true), val(val) { }
+  conditional_serialize() : hasval(false) {}
+  conditional_serialize(T& val) : hasval(true), val(val) {}
 
-  conditional_serialize(const conditional_serialize& cs): hasval(cs.hasval), val(cs.val) { }
+  conditional_serialize(const conditional_serialize& cs)
+      : hasval(cs.hasval), val(cs.val) {}
   conditional_serialize& operator=(const conditional_serialize& cs) {
     hasval = cs.hasval;
     val = cs.val;
@@ -52,6 +52,6 @@ struct conditional_serialize {
   }
 };
 
-};
+};  // namespace graphlab
 
 #endif

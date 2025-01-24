@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,30 +20,29 @@
  *
  */
 
-
 #ifndef GRAPHLAB_NET_UTIL_HPP
 #define GRAPHLAB_NET_UTIL_HPP
 #include <string>
 #include <stdint.h>
 
 namespace graphlab {
-  /**
-  * \ingroup util
-  * Returns the first non-localhost ipv4 address 
-  */
-  uint32_t get_local_ip(bool print = true);
+/**
+ * \ingroup util
+ * Returns the first non-localhost ipv4 address
+ */
+uint32_t get_local_ip(bool print = true);
 
-  /**
-  * \ingroup util
-  * Returns the first non-localhost ipv4 address as a standard dot delimited string
-  */
-  std::string get_local_ip_as_str(bool print = true);
-  /** \ingroup util 
-   * Find a free tcp port and binds it. Caller must release the port.
-   * Returns a pair of [port, socket handle]
-   */
-  std::pair<size_t, int> get_free_tcp_port();
-};
+/**
+ * \ingroup util
+ * Returns the first non-localhost ipv4 address as a standard dot delimited
+ * string
+ */
+std::string get_local_ip_as_str(bool print = true);
+/** \ingroup util
+ * Find a free tcp port and binds it. Caller must release the port.
+ * Returns a pair of [port, socket handle]
+ */
+std::pair<size_t, int> get_free_tcp_port();
+};  // namespace graphlab
 
 #endif
-

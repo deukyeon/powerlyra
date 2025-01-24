@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,9 +20,6 @@
  *
  */
 
-
-
-
 #include <graphlab/engine/iengine.hpp>
 #include <graphlab/engine/synchronous_engine.hpp>
 #include <graphlab/engine/async_consistent_engine.hpp>
@@ -33,5 +30,3 @@
 //#include <graphlab/engine/asynchronous_engine.hpp>
 //#include <graphlab/engine/engine_factory.hpp>
 //#include <graphlab/engine/engine_options.hpp>
-
-

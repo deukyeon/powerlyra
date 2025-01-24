@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,13 +19,9 @@
  *      http://www.graphlab.ml.cmu.edu
  *
  */
- 
 
 #ifndef GRAPHLAB_MASTER_INCLUDES
 #define GRAPHLAB_MASTER_INCLUDES
-
-
-
 
 // #include <graphlab/aggregation/aggregation_includes.hpp>
 #include <graphlab/engine/engine_includes.hpp>
@@ -40,6 +36,4 @@
 #include <graphlab/rpc/rpc_includes.hpp>
 #include <graphlab/ui/metrics_server.hpp>
 
-
 #endif
-

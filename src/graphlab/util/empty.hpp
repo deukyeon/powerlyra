@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef GRAPHLAB_UTIL_EMPTY_HPP
 #define GRAPHLAB_UTIL_EMPTY_HPP
 #include <vector>
@@ -31,13 +30,12 @@
 namespace graphlab {
 
 struct empty {
-  void save(oarchive&) const { }
-  void load(iarchive&) { }
+  void save(oarchive&) const {}
+  void load(iarchive&) {}
   empty& operator+=(const empty&) { return *this; }
 };
 
-} // namespace graphlab;
-
+}  // namespace graphlab
 
 namespace std {
 
@@ -55,27 +53,20 @@ class vector<graphlab::empty, allocator<graphlab::empty> > {
     typedef graphlab::empty& reference;
     typedef const graphlab::empty& const_reference;
     typedef random_access_iterator_tag iterator_category;
-    
+
     graphlab::empty e;
-    size_t i; const size_t* len;
-    iterator(): i(0),len(NULL) { }
-    iterator(size_t i, const size_t* len): i(i), len(len) { }
-    bool operator==(const iterator& iter) const {
-      return i == iter.i;
-    }
-    bool operator!=(const iterator& iter) const {
-      return !((*this) == iter);
-    }
+    size_t i;
+    const size_t* len;
+    iterator() : i(0), len(NULL) {}
+    iterator(size_t i, const size_t* len) : i(i), len(len) {}
+    bool operator==(const iterator& iter) const { return i == iter.i; }
+    bool operator!=(const iterator& iter) const { return !((*this) == iter); }
     iterator operator++() {
       i += (i < *len);
       return *this;
     }
-    reference operator*() {
-      return e;
-    }
-    const_reference operator*() const {
-      return e;
-    }
+    reference operator*() { return e; }
+    const_reference operator*() const { return e; }
     iterator operator++(int) {
       iterator old = (*this);
       i += (i < *len);
@@ -92,8 +83,10 @@ class vector<graphlab::empty, allocator<graphlab::empty> > {
     }
     iterator operator+=(int n) {
       i += n;
-      if (n > 0 && i > (*len)) i = (*len); // overflow
-      else if (n < 0 && i > (*len)) i = 0; // underflow
+      if (n > 0 && i > (*len))
+        i = (*len);  // overflow
+      else if (n < 0 && i > (*len))
+        i = 0;  // underflow
       return *this;
     }
     iterator operator-=(int n) {
@@ -111,24 +104,14 @@ class vector<graphlab::empty, allocator<graphlab::empty> > {
       return tmp;
     }
 
-    int operator-(iterator n) const {
-      return i - n.i;
-    }
+    int operator-(iterator n) const { return i - n.i; }
 
-    bool operator<(iterator other) const {
-      return i < other.i;
-    }
-    bool operator<=(iterator other) const {
-      return i <= other.i;
-    }
-    bool operator>(iterator other) const {
-      return i > other.i;
-    }
-    bool operator>=(iterator other) const {
-      return i >= other.i;
-    }
+    bool operator<(iterator other) const { return i < other.i; }
+    bool operator<=(iterator other) const { return i <= other.i; }
+    bool operator>(iterator other) const { return i > other.i; }
+    bool operator>=(iterator other) const { return i >= other.i; }
   };
-  
+
   typedef iterator const_iterator;
   typedef iterator reverse_iterator;
   typedef iterator const_reverse_iterator;
@@ -137,75 +120,57 @@ class vector<graphlab::empty, allocator<graphlab::empty> > {
   typedef allocator<graphlab::empty> allocator_type;
 
   // default constructor
-  explicit vector(const allocator_type& a = allocator_type()):len(0) { }
+  explicit vector(const allocator_type& a = allocator_type()) : len(0) {}
   // construct from value
   explicit vector(size_t n, const graphlab::empty& val = graphlab::empty(),
-           const allocator_type& a = allocator_type()):len(n) { }
+                  const allocator_type& a = allocator_type())
+      : len(n) {}
   // construct from iterator
   template <typename InputIterator>
-  vector(InputIterator first, InputIterator last, 
-         const allocator_type& a = allocator_type()): len(std::distance(first, last)) { }
+  vector(InputIterator first, InputIterator last,
+         const allocator_type& a = allocator_type())
+      : len(std::distance(first, last)) {}
   // copy constructor
-  vector(const vector<graphlab::empty, allocator_type>& v): len(v.len) { };
+  vector(const vector<graphlab::empty, allocator_type>& v) : len(v.len){};
 
-  iterator begin() {
-    return iterator(0, &len);
-  }
-  iterator end() {
-    return iterator(len, &len);
-  }
-  const_iterator begin() const {
-    return const_iterator(0, &len);
-  }
-  const_iterator end() const {
-    return const_iterator(len, &len);
-  }
+  iterator begin() { return iterator(0, &len); }
+  iterator end() { return iterator(len, &len); }
+  const_iterator begin() const { return const_iterator(0, &len); }
+  const_iterator end() const { return const_iterator(len, &len); }
 
-  reverse_iterator rbegin() {
-    return iterator(0, &len);
-  }
-  reverse_iterator rend() {
-    return iterator(len, &len);
-  }
-  const_reverse_iterator rbegin() const {
-    return const_iterator(0, &len);
-  }
-  const_reverse_iterator rend() const {
-    return const_iterator(len, &len);
-  }
+  reverse_iterator rbegin() { return iterator(0, &len); }
+  reverse_iterator rend() { return iterator(len, &len); }
+  const_reverse_iterator rbegin() const { return const_iterator(0, &len); }
+  const_reverse_iterator rend() const { return const_iterator(len, &len); }
 
-  size_t size() const {
-    return len;
-  }
-  
-  size_t capacity() const {
-    return len;
-  }
+  size_t size() const { return len; }
 
-  bool empty() const {
-    return len == 0;
-  }
+  size_t capacity() const { return len; }
 
-  void resize(size_t s, const graphlab::empty& e = graphlab::empty()) { len = s; }
+  bool empty() const { return len == 0; }
+
+  void resize(size_t s, const graphlab::empty& e = graphlab::empty()) {
+    len = s;
+  }
 
   void reserve(size_t s) {}
 
-  reference operator[](int i) {
-    return e;
-  }
+  reference operator[](int i) { return e; }
 
-  const_reference operator[](int i) const {
-    return e;
-  }
+  const_reference operator[](int i) const { return e; }
 
   reference at(int i) {
-    if (i < 0 || (size_t)i >= len) throw std::out_of_range("vector index out of range");
-    else return e;
+    if (i < 0 || (size_t)i >= len)
+      throw std::out_of_range("vector index out of range");
+    else
+      return e;
   }
 
   const_reference at(int i) const {
-    if (i < 0 || (size_t)i >= len) throw std::out_of_range("vector index out of range");
-    else return e;
+    if (i < 0 || (size_t)i >= len)
+      throw std::out_of_range("vector index out of range");
+    else
+      return e;
   }
 
   template <typename InputIterator>
@@ -213,56 +178,35 @@ class vector<graphlab::empty, allocator<graphlab::empty> > {
     len = std::distance(first, last);
   }
 
+  void assign(size_t n, const graphlab::empty&) { len = n; }
 
-  void assign(size_t n, const graphlab::empty&) {
-    len = n;
-  }
+  void push_back(const graphlab::empty&) { ++len; }
 
-  void push_back(const graphlab::empty&) {
-    ++len;
-  }
+  void pop_back(const graphlab::empty&) { --len; }
 
-  void pop_back(const graphlab::empty&) {
-    --len;
-  }
+  void insert(iterator, const graphlab::empty&) { ++len; }
 
-  void insert(iterator, const graphlab::empty&) {
-    ++len;
-  }
-
-
-  void insert(iterator, size_t n, const graphlab::empty&) {
-    len += n;
-  }
-
+  void insert(iterator, size_t n, const graphlab::empty&) { len += n; }
 
   template <typename InputIterator>
   void insert(iterator, InputIterator first, InputIterator last) {
     len += std::distance(first, last);
   }
 
-  void erase(iterator) {
-    --len;
-  }
+  void erase(iterator) { --len; }
 
-  void erase(iterator first, iterator last) {
-    len -= (last - first);
-  }
+  void erase(iterator first, iterator last) { len -= (last - first); }
 
-  void swap(vector<graphlab::empty, allocator_type> &v) {
+  void swap(vector<graphlab::empty, allocator_type>& v) {
     std::swap(len, v.len);
   }
 
-  void clear() {
-    len = 0;
-  }
+  void clear() { len = 0; }
 
-  allocator_type get_allocator() const {
-    return allocator_type();
-  }
+  allocator_type get_allocator() const { return allocator_type(); }
 };
-  
-} // namespace std
+
+}  // namespace std
 
 // serialization of the empty vector is a problem since it will
 // preferentially dispatch to the general vector serialize implementation
@@ -270,12 +214,11 @@ class vector<graphlab::empty, allocator<graphlab::empty> > {
 // save/load will fix this
 
 BEGIN_OUT_OF_PLACE_SAVE(arc, std::vector<graphlab::empty>, tval)
-  arc<< tval.len;
+arc << tval.len;
 END_OUT_OF_PLACE_SAVE()
 
 BEGIN_OUT_OF_PLACE_LOAD(arc, std::vector<graphlab::empty>, tval)
-  arc >> tval.len;
+arc >> tval.len;
 END_OUT_OF_PLACE_LOAD()
-
 
 #endif

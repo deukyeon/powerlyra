@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,10 +17,8 @@
  *
  */
 
-
 #ifndef PGIBBS_JT_SPLASH_SAMPLER_HPP
 #define PGIBBS_JT_SPLASH_SAMPLER_HPP
-
 
 #include <iostream>
 #include <fstream>
@@ -34,9 +32,7 @@
 
 #include <boost/unordered_set.hpp>
 
-
 // Including Standard Libraries
-
 
 #include <graphlab/parallel/pthread_tools.hpp>
 #include <graphlab/util/timer.hpp>
@@ -46,7 +42,6 @@
 #include "factorized_model.hpp"
 #include "mrf.hpp"
 #include "junction_tree.hpp"
-
 
 /**
  * The settings for the jt_splash_sampler.  Originally these formed a
@@ -59,22 +54,20 @@ struct splash_settings {
   size_t max_tree_height;
   size_t max_tree_width;
   size_t max_factor_size;
-  bool   priorities;
-  size_t vanish_updates; 
+  bool priorities;
+  size_t vanish_updates;
   size_t subthreads;
 
-  splash_settings() : 
-    ntrees(2), 
-    max_tree_size(std::numeric_limits<size_t>::max()),
-    max_tree_height(std::numeric_limits<size_t>::max()),
-    max_tree_width(2),
-    max_factor_size(std::numeric_limits<size_t>::max()),
-    priorities(false),
-    vanish_updates(10),
-    subthreads(1) { }
+  splash_settings()
+      : ntrees(2),
+        max_tree_size(std::numeric_limits<size_t>::max()),
+        max_tree_height(std::numeric_limits<size_t>::max()),
+        max_tree_width(2),
+        max_factor_size(std::numeric_limits<size_t>::max()),
+        priorities(false),
+        vanish_updates(10),
+        subthreads(1) {}
 };
-
-
 
 /**
  * Run the jtsplash sampler
@@ -86,12 +79,6 @@ void run_jtsplash_sampler(mrf_graph_type& mrf_graph,
                           const bool draw_images,
                           const splash_settings& settings);
 
-
-
-
-
-
-
 /**
  * This fairly complex update function assembles the clique factors by
  * conditioning on variables not in the tree.  Then it computes
@@ -99,21 +86,19 @@ void run_jtsplash_sampler(mrf_graph_type& mrf_graph,
  * using the messages and the conditioned parents, it samples each
  * clique constructing new assignments to each variable.
  */
-class jtree_update :
-  public graphlab::iupdate_functor<jtree_graph_type, jtree_update> {
-public:  
+class jtree_update
+    : public graphlab::iupdate_functor<jtree_graph_type, jtree_update> {
+ public:
   typedef graphlab::iupdate_functor<jtree_graph_type, jtree_update> base;
-  jtree_update(mrf_graph_type* mrf_ptr = NULL) : mrf_ptr(mrf_ptr) { }
+  jtree_update(mrf_graph_type* mrf_ptr = NULL) : mrf_ptr(mrf_ptr) {}
   mrf_graph_type* mrf_ptr;
   void operator()(base::icontext_type& context);
-}; // end of class jtree_update
-
-
+};  // end of class jtree_update
 
 // Termination management
 struct termination_condition {
-  bool   error;
-  float  finish_time_seconds;
+  bool error;
+  float finish_time_seconds;
   size_t target_nsamples;
   size_t target_ntrees;
   graphlab::atomic<size_t> atomic_nsamples;
@@ -123,23 +108,17 @@ struct termination_condition {
   void reset();
 };
 
-
-
-
-
-
-
-//! Predecleration 
+//! Predecleration
 //! The jt worker executes splashes sequential within each thread.
-class jt_builder : 
-  public graphlab::iupdate_functor<mrf_graph_type, jt_builder>{
-public:
+class jt_builder
+    : public graphlab::iupdate_functor<mrf_graph_type, jt_builder> {
+ public:
   typedef graphlab::iupdate_functor<mrf_graph_type, jt_builder> base;
 
   struct splash_state {
     size_t worker_id;
     splash_settings settings;
-    // Tree building data structures 
+    // Tree building data structures
     size_t root_index;
     const std::vector<vertex_id_t>* root_perm_ptr;
     vertex_id_t current_root;
@@ -171,15 +150,10 @@ public:
   jt_worker(splash_state* state_ptr = NULL);
   void operator+=(const jt_builder& other);
 
-
-
-
-
-
   //! The main loop
   void run();
-  
-private:
+
+ private:
   //! Construct a single splash
   size_t splash_once();
   //! advance the root
@@ -197,7 +171,6 @@ private:
    */
   void release_vertex(iscope_type& scope);
 
-
   double score_vertex(vertex_id_t vid);
   double score_vertex_l1_diff(vertex_id_t vid);
   double score_vertex_log_odds(vertex_id_t vid);
@@ -207,33 +180,27 @@ private:
   void grow_prioritized_jtree();
 };  // End of JT worker
 
-
-
-
-
 /**
  * The jt_splash_sampler implements the junction tree based Gibbs
  * sampler defined in:
  *
  *  Parallel Gibbs Sampling: From Colored Fields to Think Junction Trees
  *   by Joseph Gonzalez, Yucheng Low, Arthur Gretton, and Carlos Guestrin
- *  
+ *
  */
 class jt_splash_sampler {
-public:
-  typedef graphlab::general_scope_factory<mrf_graph_type>
-  scope_factory_type;
+ public:
+  typedef graphlab::general_scope_factory<mrf_graph_type> scope_factory_type;
 
-private:
-  std::vector<jt_worker*>     workers;
-  scope_factory_type          scope_factory;
-  std::vector< vertex_id_t >  root_perm;
-  termination_condition       terminator;
-public:
-  jt_splash_sampler(mrf_graph_type& mrf_core,
-                    const splash_settings& settings);
+ private:
+  std::vector<jt_worker*> workers;
+  scope_factory_type scope_factory;
+  std::vector<vertex_id_t> root_perm;
+  termination_condition terminator;
+
+ public:
+  jt_splash_sampler(mrf_graph_type& mrf_core, const splash_settings& settings);
   ~jt_splash_sampler();
-
 
   /**
    * Get the number of times the splash sampler collided on a root.
@@ -256,24 +223,14 @@ public:
   void sample_seconds(float runtime_secs);
   /** Run the splash sampler for a fixed number of trees */
   void sample_trees(size_t total_trees);
-  /**  
+  /**
    * Run the splash sampler for a fixed number of single variable *
    * updates
    */
   void sample_updates(size_t total_updates);
-private:
+
+ private:
   void run();
 };
-
-
-
-
-
-
-
-
-
-
-
 
 #endif

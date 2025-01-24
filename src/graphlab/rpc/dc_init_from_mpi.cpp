@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
@@ -36,16 +35,17 @@
 #endif
 namespace graphlab {
 
-bool init_param_from_mpi(dc_init_param& param,dc_comm_type commtype) {
+bool init_param_from_mpi(dc_init_param& param, dc_comm_type commtype) {
 #ifdef HAS_MPI
-  ASSERT_MSG(commtype == TCP_COMM, "MPI initialization only supports TCP at the moment");
-  // Look for a free port to use. 
+  ASSERT_MSG(commtype == TCP_COMM,
+             "MPI initialization only supports TCP at the moment");
+  // Look for a free port to use.
   std::pair<size_t, int> port_and_sock = get_free_tcp_port();
   size_t port = port_and_sock.first;
   int sock = port_and_sock.second;
-  
-  std::string ipaddr = 
-      get_local_ip_as_str(mpi_tools::rank() == 0 /* print stuff only if I am master */);
+
+  std::string ipaddr = get_local_ip_as_str(
+      mpi_tools::rank() == 0 /* print stuff only if I am master */);
   ipaddr = ipaddr + ":" + tostr(port);
   // now do an allgather
   logstream(LOG_INFO) << "Will Listen on: " << ipaddr << std::endl;
@@ -56,7 +56,8 @@ bool init_param_from_mpi(dc_init_param& param,dc_comm_type commtype) {
 
   param.numhandlerthreads = RPC_DEFAULT_NUMHANDLERTHREADS;
   param.commtype = commtype;
-  param.initstring = param.initstring + std::string(" __sockhandle__=") + tostr(sock) + " ";
+  param.initstring =
+      param.initstring + std::string(" __sockhandle__=") + tostr(sock) + " ";
   return true;
 #else
   std::cerr << "MPI Support not compiled!" << std::endl;
@@ -64,6 +65,4 @@ bool init_param_from_mpi(dc_init_param& param,dc_comm_type commtype) {
 #endif
 }
 
-} // namespace graphlab
-
-
+}  // namespace graphlab

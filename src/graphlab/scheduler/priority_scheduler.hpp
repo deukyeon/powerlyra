@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef GRAPHLAB_PRIORITY_SCHEDULER_HPP
 #define GRAPHLAB_PRIORITY_SCHEDULER_HPP
 
@@ -41,74 +40,64 @@
 #include <graphlab/macros_def.hpp>
 namespace graphlab {
 
-  /**
-   * \ingroup group_schedulers 
-   *
-   * This class defines a multiple queue approximate priority scheduler.
-   * Each processor has its own in_queue which it puts new tasks in
-   * and out_queue which it pulls tasks from.  Once a processors
-   * in_queue gets too large, the entire queue is placed at the end of
-   * the shared master queue.  Once a processors out queue is empty it
-   * grabs the next out_queue from the master.
-   */
-  class priority_scheduler : public ischeduler {
-  
-  public:
+/**
+ * \ingroup group_schedulers
+ *
+ * This class defines a multiple queue approximate priority scheduler.
+ * Each processor has its own in_queue which it puts new tasks in
+ * and out_queue which it pulls tasks from.  Once a processors
+ * in_queue gets too large, the entire queue is placed at the end of
+ * the shared master queue.  Once a processors out queue is empty it
+ * grabs the next out_queue from the master.
+ */
+class priority_scheduler : public ischeduler {
+ public:
+  typedef mutable_queue<lvid_type, double> queue_type;
 
-    typedef mutable_queue<lvid_type, double> queue_type;
+ private:
+  // a bitset denoting if a vertex is scheduled
+  dense_bitset vertex_is_scheduled;
+  // a collection of priority queues
+  std::vector<queue_type> queues;
+  // a parallel datastructure to queues containing all the locks
+  std::vector<padded_simple_spinlock> locks;
+  // the index of the queue currently accessed by a given CPU
+  // when used, this is modded so that it ranges from 0 to multi - 1
+  std::vector<size_t> current_queue;
 
-  private:
+  // the number of CPUs
+  size_t ncpus;
+  // The queue to CPU ratio
+  size_t multi;
+  double min_priority;
+  // the number of vertices in the graph
+  size_t num_vertices;
 
-    // a bitset denoting if a vertex is scheduled
-    dense_bitset vertex_is_scheduled;
-    // a collection of priority queues
-    std::vector<queue_type> queues;
-    // a parallel datastructure to queues containing all the locks
-    std::vector<padded_simple_spinlock>   locks;
-    // the index of the queue currently accessed by a given CPU
-    // when used, this is modded so that it ranges from 0 to multi - 1
-    std::vector<size_t>   current_queue; 
+  void set_options(const graphlab_options& opts);
 
+  // Initializes the internal datastructures
+  void initialize_data_structures();
 
-    // the number of CPUs
-    size_t ncpus;
-    // The queue to CPU ratio
-    size_t multi;
-    double min_priority; 
-    // the number of vertices in the graph
-    size_t num_vertices;
-    
-  
-    void set_options(const graphlab_options& opts);
+ public:
+  priority_scheduler(size_t num_vertices, const graphlab_options& opts);
 
-    // Initializes the internal datastructures
-    void initialize_data_structures();
-  public:
+  void set_num_vertices(const lvid_type numv);
 
-    priority_scheduler(size_t num_vertices, const graphlab_options& opts);
+  void schedule(const lvid_type vid, double priority = 1);
 
-    void set_num_vertices(const lvid_type numv);
+  /** Get the next element in the queue */
+  sched_status::status_enum get_next(const size_t cpuid, lvid_type& ret_vid);
 
-    void schedule(const lvid_type vid, double priority = 1);
+  bool empty();
 
-    /** Get the next element in the queue */
-    sched_status::status_enum get_next(const size_t cpuid,
-                                       lvid_type& ret_vid);
+  static void print_options_help(std::ostream& out) {
+    out << "\t multi = [number of queues per thread. Default = 3].\n"
+        << "min_priority = [double, minimum priority required to receive \n"
+        << "\t a message, default = -inf]\n";
+  }
+};
 
-    bool empty();
-
-    static void print_options_help(std::ostream& out) {
-      out << "\t multi = [number of queues per thread. Default = 3].\n"
-          << "min_priority = [double, minimum priority required to receive \n"
-          << "\t a message, default = -inf]\n";
-    }
-
-
-  }; 
-
-
-} // end of namespace graphlab
+}  // end of namespace graphlab
 #include <graphlab/macros_undef.hpp>
 
 #endif
-

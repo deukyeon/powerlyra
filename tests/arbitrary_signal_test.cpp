@@ -24,36 +24,31 @@
 #include <algorithm>
 #include <iostream>
 
-
 // #include <cxxtest/TestSuite.h>
 
 #include <graphlab.hpp>
 
-typedef graphlab::distributed_graph<int,int> graph_type;
+typedef graphlab::distributed_graph<int, int> graph_type;
 
-
-class test_uf:
-  public graphlab::ivertex_program<graph_type, int>,
-  public graphlab::IS_POD_TYPE {
-public:
-  edge_dir_type
-  gather_edges(icontext_type& context, 
-               const vertex_type& vertex) const {
+class test_uf : public graphlab::ivertex_program<graph_type, int>,
+                public graphlab::IS_POD_TYPE {
+ public:
+  edge_dir_type gather_edges(icontext_type& context,
+                             const vertex_type& vertex) const {
     return graphlab::NO_EDGES;
   }
   void apply(icontext_type& context, vertex_type& vertex,
              const gather_type& total) {
     if (vertex.id() < 99) context.signal_vid(vertex.id() + 1);
   }
-  edge_dir_type scatter_edges(icontext_type& context, 
+  edge_dir_type scatter_edges(icontext_type& context,
                               const vertex_type& vertex) const {
     return graphlab::NO_EDGES;
   }
-}; // end of count neighbors
-
+};  // end of count neighbors
 
 typedef graphlab::async_consistent_engine<test_uf> agg_engine_type;
-//typedef graphlab::synchronous_engine<test_uf> agg_engine_type;
+// typedef graphlab::synchronous_engine<test_uf> agg_engine_type;
 
 int main(int argc, char** argv) {
   global_logger().set_log_level(LOG_WARNING);
@@ -69,7 +64,6 @@ int main(int argc, char** argv) {
   graph_type graph(dc, clopts);
   graph.load_synthetic_powerlaw(100);
 
-
   typedef agg_engine_type engine_type;
   engine_type engine(dc, graph, clopts);
   engine.signal(0);
@@ -77,9 +71,4 @@ int main(int argc, char** argv) {
 
   ASSERT_EQ(engine.num_updates(), 100);
   graphlab::mpi_tools::finalize();
-} // end of main
-
-
-
-
-
+}  // end of main

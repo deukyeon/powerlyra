@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #include <iostream>
 #include <cstdio>
 #include <graphlab/serialization/serialization_includes.hpp>
@@ -32,17 +31,17 @@ using namespace graphlab;
 template <typename T>
 class distributed_vector {
  private:
-  dc_dist_object<distributed_vector<T> > rmi; // The local RMI object
-  std::map<size_t, T> data;   // storage
-  mutex lock;   // protect the storage
+  dc_dist_object<distributed_vector<T> > rmi;  // The local RMI object
+  std::map<size_t, T> data;                    // storage
+  mutex lock;                                  // protect the storage
  public:
-  distributed_vector(distributed_control &dc):rmi(dc, this) { };
-  
-  ///Reads the value at key i
+  distributed_vector(distributed_control& dc) : rmi(dc, this){};
+
+  /// Reads the value at key i
   T get(size_t i) {
     // find the owning machine
     procid_t owningmachine = i % rmi.dc().numprocs();
-    
+
     if (owningmachine == rmi.dc().procid()) {
       // if I own the data. just read and return it
       T ret;
@@ -50,46 +49,39 @@ class distributed_vector {
       ret = data[i];
       lock.unlock();
       return ret;
-    }
-    else {
+    } else {
       // otherwise I need to go to another machine
-      return rmi.remote_request(owningmachine, 
-                                &distributed_vector<T>::get, 
-                                i);
+      return rmi.remote_request(owningmachine, &distributed_vector<T>::get, i);
     }
   }
-  
+
   /// Sets the value at key i
   void set(size_t i, const T& val) {
     // find the owning machine
     procid_t owningmachine = i % rmi.dc().numprocs();
-    
+
     if (owningmachine == rmi.dc().procid()) {
       // if I own the data set it
       lock.lock();
       data[i] = val;
       lock.unlock();
-    }
-    else {
+    } else {
       // forward the write to another machine
-      rmi.remote_request(owningmachine, 
-                         &distributed_vector<T>::set, 
-                         i, 
-                         val);
+      rmi.remote_request(owningmachine, &distributed_vector<T>::set, i, val);
     }
   }
 };
 
-int main(int argc, char ** argv) {
+int main(int argc, char** argv) {
   mpi_tools::init(argc, argv);
   distributed_control dc;
 
   if (dc.numprocs() != 2) {
-    std::cout<< "RPC Example 7: Distributed Object\n";
+    std::cout << "RPC Example 7: Distributed Object\n";
     std::cout << "Run with exactly 2 MPI nodes.\n";
     return 0;
   }
-  
+
   size_t i = 10;
   dc.all_reduce(i);
   std::cout << i << "\n";
@@ -99,26 +91,25 @@ int main(int argc, char ** argv) {
   if (dc.procid() == 0) {
     vec.set(10, "set from 0");
     vec.set(11, "set from 0");
-  }
-  else {
+  } else {
     vec.set(1, "set from 1");
     vec.set(2, "set from 1");
   }
   dc.barrier();
   if (dc.procid() == 0) {
-    std::cout << vec.get(1) << "\n";  
-    std::cout << vec.get(2) << "\n";  
+    std::cout << vec.get(1) << "\n";
+    std::cout << vec.get(2) << "\n";
     std::cout << vec.get(10) << "\n";
     std::cout << vec.get(11) << std::endl;
   }
   dc.barrier();
   if (dc.procid() == 1) {
-    std::cout << vec.get(1) << "\n";  
-    std::cout << vec.get(2) << "\n";  
+    std::cout << vec.get(1) << "\n";
+    std::cout << vec.get(2) << "\n";
     std::cout << vec.get(10) << "\n";
     std::cout << vec.get(11) << std::endl;
   }
   dc.barrier();
-  
+
   mpi_tools::finalize();
 }

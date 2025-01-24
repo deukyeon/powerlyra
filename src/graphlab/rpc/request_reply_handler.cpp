@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,19 +20,17 @@
  *
  */
 
-
 #include <string>
 #include <graphlab/rpc/dc.hpp>
 #include <graphlab/rpc/request_reply_handler.hpp>
 
 namespace graphlab {
 
-void request_reply_handler(distributed_control &dc, procid_t src, 
-                           size_t ptr, dc_impl::blob ret) {
-  dc_impl::ireply_container* a = reinterpret_cast<dc_impl::ireply_container*>(ptr);
+void request_reply_handler(distributed_control& dc, procid_t src, size_t ptr,
+                           dc_impl::blob ret) {
+  dc_impl::ireply_container* a =
+      reinterpret_cast<dc_impl::ireply_container*>(ptr);
   a->receive(src, ret);
 }
 
-
-}
-
+}  // namespace graphlab

@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef SAFE_CIRCULAR_CHAR_BUFFER_HPP
 #define SAFE_CIRCULAR_CHAR_BUFFER_HPP
 #include <graphlab/rpc/circular_char_buffer.hpp>
@@ -32,32 +31,27 @@ namespace graphlab {
 /**
 \ingroup util
 A non-resizing circular char buffer
-with thread-safe write operations and a single reader 
+with thread-safe write operations and a single reader
 */
 class safe_circular_char_buffer {
  public:
   safe_circular_char_buffer(std::streamsize bufsize = 10485760 /*10 MB */);
 
   ~safe_circular_char_buffer();
-  
+
   /**
    * Stops the buffer and signals any blocking calls.
    */
   void stop_reader();
-
 
   /**
    * Determine if the buffer is empty
    */
   bool empty() const;
 
-  inline bool is_done() const { 
-    return done;
-  }
-  
-  inline bool reader_is_blocked() const {
-    return iswaiting;
-  }
+  inline bool is_done() const { return done; }
+
+  inline bool reader_is_blocked() const { return iswaiting; }
   /**
    * Get the total contents currently stored in the buffer.
    */
@@ -68,13 +62,10 @@ class safe_circular_char_buffer {
    */
   std::streamsize free_space() const;
 
-  /** Gets the size of the buffer. 
+  /** Gets the size of the buffer.
      \note: The useable space is reserved_size() - 1 */
-  inline std::streamsize reserved_size() const {
-    return bufsize - 1;
-  }
+  inline std::streamsize reserved_size() const { return bufsize - 1; }
 
-  
   /**
    * Returns 0 if the write doesn't fit
    *
@@ -91,7 +82,6 @@ class safe_circular_char_buffer {
    */
   std::streamsize write_unsafe(const char* c, std::streamsize clen);
 
-
   /**
    * Returns a pointer (through s) and a length of the read.  This
    * pointer is a direct pointer into the internal buffer of this
@@ -101,66 +91,56 @@ class safe_circular_char_buffer {
    * requested. Multiple calls to introspective_read may be necessary
    * to read all data in the buffer. If the function returns 0, the
    * buffer is empty.
-   * 
+   *
    * No locks are acquired on this call.
-   */  
-  std::streamsize introspective_read(char* &s, std::streamsize clen);
-  
-  
+   */
+  std::streamsize introspective_read(char*& s, std::streamsize clen);
+
   /**
    * Same as introspective read. But blocks until there is something to read
    * This function does not acquire a critical section.
    */
-  std::streamsize blocking_introspective_read(char* &s, 
-                                              std::streamsize clen);
-
+  std::streamsize blocking_introspective_read(char*& s, std::streamsize clen);
 
   void advance_head(const std::streamsize advance_len);
-  
-  
-  /** When begin critical section returns, it is 
+
+  /** When begin critical section returns, it is
       guaranteed that no other writer will be touching
       the tail of the queue */
-  inline void begin_critical_section() {
-    mut.lock();
-  }
-  
+  inline void begin_critical_section() { mut.lock(); }
+
   /** Releases a critical section acquired by begin_critical_section */
-  inline void end_critical_section() {
-    mut.unlock();
-  }
+  inline void end_critical_section() { mut.unlock(); }
 
   /** Releases a critical section acquired by begin_critical_section,
-   and signals the reader to begin reading if the reader is blocked */  
+   and signals the reader to begin reading if the reader is blocked */
   inline void end_critical_section_with_signal() {
     cond.signal();
     mut.unlock();
   }
-  
-  
+
  private:
   char* buffer;
-  std::streamsize bufsize; // current size of the buffer
+  std::streamsize bufsize;  // current size of the buffer
 
-  /** 
+  /**
    * points to the head of the queue.  Reader reads from here
    */
-  std::streamsize head;  
-  
-  /** 
+  std::streamsize head;
+
+  /**
    * points to one past the end of the queue.  writer writes to
    * here. if tail == head, buffer must be empty
    */
-  std::streamsize tail;  
+  std::streamsize tail;
 
   mutex mut;
   conditional cond;
-  
-  volatile bool done; // Once 
+
+  volatile bool done;  // Once
   volatile bool iswaiting;
 };
 
-}
+}  // namespace graphlab
 
 #endif
-

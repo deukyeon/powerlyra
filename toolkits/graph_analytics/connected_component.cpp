@@ -33,77 +33,65 @@
 
 struct vdata {
   uint64_t labelid;
-  vdata() :
-      labelid(0) {
-  }
+  vdata() : labelid(0) {}
 
-  void save(graphlab::oarchive& oarc) const {
-    oarc << labelid;
-  }
-  void load(graphlab::iarchive& iarc) {
-    iarc >> labelid;
-  }
+  void save(graphlab::oarchive& oarc) const { oarc << labelid; }
+  void load(graphlab::iarchive& iarc) { iarc >> labelid; }
 };
 
 typedef graphlab::distributed_graph<vdata, graphlab::empty> graph_type;
 
-//set label id at vertex id
+// set label id at vertex id
 void initialize_vertex(graph_type::vertex_type& v) {
   v.data().labelid = v.id();
 }
 
-//message where summation means minimum
+// message where summation means minimum
 struct min_message {
   uint64_t value;
-  explicit min_message(uint64_t v) :
-      value(v) {
-  }
-  min_message() :
-      value(std::numeric_limits<uint64_t>::max()) {
-  }
+  explicit min_message(uint64_t v) : value(v) {}
+  min_message() : value(std::numeric_limits<uint64_t>::max()) {}
   min_message& operator+=(const min_message& other) {
     value = std::min<uint64_t>(value, other.value);
     return *this;
   }
 
-  void save(graphlab::oarchive& oarc) const {
-    oarc << value;
-  }
-  void load(graphlab::iarchive& iarc) {
-    iarc >> value;
-  }
+  void save(graphlab::oarchive& oarc) const { oarc << value; }
+  void load(graphlab::iarchive& iarc) { iarc >> value; }
 };
 
-class label_propagation: public graphlab::ivertex_program<graph_type, size_t,
-    min_message>, public graphlab::IS_POD_TYPE {
-private:
+class label_propagation
+    : public graphlab::ivertex_program<graph_type, size_t, min_message>,
+      public graphlab::IS_POD_TYPE {
+ private:
   size_t recieved_labelid;
   bool perform_scatter;
-public:
+
+ public:
   label_propagation() {
     recieved_labelid = std::numeric_limits<size_t>::max();
     perform_scatter = false;
   }
 
-  //receive messages
+  // receive messages
   void init(icontext_type& context, const vertex_type& vertex,
-      const message_type& msg) {
+            const message_type& msg) {
     recieved_labelid = msg.value;
   }
 
-  //do not gather
+  // do not gather
   edge_dir_type gather_edges(icontext_type& context,
-      const vertex_type& vertex) const {
+                             const vertex_type& vertex) const {
     return graphlab::NO_EDGES;
   }
   size_t gather(icontext_type& context, const vertex_type& vertex,
-      edge_type& edge) const {
+                edge_type& edge) const {
     return 0;
   }
 
-  //update label id. If updated, scatter messages
+  // update label id. If updated, scatter messages
   void apply(icontext_type& context, vertex_type& vertex,
-      const gather_type& total) {
+             const gather_type& total) {
     if (recieved_labelid == std::numeric_limits<size_t>::max()) {
       perform_scatter = true;
     } else if (vertex.data().labelid > recieved_labelid) {
@@ -113,37 +101,35 @@ public:
   }
 
   edge_dir_type scatter_edges(icontext_type& context,
-      const vertex_type& vertex) const {
+                              const vertex_type& vertex) const {
     if (perform_scatter)
       return graphlab::ALL_EDGES;
     else
       return graphlab::NO_EDGES;
   }
 
-  //If a neighbor vertex has a bigger label id, send a massage
+  // If a neighbor vertex has a bigger label id, send a massage
   void scatter(icontext_type& context, const vertex_type& vertex,
-      edge_type& edge) const {
-    if (edge.source().id() != vertex.id()
-        && edge.source().data().labelid > vertex.data().labelid) {
+               edge_type& edge) const {
+    if (edge.source().id() != vertex.id() &&
+        edge.source().data().labelid > vertex.data().labelid) {
       context.signal(edge.source(), min_message(vertex.data().labelid));
     }
-    if (edge.target().id() != vertex.id()
-        && edge.target().data().labelid > vertex.data().labelid) {
+    if (edge.target().id() != vertex.id() &&
+        edge.target().data().labelid > vertex.data().labelid) {
       context.signal(edge.target(), min_message(vertex.data().labelid));
     }
   }
 };
 
 class graph_writer {
-public:
+ public:
   std::string save_vertex(graph_type::vertex_type v) {
     std::stringstream strm;
     strm << v.id() << "," << v.data().labelid << "\n";
     return strm.str();
   }
-  std::string save_edge(graph_type::edge_type e) {
-    return "";
-  }
+  std::string save_edge(graph_type::edge_type e) { return ""; }
 };
 
 int main(int argc, char** argv) {
@@ -152,7 +138,7 @@ int main(int argc, char** argv) {
   graphlab::mpi_tools::init(argc, argv);
   graphlab::distributed_control dc;
   global_logger().set_log_level(LOG_INFO);
-  //parse options
+  // parse options
   graphlab::command_line_options clopts("Connected Component.");
   std::string graph_dir;
   std::string saveprefix;
@@ -161,8 +147,7 @@ int main(int argc, char** argv) {
   clopts.attach_option("graph", graph_dir,
                        "The graph file. This is not optional");
   clopts.add_positional("graph");
-  clopts.attach_option("format", format,
-                       "The graph file format");
+  clopts.attach_option("format", format, "The graph file format");
   clopts.attach_option("engine", exec_type,
                        "The engine type synchronous or asynchronous");
   clopts.attach_option("saveprefix", saveprefix,
@@ -177,28 +162,24 @@ int main(int argc, char** argv) {
     std::cout << "--graph is not optional\n";
     return EXIT_FAILURE;
   }
-  
-  //load graph
-  dc.cout() << "Loading graph in format: "<< format << std::endl;
+
+  // load graph
+  dc.cout() << "Loading graph in format: " << format << std::endl;
   graphlab::timer timer;
   graph_type graph(dc, clopts);
   graph.load_format(graph_dir, format);
   const double loading = timer.current_time();
-  dc.cout() << "Loading graph. Finished in " 
-            << loading << std::endl;
-
+  dc.cout() << "Loading graph. Finished in " << loading << std::endl;
 
   dc.cout() << "Finalizing graph." << std::endl;
   timer.start();
   graph.finalize();
   const double finalizing = timer.current_time();
-  dc.cout() << "Finalizing graph. Finished in " 
-            << finalizing << std::endl;
+  dc.cout() << "Finalizing graph. Finished in " << finalizing << std::endl;
 
   // NOTE: ingress time = loading time + finalizing time
   const double ingress = loading + finalizing;
   dc.cout() << "Final Ingress (second): " << ingress << std::endl;
-
 
   dc.cout() << "#vertices: " << graph.num_vertices()
             << " #edges:" << graph.num_edges() << std::endl;
@@ -206,7 +187,7 @@ int main(int argc, char** argv) {
   // init
   graph.transform_vertices(initialize_vertex);
 
-  //running the engine
+  // running the engine
   graphlab::omni_engine<label_propagation> engine(dc, graph, exec_type, clopts);
   engine.signal_all();
   timer.start();
@@ -215,23 +196,20 @@ int main(int argc, char** argv) {
   const double runtime = timer.current_time();
   dc.cout() << "----------------------------------------------------------"
             << std::endl
-            << "Final Runtime (seconds):   " << runtime 
-            << std::endl
+            << "Final Runtime (seconds):   " << runtime << std::endl
             << "Updates executed: " << engine.num_updates() << std::endl
-            << "Update Rate (updates/second): " 
+            << "Update Rate (updates/second): "
             << engine.num_updates() / runtime << std::endl;
-    
 
-  //write results
+  // write results
   if (saveprefix.size() > 0) {
     graph.save(saveprefix, graph_writer(),
-        false, //set to true if each output file is to be gzipped
-        true, //whether vertices are saved
-        false); //whether edges are saved
+               false,   // set to true if each output file is to be gzipped
+               true,    // whether vertices are saved
+               false);  // whether edges are saved
   }
 
   graphlab::mpi_tools::finalize();
 
   return EXIT_SUCCESS;
 }
-

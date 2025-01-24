@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,7 +19,6 @@
  *      http://www.graphlab.ml.cmu.edu
  *
  */
-
 
 #include <cstdio>
 #include <cstdlib>
@@ -44,7 +43,7 @@ bool init_param_from_env(dc_init_param& param) {
   }
 
   param.machines = strsplit(nodesstr, ",");
-  for (size_t i = 0;i < param.machines.size(); ++i) {
+  for (size_t i = 0; i < param.machines.size(); ++i) {
     param.machines[i] = param.machines[i] + ":" + tostr(10000 + i);
   }
   // set defaults
@@ -53,5 +52,4 @@ bool init_param_from_env(dc_init_param& param) {
   return true;
 }
 
-} // namespace graphlab
-
+}  // namespace graphlab

@@ -33,25 +33,21 @@
 
 struct vdata {
   std::vector<size_t> vids;
-  void save(graphlab::oarchive& oarc) const {
-    oarc << vids;
-  }
-  void load(graphlab::iarchive& iarc) {
-    iarc >> vids;
-  }
+  void save(graphlab::oarchive& oarc) const { oarc << vids; }
+  void load(graphlab::iarchive& iarc) { iarc >> vids; }
 };
 
 typedef graphlab::distributed_graph<vdata, graphlab::empty> graph_type;
 
-
 void vertex_combine(vdata& a, const vdata& b) {
-  for (size_t i = 0;i < b.vids.size(); ++i) a.vids.push_back(b.vids[i]);
+  for (size_t i = 0; i < b.vids.size(); ++i) a.vids.push_back(b.vids[i]);
 }
 
-
-bool ccoutput_parser(graph_type& graph, const std::string& filename, const std::string& textline) {
+bool ccoutput_parser(graph_type& graph, const std::string& filename,
+                     const std::string& textline) {
   size_t split = textline.find_first_of(",");
-  if (split == std::string::npos) return true;
+  if (split == std::string::npos)
+    return true;
   else {
     std::string t = textline;
     t[split] = 0;
@@ -66,27 +62,22 @@ struct size_counter {
   // a map from size to count
   boost::unordered_map<size_t, size_t> counts;
 
-  size_counter() { }
+  size_counter() {}
 
-  explicit size_counter(size_t size) {
-    counts[size] = 1;
-  }
+  explicit size_counter(size_t size) { counts[size] = 1; }
 
   size_counter& operator+=(const size_counter& other) {
-    boost::unordered_map<size_t, size_t>::const_iterator iter = other.counts.begin();
-    while(iter != other.counts.end()) {
+    boost::unordered_map<size_t, size_t>::const_iterator iter =
+        other.counts.begin();
+    while (iter != other.counts.end()) {
       counts[iter->first] += iter->second;
       ++iter;
     }
     return *this;
   }
 
-  void save(graphlab::oarchive& oarc) const {
-    oarc << counts;
-  }
-  void load(graphlab::iarchive& iarc) {
-    iarc >> counts;
-  }
+  void save(graphlab::oarchive& oarc) const { oarc << counts; }
+  void load(graphlab::iarchive& iarc) { iarc >> counts; }
 };
 
 size_counter absolute_vertex_data(const graph_type::vertex_type& vertex) {
@@ -94,30 +85,25 @@ size_counter absolute_vertex_data(const graph_type::vertex_type& vertex) {
 }
 
 class graph_writer {
-public:
+ public:
   std::string save_vertex(graph_type::vertex_type v) {
     std::stringstream strm;
     strm << v.id() << ":";
-    for (size_t i = 0;i < v.data().vids.size(); ++i) {
+    for (size_t i = 0; i < v.data().vids.size(); ++i) {
       strm << v.data().vids[i] << " ";
     }
     strm << "\n";
     return strm.str();
   }
-  std::string save_edge(graph_type::edge_type e) {
-    return "";
-  }
+  std::string save_edge(graph_type::edge_type e) { return ""; }
 };
-
-
-
 
 int main(int argc, char** argv) {
   std::cout << "Connected Component\n\n";
 
   graphlab::mpi_tools::init(argc, argv);
   graphlab::distributed_control dc;
-  //parse options
+  // parse options
   graphlab::command_line_options clopts("Connected Component Stats.");
   std::string graph_dir;
   std::string saveprefix;
@@ -125,10 +111,8 @@ int main(int argc, char** argv) {
   clopts.attach_option("graph", graph_dir,
                        "The graph file. This is not optional");
   clopts.add_positional("graph");
-  clopts.attach_option("format", format,
-                       "The graph file format");
-  clopts.attach_option("saveprefix", saveprefix,
-                       "save location");
+  clopts.attach_option("format", format, "The graph file format");
+  clopts.attach_option("saveprefix", saveprefix, "save location");
   if (!clopts.parse(argc, argv)) {
     dc.cout() << "Error in parsing command line arguments." << std::endl;
     return EXIT_FAILURE;
@@ -140,8 +124,8 @@ int main(int argc, char** argv) {
 
   graph_type graph(dc, clopts);
 
-  //load graph
-  dc.cout() << "Loading graph in format: "<< format << std::endl;
+  // load graph
+  dc.cout() << "Loading graph in format: " << format << std::endl;
   graphlab::timer ti;
   graph.set_duplicate_vertex_strategy(vertex_combine);
   graph.load(graph_dir, ccoutput_parser);
@@ -149,27 +133,27 @@ int main(int argc, char** argv) {
   dc.cout() << "Complete Finalization in " << ti.current_time() << std::endl;
 
   ti.start();
-  //take statistics
-  size_counter stat = graph.map_reduce_vertices<size_counter>(
-      absolute_vertex_data);
+  // take statistics
+  size_counter stat =
+      graph.map_reduce_vertices<size_counter>(absolute_vertex_data);
 
   dc.cout() << "graph calculation time is " << ti.current_time() << " sec\n";
   dc.cout() << "RESULT:\nsize\tcount\n";
-  for (boost::unordered_map<size_t, size_t>::const_iterator iter = stat.counts.begin();
-      iter != stat.counts.end(); iter++) {
+  for (boost::unordered_map<size_t, size_t>::const_iterator iter =
+           stat.counts.begin();
+       iter != stat.counts.end(); iter++) {
     dc.cout() << iter->first << "\t" << iter->second << "\n";
   }
-  
-  //write results
+
+  // write results
   if (saveprefix.size() > 0) {
     graph.save(saveprefix, graph_writer(),
-        false, //set to true if each output file is to be gzipped
-        true, //whether vertices are saved
-        false); //whether edges are saved
+               false,   // set to true if each output file is to be gzipped
+               true,    // whether vertices are saved
+               false);  // whether edges are saved
   }
 
   graphlab::mpi_tools::finalize();
 
   return EXIT_SUCCESS;
 }
-

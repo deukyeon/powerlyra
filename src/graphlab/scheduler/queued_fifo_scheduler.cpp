@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #include <graphlab/scheduler/queued_fifo_scheduler.hpp>
 #include <graphlab/macros_def.hpp>
 
@@ -29,13 +28,14 @@ namespace graphlab {
 void queued_fifo_scheduler::set_options(const graphlab_options& opts) {
   // read the remaining options.
   std::vector<std::string> keys = opts.get_scheduler_args().get_option_keys();
-  foreach(std::string opt, keys) {
+  foreach (std::string opt, keys) {
     if (opt == "queuesize") {
       opts.get_scheduler_args().get_option("queuesize", sub_queue_size);
     } else if (opt == "multi") {
       opts.get_scheduler_args().get_option("multi", multi);
     } else {
-      logstream(LOG_FATAL) << "Unexpected Scheduler Option: " << opt << std::endl;
+      logstream(LOG_FATAL) << "Unexpected Scheduler Option: " << opt
+                           << std::endl;
     }
   }
 }
@@ -50,20 +50,19 @@ void queued_fifo_scheduler::initialize_data_structures() {
 }
 
 queued_fifo_scheduler::queued_fifo_scheduler(size_t num_vertices,
-                                             const graphlab_options& opts) :
-    ncpus(opts.get_ncpus()),
-    num_vertices(num_vertices),
-    multi(3),
-    sub_queue_size(100) {
-      ASSERT_GE(opts.get_ncpus(), 1);
-      set_options(opts);
-      initialize_data_structures();
+                                             const graphlab_options& opts)
+    : ncpus(opts.get_ncpus()),
+      num_vertices(num_vertices),
+      multi(3),
+      sub_queue_size(100) {
+  ASSERT_GE(opts.get_ncpus(), 1);
+  set_options(opts);
+  initialize_data_structures();
 
-      logstream(LOG_INFO) << "Queued-FIFO Scheduler:"
-                          << " queuesize=" << sub_queue_size 
-                          << " multi=" << multi 
-                          << std::endl;
-    }
+  logstream(LOG_INFO) << "Queued-FIFO Scheduler:"
+                      << " queuesize=" << sub_queue_size << " multi=" << multi
+                      << std::endl;
+}
 
 void queued_fifo_scheduler::set_num_vertices(const lvid_type numv) {
   num_vertices = numv;
@@ -74,13 +73,11 @@ void queued_fifo_scheduler::schedule(const lvid_type vid, double priority) {
   // If this is a new message, schedule it
   // the min priority will be taken care of by the get_next function
   if (vid < num_vertices && !vertex_is_scheduled.set_bit(vid)) {
-    const size_t cpuid= 
-        random::fast_uniform(size_t(0), 
-                             in_queues.size() - 1);
+    const size_t cpuid = random::fast_uniform(size_t(0), in_queues.size() - 1);
     in_queue_locks[cpuid].lock();
     queue_type& queue = in_queues[cpuid];
     queue.push_back(vid);
-    if(queue.size() > sub_queue_size) {
+    if (queue.size() > sub_queue_size) {
       master_lock.lock();
       queue_type emptyq;
       master_queue.push_back(emptyq);
@@ -88,8 +85,8 @@ void queued_fifo_scheduler::schedule(const lvid_type vid, double priority) {
       master_lock.unlock();
     }
     in_queue_locks[cpuid].unlock();
-  } 
-} // end of schedule
+  }
+}  // end of schedule
 
 /** Get the next element in the queue */
 sched_status::status_enum queued_fifo_scheduler::get_next(const size_t cpuid,
@@ -97,34 +94,33 @@ sched_status::status_enum queued_fifo_scheduler::get_next(const size_t cpuid,
   queue_type& myqueue = out_queues[cpuid];
   // if the local queue is empty try to get a queue from the master
   out_queue_locks[cpuid].lock();
-  if(myqueue.empty()) {
+  if (myqueue.empty()) {
     master_lock.lock();
-    // if master queue is empty... 
+    // if master queue is empty...
     if (!master_queue.empty()) {
       myqueue.swap(master_queue.front());
       master_queue.pop_front();
       master_lock.unlock();
-    }
-    else {
+    } else {
       master_lock.unlock();
-      //try to steal from the inqueues
+      // try to steal from the inqueues
       for (size_t i = 0; i < in_queues.size(); ++i) {
         size_t idx = (i + multi * cpuid) % in_queues.size();
         if (!in_queues[idx].empty()) {
           in_queue_locks[idx].lock();
           // double check
-          if(!in_queues[idx].empty()) {
+          if (!in_queues[idx].empty()) {
             myqueue.swap(in_queues[idx]);
           }
           in_queue_locks[idx].unlock();
           if (!myqueue.empty()) break;
-        } 
+        }
       }
     }
   }
   // end of get next
   bool good = false;
-  while(!myqueue.empty()) {
+  while (!myqueue.empty()) {
     // not empty, pop and verify
     ret_vid = myqueue.front();
     myqueue.pop_front();
@@ -135,23 +131,22 @@ sched_status::status_enum queued_fifo_scheduler::get_next(const size_t cpuid,
   }
   out_queue_locks[cpuid].unlock();
 
-  if(good) {
+  if (good) {
     return sched_status::NEW_TASK;
   } else {
     return sched_status::EMPTY;
   }
-} // end of get_next_task
-
+}  // end of get_next_task
 
 bool queued_fifo_scheduler::empty() {
-  for (size_t i = 0;i < out_queues.size(); ++i) {
+  for (size_t i = 0; i < out_queues.size(); ++i) {
     if (!out_queues[i].empty()) return false;
   }
   if (!master_queue.empty()) return false;
-  for (size_t i = 0;i < in_queues.size(); ++i) {
+  for (size_t i = 0; i < in_queues.size(); ++i) {
     if (!in_queues[i].empty()) return false;
   }
   return true;
 }
 
-} // namespace graphlab
+}  // namespace graphlab

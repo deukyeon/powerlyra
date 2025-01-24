@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,13 +20,12 @@
  *
  */
 
-
 #ifndef GRAPHLAB_RPC_GET_CURRENT_PROCESS_HASH_HPP
 #define GRAPHLAB_RPC_GET_CURRENT_PROCESS_HASH_HPP
 #include <string>
 namespace graphlab {
 namespace dc_impl {
 std::string get_current_process_hash();
-} // dc_impl 
-} // graphlab
+}  // namespace dc_impl
+}  // namespace graphlab
 #endif

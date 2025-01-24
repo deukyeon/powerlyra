@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef GRAPHLAB_OP_PLUS_EQ_CONCEPT
 #define GRAPHLAB_OP_PLUS_EQ_CONCEPT
 
@@ -30,43 +29,41 @@
 #include <sstream>
 #include <graphlab/serialization/serialize.hpp>
 
-
 namespace graphlab {
 
-  /**
-   * \brief Concept checks if a type T supports operator+=
-   *
-   * This is a concept checking class for boost::concept and can be
-   * used to enforce that a type T is "additive."  In particular many
-   * types in GraphLab (e.g., messages, gather_type, as well as
-   * aggregation types) must support operator+=.  To achieve this the
-   * class should implement:
-   *
-   * \code
-   * class gather_type {
-   *   int member1;
-   * public:
-   *   gather_type& operator+=(const gather_type& other) {
-   *     member1 += other.member1;
-   *     return *this;
-   *   } // end of operator+=
-   * };
-   * \endcode
-   *
-   * \tparam T The type to test for additivity
-   */
-  template <typename T>
-  class OpPlusEq :  boost::Assignable<T>, public boost::DefaultConstructible<T> {
-   public:
-    BOOST_CONCEPT_USAGE(OpPlusEq) {
-      T t1 = T();
-      const T t2 = T();
-      // A compiler error on these lines implies that your type does
-      // not support operator+= when this is required (e.g.,
-      // gather_type or aggregator types)
-      t1 += t2;
-    }
-  };
-} // namespace graphlab
+/**
+ * \brief Concept checks if a type T supports operator+=
+ *
+ * This is a concept checking class for boost::concept and can be
+ * used to enforce that a type T is "additive."  In particular many
+ * types in GraphLab (e.g., messages, gather_type, as well as
+ * aggregation types) must support operator+=.  To achieve this the
+ * class should implement:
+ *
+ * \code
+ * class gather_type {
+ *   int member1;
+ * public:
+ *   gather_type& operator+=(const gather_type& other) {
+ *     member1 += other.member1;
+ *     return *this;
+ *   } // end of operator+=
+ * };
+ * \endcode
+ *
+ * \tparam T The type to test for additivity
+ */
+template <typename T>
+class OpPlusEq : boost::Assignable<T>, public boost::DefaultConstructible<T> {
+ public:
+  BOOST_CONCEPT_USAGE(OpPlusEq) {
+    T t1 = T();
+    const T t2 = T();
+    // A compiler error on these lines implies that your type does
+    // not support operator+= when this is required (e.g.,
+    // gather_type or aggregator types)
+    t1 += t2;
+  }
+};
+}  // namespace graphlab
 #endif
-

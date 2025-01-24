@@ -23,39 +23,35 @@ int main(int argc, char** argv) {
 
   std::cout << "\n\nPrinting column 0\n";
   typedef dcsc_store<uint32_t>::entry_type entry_type;
-  foreach(const entry_type e, store.get_column(0)) {
-    std::cout << "(" << e.row() << ", " << e.column() << ") = " << e.value() << "\n";
+  foreach (const entry_type e, store.get_column(0)) {
+    std::cout << "(" << e.row() << ", " << e.column() << ") = " << e.value()
+              << "\n";
   }
 
   std::cout << "\n\nPrinting column 5\n";
-  foreach(entry_type e, store.get_column(5)) {
-    std::cout << "(" << e.row() << ", " << e.column() << ") = " << e.value() << "\n";
+  foreach (entry_type e, store.get_column(5)) {
+    std::cout << "(" << e.row() << ", " << e.column() << ") = " << e.value()
+              << "\n";
   }
-
 
   std::cout << "\n\nChanging column 3 to all 1s\n";
-  foreach(entry_type e, store.get_column(3)) {
-    e.value() = 1;
-  }
+  foreach (entry_type e, store.get_column(3)) { e.value() = 1; }
 
   std::cout << store;
 
   srand(10);
   store.clear();
   std::vector<uint32_t> row, col, val;
-  for (size_t i = 0;i < 10000; ++i) {
+  for (size_t i = 0; i < 10000; ++i) {
     row.push_back(rand());
     col.push_back(rand());
     val.push_back(rand());
   }
 
-  store.construct(row.begin(), row.end(),
-                  col.begin(), col.end(),
-                  val.begin(), val.end());
+  store.construct(row.begin(), row.end(), col.begin(), col.end(), val.begin(),
+                  val.end());
 
-  for (size_t i = 0;i < 10000; ++i) {
+  for (size_t i = 0; i < 10000; ++i) {
     assert(store.find(row[i], col[i]) == val[i]);
   }
-
-
 }

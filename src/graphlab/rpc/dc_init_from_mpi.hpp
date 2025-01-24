@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,18 +20,16 @@
  *
  */
 
-
 #ifndef GRAPHLAB_DC_INIT_FROM_MPI_HPP
 #define GRAPHLAB_DC_INIT_FROM_MPI_HPP
 #include <graphlab/rpc/dc.hpp>
 namespace graphlab {
-  /**
-   * \ingroup rpc 
-   * initializes parameters from MPI. Returns true on success
-      MPI must be initialized before calling this function */
-  bool init_param_from_mpi(dc_init_param& param, dc_comm_type commtype = TCP_COMM);
-}
+/**
+ * \ingroup rpc
+ * initializes parameters from MPI. Returns true on success
+    MPI must be initialized before calling this function */
+bool init_param_from_mpi(dc_init_param& param,
+                         dc_comm_type commtype = TCP_COMM);
+}  // namespace graphlab
 
-#endif // GRAPHLAB_DC_INIT_FROM_MPI_HPP
-
-
+#endif  // GRAPHLAB_DC_INIT_FROM_MPI_HPP

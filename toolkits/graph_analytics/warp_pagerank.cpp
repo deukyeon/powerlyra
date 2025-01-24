@@ -52,8 +52,6 @@ typedef gl3engine<graph_type> engine_type;
  */
 void init_vertex(graph_type::vertex_type& vertex) { vertex.data() = 1; }
 
-
-
 /*
  * We want to save the final graph so we define a write which will be
  * used in graph.save("path/prefix", pagerank_writer()) to save the graph.
@@ -65,34 +63,29 @@ struct pagerank_writer {
     return strm.str();
   }
   std::string save_edge(graph_type::edge_type e) { return ""; }
-}; // end of pagerank writer
-
+};  // end of pagerank writer
 
 double pagerank_map(const graph_type::vertex_type& v) {
   return v.data() / v.num_out_edges();
 }
 
-void pagerank_combine(double& v1, const double& v2) {
-  v1 += v2;
-}
+void pagerank_combine(double& v1, const double& v2) { v1 += v2; }
 
 void update_function(engine_type::context_type& context,
                      graph_type::vertex_type& vertex,
                      const engine_type::message_type& unused) {
   double prev = vertex.data();
-  vertex.data() = 0.15 + 0.85 *
-      context.map_reduce<double>(PAGERANK_MAP_REDUCE, IN_EDGES);
+  vertex.data() =
+      0.15 + 0.85 * context.map_reduce<double>(PAGERANK_MAP_REDUCE, IN_EDGES);
 
-  double last_change = std::fabs((vertex.data()- prev));// / vertex.num_out_edges());
+  double last_change =
+      std::fabs((vertex.data() - prev));  // / vertex.num_out_edges());
   if (last_change > TOLERANCE) {
     context.broadcast_signal(OUT_EDGES);
   }
 }
 
-double pagerank_sum(graph_type::vertex_type v) {
-  return v.data();
-}
-
+double pagerank_sum(graph_type::vertex_type v) { return v.data(); }
 
 int main(int argc, char** argv) {
   // Initialize control plain using mpi
@@ -110,8 +103,7 @@ int main(int argc, char** argv) {
   clopts.add_positional("graph");
   clopts.attach_option("tol", TOLERANCE,
                        "The permissible change at convergence.");
-  clopts.attach_option("format", format,
-                       "The graph file format");
+  clopts.attach_option("format", format, "The graph file format");
   size_t powerlaw = 0;
   clopts.attach_option("powerlaw", powerlaw,
                        "Generate a synthetic powerlaw out-degree graph. ");
@@ -120,7 +112,7 @@ int main(int argc, char** argv) {
                        "If set, will save the resultant pagerank to a "
                        "sequence of files with prefix saveprefix");
 
-  if(!clopts.parse(argc, argv)) {
+  if (!clopts.parse(argc, argv)) {
     dc.cout() << "Error in parsing command line arguments." << std::endl;
     return EXIT_FAILURE;
   }
@@ -128,15 +120,13 @@ int main(int argc, char** argv) {
   // Build the graph ----------------------------------------------------------
   graphlab::launch_metric_server();
   graph_type graph(dc, clopts);
-  if(powerlaw > 0) { // make a synthetic graph
+  if (powerlaw > 0) {  // make a synthetic graph
     dc.cout() << "Loading synthetic Powerlaw graph." << std::endl;
     graph.load_synthetic_powerlaw(powerlaw, false, 2.1, 100000000);
-  }
-  else if (graph_dir.length() > 0) { // Load the graph from a file
-    dc.cout() << "Loading graph in format: "<< format << std::endl;
+  } else if (graph_dir.length() > 0) {  // Load the graph from a file
+    dc.cout() << "Loading graph in format: " << format << std::endl;
     graph.load_format(graph_dir, format);
-  }
-  else {
+  } else {
     dc.cout() << "graph or powerlaw option must be specified" << std::endl;
     clopts.print_description();
     return 0;
@@ -151,35 +141,30 @@ int main(int argc, char** argv) {
 
   // Running The Engine -------------------------------------------------------
   engine_type engine(dc, graph, clopts);
-  engine.register_map_reduce(PAGERANK_MAP_REDUCE,
-                             pagerank_map,
+  engine.register_map_reduce(PAGERANK_MAP_REDUCE, pagerank_map,
                              pagerank_combine);
 
   engine.set_vertex_program(update_function);
-  timer ti; ti.start();
+  timer ti;
+  ti.start();
   engine.signal_all();
 
   engine.wait();
-  dc.cout() << "Finished Running engine in " << ti.current_time()
-            << " seconds." << std::endl;
-  dc.cout() << engine.num_updates()
-            << " updates." << std::endl;
-
+  dc.cout() << "Finished Running engine in " << ti.current_time() << " seconds."
+            << std::endl;
+  dc.cout() << engine.num_updates() << " updates." << std::endl;
 
   // Save the final graph -----------------------------------------------------
   if (saveprefix != "") {
     graph.save(saveprefix, pagerank_writer(),
-               false,    // do not gzip
-               true,     // save vertices
-               false);   // do not save edges
+               false,   // do not gzip
+               true,    // save vertices
+               false);  // do not save edges
   }
 
   graphlab::stop_metric_server();
   mpi_tools::finalize();
   return EXIT_SUCCESS;
-} // End of main
-
+}  // End of main
 
 // We render this entire program in the documentation
-
-

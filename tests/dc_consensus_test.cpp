@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #include <iostream>
 #include <string>
 #include <map>
@@ -31,43 +30,39 @@
 #include <graphlab/rpc/async_consensus.hpp>
 using namespace graphlab;
 
-
-
-
 class simple_engine_test {
  public:
   dc_dist_object<simple_engine_test> rmi;
   blocking_queue<size_t> queue;
   async_consensus cons;
-  atomic<size_t> numactive;;
+  atomic<size_t> numactive;
+  ;
 
-  simple_engine_test(distributed_control &dc):rmi(dc, this), cons(dc, 4) {
-    numactive.value = 4; 
+  simple_engine_test(distributed_control &dc) : rmi(dc, this), cons(dc, 4) {
+    numactive.value = 4;
     dc.barrier();
   }
 
   void add_task_local(size_t i) {
     queue.enqueue(i);
     if (numactive.value < 4) cons.cancel();
-  }  
-  
+  }
+
   void task(size_t i) {
     if (i < 5) std::cout << "Task " << i << std::endl;
     if (i > 0) {
       if (rmi.numprocs() == 1) {
         add_task_local(i - 1);
-      }
-      else {
+      } else {
         rmi.remote_call((procid_t)((rmi.procid() + 1) % rmi.numprocs()),
-                    &simple_engine_test::add_task_local,
-                    i - 1);
+                        &simple_engine_test::add_task_local, i - 1);
       }
     }
   }
-  
+
   bool try_terminate(size_t cpuid, std::pair<size_t, bool> &job) {
     job.second = false;
-    
+
     numactive.dec();
     cons.begin_done_critical_section(cpuid);
     job = queue.try_dequeue();
@@ -75,41 +70,37 @@ class simple_engine_test {
       bool ret = cons.end_done_critical_section(cpuid);
       numactive.inc();
       return ret;
-    }
-    else {
+    } else {
       cons.cancel_critical_section(cpuid);
       numactive.inc();
       return false;
     }
   }
-  
+
   void thread(size_t cpuid) {
-    while(1) {
-       std::pair<size_t, bool> job = queue.try_dequeue();
-       if (job.second == false) {
-          bool ret = try_terminate(cpuid, job);
-          if (ret == true) break;
-          if (ret == false && job.second == false) continue;
-       }
-       task(job.first);
+    while (1) {
+      std::pair<size_t, bool> job = queue.try_dequeue();
+      if (job.second == false) {
+        bool ret = try_terminate(cpuid, job);
+        if (ret == true) break;
+        if (ret == false && job.second == false) continue;
+      }
+      task(job.first);
     }
   }
-  
+
   void start_thread() {
-    thread_group thrgrp; 
-    for (size_t i = 0;i < 4; ++i) {
-      thrgrp.launch(boost::bind(
-                            &simple_engine_test::thread,
-                            this, i));
+    thread_group thrgrp;
+    for (size_t i = 0; i < 4; ++i) {
+      thrgrp.launch(boost::bind(&simple_engine_test::thread, this, i));
     }
-    
+
     thrgrp.join();
     ASSERT_EQ(queue.size(), 0);
   }
 };
 
-
-int main(int argc, char ** argv) {
+int main(int argc, char **argv) {
   /** Initialization */
   mpi_tools::init(argc, argv);
   global_logger().set_log_level(LOG_DEBUG);

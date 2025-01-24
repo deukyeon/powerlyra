@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef GRAPHLAB_ZOOKEEPER_SERVER_LIST_HPP
 #define GRAPHLAB_ZOOKEEPER_SERVER_LIST_HPP
 
@@ -32,7 +31,7 @@
 extern "C" {
 #include <zookeeper/zookeeper.h>
 }
-namespace graphlab{
+namespace graphlab {
 namespace zookeeper {
 
 /**
@@ -42,12 +41,10 @@ namespace zookeeper {
  */
 class server_list {
  public:
-
   ///  Joins a zookeeper cluster.
   ///  Zookeeper nodes will be created in the prefix "prefix".
   ///  The current machine will be identified as "serveridentifier"
-  server_list(std::vector<std::string> zkhosts,
-              std::string prefix,
+  server_list(std::vector<std::string> zkhosts, std::string prefix,
               std::string serveridentifier);
 
   /// destructor
@@ -70,38 +67,34 @@ class server_list {
   /// Removes the watch callback.
   void stop_watching(std::string name_space);
 
-
   /** Adds a callback which will be triggered when any namespace in the prefix
    * changes. The callback arguments will be the server_list object, the
    * namespace which changed, and the new list of servers in the name space.
    * Calling this function will a NULL argument deletes
-   * the callback. Note that the callback may be triggered in a different thread.
+   * the callback. Note that the callback may be triggered in a different
+   * thread.
    */
-  void set_callback(boost::function<void(server_list* cur,
-                                         std::string name_space,
-                                         std::vector<std::string> server)
-                                         > fn);
+  void set_callback(
+      boost::function<void(server_list *cur, std::string name_space,
+                           std::vector<std::string> server)>
+          fn);
 
  private:
   std::string prefix, serveridentifier;
-  zhandle_t* handle;
+  zhandle_t *handle;
 
   recursive_mutex watchlock;
   std::set<std::string> watches;
 
-  boost::function<void(server_list*, std::string, std::vector<std::string>)> callback;
+  boost::function<void(server_list *, std::string, std::vector<std::string>)>
+      callback;
 
   void issue_callback(std::string path);
 
-  static void watcher(zhandle_t *zh,
-                    int type,
-                    int state,
-                    const char *path,
-                    void *watcherCtx);
-
-
+  static void watcher(zhandle_t *zh, int type, int state, const char *path,
+                      void *watcherCtx);
 };
 
-} // namespace zookeeper
-} // namespace graphlab
+}  // namespace zookeeper
+}  // namespace graphlab
 #endif

@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,21 +17,19 @@
  *
  */
 
-
 #include <graphlab/factors/binary_factor.hpp>
 
-std::ostream& operator<<(std::ostream& out, 
+std::ostream& operator<<(std::ostream& out,
                          const graphlab::binary_factor& fact) {
-  out << "Binary Factor(v_" << fact.var1() << " in {1..."
-      << fact.arity1() << "}, " 
-      << ", v_ " << fact.var2() << " in {1..." 
-      << fact.arity2() << "})" << std::endl;
-  for(uint16_t i = 0; i < fact.arity1(); ++i) {
-    for(uint16_t j = 0; j < fact.arity2(); ++j) {
-      out << fact.logP(i,j) << " ";
+  out << "Binary Factor(v_" << fact.var1() << " in {1..." << fact.arity1()
+      << "}, "
+      << ", v_ " << fact.var2() << " in {1..." << fact.arity2() << "})"
+      << std::endl;
+  for (uint16_t i = 0; i < fact.arity1(); ++i) {
+    for (uint16_t j = 0; j < fact.arity2(); ++j) {
+      out << fact.logP(i, j) << " ";
     }
     out << std::endl;
   }
   return out;
-} // end of operator<<
-
+}  // end of operator<<

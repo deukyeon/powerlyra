@@ -31,7 +31,7 @@
 using namespace graphlab;
 
 // The graph type is determined by the vertex and edge data types
-typedef distributed_graph<float , float> graph_type;
+typedef distributed_graph<float, float> graph_type;
 
 /*
  * A simple function used by graph.transform_vertices(init_vertex);
@@ -39,14 +39,12 @@ typedef distributed_graph<float , float> graph_type;
  */
 void init_vertex(graph_type::vertex_type& vertex) { vertex.data() = 1; }
 
-
 float pagerank_map(graph_type::edge_type edge, graph_type::vertex_type other) {
   return other.data() / other.num_out_edges();
 }
 
 void pagerank(graph_type::vertex_type vertex) {
-  vertex.data() = 0.15 + 0.85 * warp::map_reduce_neighborhood(vertex,
-                                                              IN_EDGES,
+  vertex.data() = 0.15 + 0.85 * warp::map_reduce_neighborhood(vertex, IN_EDGES,
                                                               pagerank_map);
 }
 
@@ -61,8 +59,7 @@ struct pagerank_writer {
     return strm.str();
   }
   std::string save_edge(graph_type::edge_type e) { return ""; }
-}; // end of pagerank writer
-
+};  // end of pagerank writer
 
 int main(int argc, char** argv) {
   // Initialize control plain using mpi
@@ -82,14 +79,14 @@ int main(int argc, char** argv) {
   clopts.attach_option("saveprefix", saveprefix,
                        "Prefix to save the output pagerank in");
 
-  if(!clopts.parse(argc, argv)) {
+  if (!clopts.parse(argc, argv)) {
     dc.cout() << "Error in parsing command line arguments." << std::endl;
     return EXIT_FAILURE;
   }
 
   // Build the graph ----------------------------------------------------------
   graph_type graph(dc, clopts);
-  dc.cout() << "Loading graph in format: "<< format << std::endl;
+  dc.cout() << "Loading graph in format: " << format << std::endl;
   graph.load_format(graph_dir, format);
   // must call finalize before querying the graph
   graph.finalize();
@@ -98,26 +95,21 @@ int main(int argc, char** argv) {
   graph.transform_vertices(init_vertex);
 
   timer ti;
-  for (size_t i = 0;i < iterations; ++i) {
+  for (size_t i = 0; i < iterations; ++i) {
     warp::parfor_all_vertices(graph, pagerank);
     std::cout << "Iteration " << i << " complete\n";
   }
 
-  dc.cout() << "Finished Running in " << ti.current_time()
-            << " seconds." << std::endl;
-
+  dc.cout() << "Finished Running in " << ti.current_time() << " seconds."
+            << std::endl;
 
   // Save the final graph -----------------------------------------------------
   if (saveprefix != "") {
     graph.save(saveprefix, pagerank_writer(),
-               false,    // do not gzip
-               true,     // save vertices
-               false);   // do not save edges
+               false,   // do not gzip
+               true,    // save vertices
+               false);  // do not save edges
   }
 
   mpi_tools::finalize();
-} // End of main
-
-
-
-
+}  // End of main

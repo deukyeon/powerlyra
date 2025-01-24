@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,31 +20,29 @@
  *
  */
 
-
 #ifndef DEFERRED_RWLOCK_HPP
 #define DEFERRED_RWLOCK_HPP
 #include <graphlab/parallel/pthread_tools.hpp>
 #include <graphlab/parallel/queued_rwlock.hpp>
 #include <graphlab/logger/assertions.hpp>
 namespace graphlab {
-class deferred_rwlock{
+class deferred_rwlock {
  public:
-
-  struct request{
+  struct request {
     char lockclass : 2;
-    __attribute__((may_alias)) uint64_t id : 62; 
+    __attribute__((may_alias)) uint64_t id : 62;
     request* next;
   };
+
  private:
   request* head;
   request* tail;
   uint16_t reader_count;
   bool writer;
   simple_spinlock lock;
- public:
 
-  deferred_rwlock(): head(NULL),
-                      tail(NULL), reader_count(0),writer(false) { }
+ public:
+  deferred_rwlock() : head(NULL), tail(NULL), reader_count(0), writer(false) {}
 
   // debugging purposes only
   inline size_t get_reader_count() {
@@ -53,32 +51,28 @@ class deferred_rwlock{
   }
 
   // debugging purposes only
-  inline bool has_waiters() {
-    return head != NULL || tail != NULL;
-  }
+  inline bool has_waiters() { return head != NULL || tail != NULL; }
 
-  inline void insert_queue(request *I) {
+  inline void insert_queue(request* I) {
     if (head == NULL) {
       head = I;
       tail = I;
-    }
-    else {
+    } else {
       tail->next = I;
       tail = I;
     }
   }
-  inline void insert_queue_head(request *I) {
+  inline void insert_queue_head(request* I) {
     if (head == NULL) {
       head = I;
       tail = I;
-    }
-    else {
+    } else {
       I->next = head;
       head = I;
     }
   }
-  
-  inline bool writelock_priority(request *I) {
+
+  inline bool writelock_priority(request* I) {
     I->next = NULL;
     I->lockclass = QUEUED_RW_LOCK_REQUEST_WRITE;
     lock.lock();
@@ -87,15 +81,14 @@ class deferred_rwlock{
       writer = true;
       lock.unlock();
       return true;
-    }
-    else {
+    } else {
       insert_queue_head(I);
       lock.unlock();
       return false;
     }
   }
-  
-  inline bool writelock(request *I) {
+
+  inline bool writelock(request* I) {
     I->next = NULL;
     I->lockclass = QUEUED_RW_LOCK_REQUEST_WRITE;
     lock.lock();
@@ -104,8 +97,7 @@ class deferred_rwlock{
       writer = true;
       lock.unlock();
       return true;
-    }
-    else {
+    } else {
       insert_queue(I);
       lock.unlock();
       return false;
@@ -115,7 +107,7 @@ class deferred_rwlock{
   // completes the write lock on the head. lock must be acquired
   // head must be a write lock
   inline void complete_wrlock() {
-  //  ASSERT_EQ(reader_count.value, 0);
+    //  ASSERT_EQ(reader_count.value, 0);
     head = head->next;
     if (head == NULL) tail = NULL;
     writer = true;
@@ -123,7 +115,7 @@ class deferred_rwlock{
 
   // completes the read lock on the head. lock must be acquired
   // head must be a read lock
-  inline size_t complete_rdlock(request* &released) {
+  inline size_t complete_rdlock(request*& released) {
     released = head;
     size_t numcompleted = 1;
     head = head->next;
@@ -135,12 +127,12 @@ class deferred_rwlock{
     }
     reader_count += numcompleted;
     if (head == NULL) tail = NULL;
-    
+
     // now released is the head to a reader list
     // and head is the head of a writer list
     // I want to go through the writer list and extract all the readers
-    // this essentially 
-    // splits the list into two sections, one containing only readers, and 
+    // this essentially
+    // splits the list into two sections, one containing only readers, and
     // one containing only writers.
     // (reader biased locking)
     if (head != NULL) {
@@ -149,8 +141,7 @@ class deferred_rwlock{
       while (1) {
         if (cur->lockclass == QUEUED_RW_LOCK_REQUEST_WRITE) {
           latestwriter = cur;
-        }
-        else {
+        } else {
           readertail->next = cur;
           readertail = cur;
           reader_count++;
@@ -158,13 +149,13 @@ class deferred_rwlock{
           latestwriter->next = cur->next;
         }
         if (cur == tail) break;
-        cur=cur->next;
+        cur = cur->next;
       }
     }
     return numcompleted;
   }
-  
-  inline size_t wrunlock(request* &released) {
+
+  inline size_t wrunlock(request*& released) {
     released = NULL;
     lock.lock();
     writer = false;
@@ -173,8 +164,7 @@ class deferred_rwlock{
       if (head->lockclass == QUEUED_RW_LOCK_REQUEST_READ) {
         ret = complete_rdlock(released);
         if (ret == 2) assert(released->next != NULL);
-      }
-      else {
+      } else {
         writer = true;
         released = head;
         complete_wrlock();
@@ -185,7 +175,7 @@ class deferred_rwlock{
     return ret;
   }
 
-  inline size_t readlock(request *I, request* &released)  {
+  inline size_t readlock(request* I, request*& released) {
     released = NULL;
     size_t ret = 0;
     I->next = NULL;
@@ -198,8 +188,7 @@ class deferred_rwlock{
       lock.unlock();
       released = I;
       return 1;
-    }
-    else {
+    } else {
       // slow path. Insert into queue
       insert_queue(I);
       if (head->lockclass == QUEUED_RW_LOCK_REQUEST_READ && writer == false) {
@@ -210,7 +199,7 @@ class deferred_rwlock{
     }
   }
 
-  inline size_t readlock_priority(request *I, request* &released)  {
+  inline size_t readlock_priority(request* I, request*& released) {
     released = NULL;
     size_t ret = 0;
     I->next = NULL;
@@ -223,8 +212,7 @@ class deferred_rwlock{
       lock.unlock();
       released = I;
       return 1;
-    }
-    else {
+    } else {
       // slow path. Insert into queue
       insert_queue_head(I);
       if (head->lockclass == QUEUED_RW_LOCK_REQUEST_READ && writer == false) {
@@ -235,7 +223,7 @@ class deferred_rwlock{
     }
   }
 
-  inline size_t rdunlock(request* &released)  {
+  inline size_t rdunlock(request*& released) {
     released = NULL;
     lock.lock();
     --reader_count;
@@ -244,8 +232,7 @@ class deferred_rwlock{
       if (head != NULL) {
         if (head->lockclass == QUEUED_RW_LOCK_REQUEST_READ) {
           ret = complete_rdlock(released);
-        }
-        else {
+        } else {
           writer = true;
           released = head;
           complete_wrlock();
@@ -254,14 +241,12 @@ class deferred_rwlock{
       }
       lock.unlock();
       return ret;
-    }
-    else {
+    } else {
       lock.unlock();
       return 0;
     }
   }
 };
 
-}
+}  // namespace graphlab
 #endif
-

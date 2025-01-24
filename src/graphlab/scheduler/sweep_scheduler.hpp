@@ -37,71 +37,60 @@
 
 namespace graphlab {
 
-   /** \ingroup group_schedulers
-    */
-  class sweep_scheduler: public ischeduler {
-  private:
+/** \ingroup group_schedulers
+ */
+class sweep_scheduler : public ischeduler {
+ private:
+  size_t ncpus;
 
-    size_t ncpus;
+  size_t num_vertices;
+  bool strict_round_robin;
+  atomic<size_t> rr_index;
+  size_t max_iterations;
+  size_t randomizer;
 
-    size_t num_vertices;
-    bool strict_round_robin;
-    atomic<size_t> rr_index;
-    size_t max_iterations;
-    size_t randomizer;
+  std::vector<lvid_type> cpu2index;
 
-    std::vector<lvid_type>             cpu2index;
+  dense_bitset vertex_is_scheduled;
+  std::string ordering;
 
-    dense_bitset vertex_is_scheduled;
-    std::string                             ordering;
+  void set_options(const graphlab_options& opts);
 
-    void set_options(const graphlab_options& opts);
+ public:
+  sweep_scheduler(size_t num_vertices, const graphlab_options& opts);
 
-  public:
-    sweep_scheduler(size_t num_vertices,
-                    const graphlab_options& opts);
+  void set_num_vertices(const lvid_type numv);
 
-    void set_num_vertices(const lvid_type numv);
+  void schedule(const lvid_type vid, double priority = 1 /* ignored */);
 
-    void schedule(const lvid_type vid, double priority = 1 /* ignored */) ; 
+  sched_status::status_enum get_next(const size_t cpuid, lvid_type& ret_vid);
 
+  static void print_options_help(std::ostream& out) {
+    out << "order = [string: {random, ascending} default=random]\n"
+        << "strict = [bool, use strict round robin schedule, default=true]\n"
+        << "max_iterations = [integer, maximum number of iterations "
+        << " (requires strict=true) \n"
+        << "\t default = inf]\n";
+  }  // end of print_options_help
 
-    
-    sched_status::status_enum get_next(const size_t cpuid, lvid_type& ret_vid);
-    
-    
-    static void print_options_help(std::ostream &out) {
-      out << "order = [string: {random, ascending} default=random]\n"
-          << "strict = [bool, use strict round robin schedule, default=true]\n"
-          << "max_iterations = [integer, maximum number of iterations "
-          << " (requires strict=true) \n"
-          << "\t default = inf]\n";
-    } // end of print_options_help
+  bool empty() { return (vertex_is_scheduled.popcount() == 0); }
 
-
-    bool empty() {
-      return (vertex_is_scheduled.popcount() == 0);
+ private:
+  inline size_t get_and_inc_index(const size_t cpuid) {
+    if (strict_round_robin) {
+      return rr_index++ % num_vertices;
+    } else {
+      const size_t index = cpu2index[cpuid];
+      cpu2index[cpuid] += ncpus;
+      // Address loop around
+      if (__builtin_expect(cpu2index[cpuid] >= num_vertices, false))
+        cpu2index[cpuid] = cpuid;
+      return index;
     }
+  }  // end of next index
+};
 
-  private:
-    inline size_t get_and_inc_index(const size_t cpuid) {
-      if (strict_round_robin) { 
-        return rr_index++ % num_vertices; 
-      } else {
-        const size_t index = cpu2index[cpuid];
-        cpu2index[cpuid] += ncpus;
-        // Address loop around
-        if (__builtin_expect(cpu2index[cpuid] >= num_vertices, false)) 
-          cpu2index[cpuid] = cpuid;
-        return index;
-      }
-    }// end of next index
-
-  };
-
-
-} // end of namespace graphlab
+}  // end of namespace graphlab
 #include <graphlab/macros_undef.hpp>
 
 #endif
-

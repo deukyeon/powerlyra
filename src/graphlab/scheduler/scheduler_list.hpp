@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef GRAPHLAB_SCHEDULER_LIST_HPP
 #define GRAPHLAB_SCHEDULER_LIST_HPP
 #include <string>
@@ -28,39 +27,37 @@
 #include <iostream>
 #include <boost/preprocessor.hpp>
 
-#define __SCHEDULER_LIST__                                              \
-  (("fifo", fifo_scheduler,                                             \
-    "Standard FIFO task queue, poor parallelism, but task evaluation "  \
-    "sequence is highly predictable. "                                  \
-    "Useful for debugging and testing."))                               \
-  (("sweep", sweep_scheduler,                                           \
-    "very fast dynamic scheduler. Scans all vertices in sequence, "     \
-    "running all update tasks on each vertex evaluated."))              \
-  (("priority", priority_scheduler,                                     \
-    "Standard Priority queue, poor parallelism, but task evaluation "   \
-    "sequence is highly predictable. Useful for debugging"))            \
-  (("queued_fifo", queued_fifo_scheduler,                               \
-    "This scheduler maintains a shared FIFO queue of FIFO queues. "     \
-    "Each thread maintains its own smaller in and out queues. When a "  \
-    "threads out queue is too large (greater than \"queuesize\") then " \
-    "the thread puts its out queue at the end of the master queue."))   
+#define __SCHEDULER_LIST__                                                 \
+  (("fifo", fifo_scheduler,                                                \
+    "Standard FIFO task queue, poor parallelism, but task evaluation "     \
+    "sequence is highly predictable. "                                     \
+    "Useful for debugging and testing."))(                                 \
+      ("sweep", sweep_scheduler,                                           \
+       "very fast dynamic scheduler. Scans all vertices in sequence, "     \
+       "running all update tasks on each vertex evaluated."))(             \
+      ("priority", priority_scheduler,                                     \
+       "Standard Priority queue, poor parallelism, but task evaluation "   \
+       "sequence is highly predictable. Useful for debugging"))(           \
+      ("queued_fifo", queued_fifo_scheduler,                               \
+       "This scheduler maintains a shared FIFO queue of FIFO queues. "     \
+       "Each thread maintains its own smaller in and out queues. When a "  \
+       "threads out queue is too large (greater than \"queuesize\") then " \
+       "the thread puts its out queue at the end of the master queue."))
 
 #include <graphlab/scheduler/fifo_scheduler.hpp>
 #include <graphlab/scheduler/sweep_scheduler.hpp>
 #include <graphlab/scheduler/priority_scheduler.hpp>
 #include <graphlab/scheduler/queued_fifo_scheduler.hpp>
 
-
 namespace graphlab {
-  /// get all the scheduler names
-  std::vector<std::string> get_scheduler_names();
+/// get all the scheduler names
+std::vector<std::string> get_scheduler_names();
 
-  /// get all the scheduler names concated into a string
-  std::string get_scheduler_names_str();
+/// get all the scheduler names concated into a string
+std::string get_scheduler_names_str();
 
-  /// Display the scheduler options for a particular scheduler
-  void print_scheduler_info(std::string s, std::ostream &out);
-}
+/// Display the scheduler options for a particular scheduler
+void print_scheduler_info(std::string s, std::ostream &out);
+}  // namespace graphlab
 
 #endif
-

@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef GRAPHLAB_SERIALIZE_HPP
 #define GRAPHLAB_SERIALIZE_HPP
 #include <graphlab/serialization/iarchive.hpp>
@@ -38,4 +37,3 @@
 #include <graphlab/serialization/serialize_to_from_string.hpp>
 #include <graphlab/serialization/conditional_serialize.hpp>
 #endif
-

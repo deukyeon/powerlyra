@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,8 +17,6 @@
  *
  */
 
-
-
 #include "util.hpp"
 #include "chromatic_sampler.hpp"
 #include "run_statistics.hpp"
@@ -27,21 +25,19 @@
 // Include the macro for the foreach operation
 #include <graphlab/macros_def.hpp>
 
-
-
 void gibbs_update::operator()(base::icontext_type& context) {
   mrf_vertex_data& vdata = context.vertex_data();
-  //TODO: switch to use tls
+  // TODO: switch to use tls
   factor_t belief(vdata.variable);
   belief.uniform();
-  foreach(const factor_id_t factor_id, vdata.factor_ids) {
-    //const factor_t& factor(SHARED_FACTORS.get()[factor_id]);
+  foreach (const factor_id_t factor_id, vdata.factor_ids) {
+    // const factor_t& factor(SHARED_FACTORS.get()[factor_id]);
     const factor_t& factor((*SHARED_FACTORS_PTR)[factor_id]);
     // build the conditional
     assignment_t conditional_asg = factor.args() - vdata.variable;
-    for(size_t i = 0; i < conditional_asg.num_vars(); ++i) {
-      const mrf_vertex_data& other_vdata = 
-	context.const_neighbor_vertex_data(conditional_asg.args().var(i).id());
+    for (size_t i = 0; i < conditional_asg.num_vars(); ++i) {
+      const mrf_vertex_data& other_vdata = context.const_neighbor_vertex_data(
+          conditional_asg.args().var(i).id());
       assert(conditional_asg.args().var(i) == other_vdata.variable);
       conditional_asg.set_asg_at(i, other_vdata.asg);
     }
@@ -52,10 +48,8 @@ void gibbs_update::operator()(base::icontext_type& context) {
   vdata.nchanges += (new_asg != vdata.asg);
   vdata.asg = new_asg;
   vdata.belief += belief;
-  vdata.nsamples++;  
+  vdata.nsamples++;
 }
-
-
 
 // bool nsamples_terminator(const mrf_gl::ishared_data* shared_data) {
 //   const size_t nsamples = n_samples.get_val();
@@ -65,7 +59,6 @@ void gibbs_update::operator()(base::icontext_type& context) {
 //   }
 //   return terminate;
 // }
-
 
 void run_chromatic_sampler(graphlab::core<mrf_graph_type, gibbs_update>& core,
                            const std::string& chromatic_results_fn,
@@ -79,11 +72,11 @@ void run_chromatic_sampler(graphlab::core<mrf_graph_type, gibbs_update>& core,
 
   // Use fixed update function
   gibbs_update ufun;
-  core.schedule_all( ufun );
-  
+  core.schedule_all(ufun);
+
   double total_runtime = 0;
   double actual_total_runtime = 0;
-  foreach(const double experiment_runtime, runtimes) {
+  foreach (const double experiment_runtime, runtimes) {
     total_runtime += experiment_runtime;
     // get the experiment id
     size_t experiment_id = file_line_count(chromatic_results_fn);
@@ -110,17 +103,12 @@ void run_chromatic_sampler(graphlab::core<mrf_graph_type, gibbs_update>& core,
     // Save the experiment
     std::ofstream fout(chromatic_results_fn.c_str(), std::ios::app);
     fout.precision(16);
-    fout << experiment_id << '\t'
-         << total_runtime << '\t'
-         << actual_total_runtime << '\t'
-         << ncpus << '\t'
-         << stats.nsamples << '\t'
-         << stats.nchanges << '\t'
-         << stats.loglik << '\t'
-         << stats.min_samples << '\t'
-         << stats.max_samples << std::endl;
+    fout << experiment_id << '\t' << total_runtime << '\t'
+         << actual_total_runtime << '\t' << ncpus << '\t' << stats.nsamples
+         << '\t' << stats.nchanges << '\t' << stats.loglik << '\t'
+         << stats.min_samples << '\t' << stats.max_samples << std::endl;
     fout.close();
     // Plot images if desired
-    if(draw_images) draw_mrf(experiment_id, "chromatic", core.graph());
+    if (draw_images) draw_mrf(experiment_id, "chromatic", core.graph());
   }
-} // end run_chromatic sampler
+}  // end run_chromatic sampler

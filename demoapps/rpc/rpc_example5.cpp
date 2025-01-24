@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,29 +20,25 @@
  *
  */
 
-
-
 #include <iostream>
 #include <cstdio>
 #include <graphlab/rpc/dc.hpp>
 using namespace graphlab;
 
-
-int main(int argc, char ** argv) {
+int main(int argc, char** argv) {
   mpi_tools::init(argc, argv);
   distributed_control dc;
 
   if (dc.numprocs() != 2) {
-
-    std::cout<< "RPC Example 5: Asynchronous RPC to printf \n";
+    std::cout << "RPC Example 5: Asynchronous RPC to printf \n";
     std::cout << "Run with exactly 2 MPI nodes.\n";
     return 0;
   }
-  
+
   if (dc.procid() == 0) {
     dc.remote_call(1, printf, "%d + %f = %s\n", 1, 2.0, "three");
   }
   dc.barrier();
-  
+
   mpi_tools::finalize();
 }

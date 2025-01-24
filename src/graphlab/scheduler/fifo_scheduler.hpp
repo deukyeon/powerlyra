@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef GRAPHLAB_FIFO_SCHEDULER_HPP
 #define GRAPHLAB_FIFO_SCHEDULER_HPP
 
@@ -39,74 +38,60 @@
 
 namespace graphlab {
 
-  /**
-   * \ingroup group_schedulers
-   *
-   * This class defines a multiple queue approximate fifo scheduler.
-   * Each processor has its own in_queue which it puts new tasks in
-   * and out_queue which it pulls tasks from.  Once a processors
-   * in_queue gets too large, the entire queue is placed at the end of
-   * the shared master queue.  Once a processors out queue is empty it
-   * grabs the next out_queue from the master.
-   */
-  class fifo_scheduler : public ischeduler {
-  
-  public:
+/**
+ * \ingroup group_schedulers
+ *
+ * This class defines a multiple queue approximate fifo scheduler.
+ * Each processor has its own in_queue which it puts new tasks in
+ * and out_queue which it pulls tasks from.  Once a processors
+ * in_queue gets too large, the entire queue is placed at the end of
+ * the shared master queue.  Once a processors out queue is empty it
+ * grabs the next out_queue from the master.
+ */
+class fifo_scheduler : public ischeduler {
+ public:
+  typedef std::deque<lvid_type> queue_type;
 
-    typedef std::deque<lvid_type> queue_type;
+ private:
+  // a bitset denoting if a vertex is scheduled
+  dense_bitset vertex_is_scheduled;
+  // a collection of FIFO queues
+  std::vector<queue_type> queues;
+  // a parallel datastructure to queues containing all the locks
+  std::vector<padded_simple_spinlock> locks;
+  // the index of the queue currently accessed by a given CPU
+  // when used, this is modded so that it ranges from 0 to multi - 1
+  std::vector<size_t> current_queue;
 
-  private:
+  // the number of CPUs
+  size_t ncpus;
+  // The queue to CPU ratio
+  size_t multi;
+  // the number of vertices in the graph
+  size_t num_vertices;
 
-    // a bitset denoting if a vertex is scheduled
-    dense_bitset vertex_is_scheduled;
-    // a collection of FIFO queues
-    std::vector<queue_type> queues;
-    // a parallel datastructure to queues containing all the locks
-    std::vector<padded_simple_spinlock>   locks;
-    // the index of the queue currently accessed by a given CPU
-    // when used, this is modded so that it ranges from 0 to multi - 1
-    std::vector<size_t>   current_queue; 
+  void set_options(const graphlab_options& opts);
 
+  // Initializes the internal datastructures
+  void initialize_data_structures();
 
-    // the number of CPUs
-    size_t ncpus;
-    // The queue to CPU ratio
-    size_t multi;
-    // the number of vertices in the graph
-    size_t num_vertices;
-    
-    
-  
-    void set_options(const graphlab_options& opts); 
+ public:
+  fifo_scheduler(size_t num_vertices, const graphlab_options& opts);
 
-    // Initializes the internal datastructures
-    void initialize_data_structures();
-  public:
+  void set_num_vertices(const lvid_type numv);
 
-    fifo_scheduler(size_t num_vertices,
-                   const graphlab_options& opts);
+  void schedule(const lvid_type vid, double priority = 1 /* ignored */);
 
+  /** Get the next element in the queue */
+  sched_status::status_enum get_next(const size_t cpuid, lvid_type& ret_vid);
 
-    void set_num_vertices(const lvid_type numv);
+  bool empty();
 
-    void schedule(const lvid_type vid, double priority = 1 /* ignored */ );
+  static void print_options_help(std::ostream& out) {
+    out << "\t multi = [number of queues per thread. Default = 3].\n";
+  }
+};
 
-    /** Get the next element in the queue */
-    sched_status::status_enum get_next(const size_t cpuid,
-                                       lvid_type& ret_vid);
-
-
-    bool empty();
-
-    static void print_options_help(std::ostream& out) {
-      out << "\t multi = [number of queues per thread. Default = 3].\n";
-    }
-
-
-  }; 
-
-
-} // end of namespace graphlab
+}  // end of namespace graphlab
 
 #endif
-

@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef ZOOKEEPER_KEY_VALUE_HPP
 #define ZOOKEEPER_KEY_VALUE_HPP
 #include <map>
@@ -33,10 +32,8 @@ extern "C" {
 #include <zookeeper/zookeeper.h>
 }
 
-
-namespace graphlab{
+namespace graphlab {
 namespace zookeeper {
-
 
 /**
  *  A simple zookeeper service to maintain a key value store
@@ -65,11 +62,9 @@ namespace zookeeper {
  */
 class key_value {
  public:
-
   ///  Joins a zookeeper cluster.
   ///  Zookeeper nodes will be created in the prefix "prefix".
-  key_value(std::vector<std::string> zkhosts,
-            std::string prefix,
+  key_value(std::vector<std::string> zkhosts, std::string prefix,
             std::string serveridentifier);
   /// destructor
   ~key_value();
@@ -91,32 +86,31 @@ class key_value {
    */
   bool erase(const std::string& key);
 
-
   /// Gets a value of a key. First element of the pair is if the key was found
   std::pair<bool, std::string> get(const std::string& key);
 
-
-  typedef boost::function<void(key_value*,
-                               const std::vector<std::string>& out_newkeys,
-                               const std::vector<std::string>& out_deletedkeys,
-                               const std::vector<std::string>& out_modifiedkeys)
-                          >  callback_type;
+  typedef boost::function<void(
+      key_value*, const std::vector<std::string>& out_newkeys,
+      const std::vector<std::string>& out_deletedkeys,
+      const std::vector<std::string>& out_modifiedkeys)>
+      callback_type;
 
   /** Adds a callback which will be triggered when any key/value
    * changes. The callback arguments will be the key_value object,
    * and the new complete key-value mapping.
    * Calling this function will a NULL argument deletes
-   * the callback. Note that the callback may be triggered in a different thread.
+   * the callback. Note that the callback may be triggered in a different
+   * thread.
    *
    * Returns the id of the callback. Calling remove_callback with the id
    * disables the callback.
    */
   int add_callback(callback_type fn);
 
-
   /** Removes a callback identified by an ID. Returns true on success,
    * false on failure */
   bool remove_callback(int fnid);
+
  private:
   std::string serveridentifier;
   std::string prefix;
@@ -138,12 +132,12 @@ class key_value {
     int stored_version;
     int remote_version;
     std::string value;
-    lazy_value():has_value(false), stored_version(-1), remote_version(-1) {}
-    lazy_value(const lazy_value& lv):
-        has_value(lv.has_value),
-        stored_version(lv.stored_version),
-        remote_version(lv.remote_version),
-        value(lv.value) {}
+    lazy_value() : has_value(false), stored_version(-1), remote_version(-1) {}
+    lazy_value(const lazy_value& lv)
+        : has_value(lv.has_value),
+          stored_version(lv.stored_version),
+          remote_version(lv.remote_version),
+          value(lv.value) {}
   };
 
   std::map<std::string, lazy_value> data;
@@ -158,17 +152,10 @@ class key_value {
                         std::vector<std::string>& out_deletedkeys,
                         std::vector<std::string>& out_modifiedkeys);
 
-  static void watcher(zhandle_t *zh,
-                    int type,
-                    int state,
-                    const char *path,
-                    void *watcherCtx);
-
-
+  static void watcher(zhandle_t* zh, int type, int state, const char* path,
+                      void* watcherCtx);
 };
 
-
-} // namespace zookeeper
-} // namespace graphlab
+}  // namespace zookeeper
+}  // namespace graphlab
 #endif
-

@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #include <graphlab/scheduler/fifo_scheduler.hpp>
 
 #include <graphlab/macros_def.hpp>
@@ -29,11 +28,12 @@ namespace graphlab {
 void fifo_scheduler::set_options(const graphlab_options& opts) {
   ncpus = opts.get_ncpus();
   std::vector<std::string> keys = opts.get_scheduler_args().get_option_keys();
-  foreach(std::string opt, keys) {
+  foreach (std::string opt, keys) {
     if (opt == "multi") {
       opts.get_scheduler_args().get_option("multi", multi);
-    }  else {
-      logstream(LOG_FATAL) << "Unexpected Scheduler Option: " << opt << std::endl;
+    } else {
+      logstream(LOG_FATAL) << "Unexpected Scheduler Option: " << opt
+                           << std::endl;
     }
   }
 }
@@ -48,17 +48,14 @@ void fifo_scheduler::initialize_data_structures() {
 }
 
 fifo_scheduler::fifo_scheduler(size_t num_vertices,
-                               const graphlab_options& opts):
-     multi(3), num_vertices(num_vertices) { 
+                               const graphlab_options& opts)
+    : multi(3), num_vertices(num_vertices) {
   ASSERT_GE(opts.get_ncpus(), 1);
   set_options(opts);
   initialize_data_structures();
   logstream(LOG_INFO) << "FIFO Scheduler:"
-                      << " multi=" << multi
-                      << std::endl;
-
+                      << " multi=" << multi << std::endl;
 }
-
 
 void fifo_scheduler::set_num_vertices(const lvid_type numv) {
   num_vertices = numv;
@@ -76,15 +73,16 @@ void fifo_scheduler::schedule(const lvid_type vid, double priority) {
     // Load Balancing (1991)
     // http://www.eecs.harvard.edu/~michaelm/postscripts/mythesis.
     size_t idx = 0;
-    if(queues.size() > 1) {
-      const uint32_t prod = 
-          random::fast_uniform(uint32_t(0), 
-                               uint32_t(queues.size() * queues.size() - 1));
+    if (queues.size() > 1) {
+      const uint32_t prod = random::fast_uniform(
+          uint32_t(0), uint32_t(queues.size() * queues.size() - 1));
       const uint32_t r1 = prod / queues.size();
       const uint32_t r2 = prod % queues.size();
-      idx = (queues[r1].size() < queues[r2].size()) ? r1 : r2;  
+      idx = (queues[r1].size() < queues[r2].size()) ? r1 : r2;
     }
-    locks[idx].lock(); queues[idx].push_back(vid); locks[idx].unlock();
+    locks[idx].lock();
+    queues[idx].push_back(vid);
+    locks[idx].unlock();
   }
 }
 
@@ -94,16 +92,16 @@ sched_status::status_enum fifo_scheduler::get_next(const size_t cpuid,
   /* Check all of my queues for a task */
   // begin scanning from the machine's current queue
   size_t initial_idx = (current_queue[cpuid] % multi) + cpuid * multi;
-  for(size_t i = 0; i < queues.size(); ++i) {
+  for (size_t i = 0; i < queues.size(); ++i) {
     const size_t idx = (initial_idx + i) % queues.size();
-    // increment the current queue as long as I am scanning with in the 
+    // increment the current queue as long as I am scanning with in the
     // queues owned by this machine
     current_queue[cpuid] += (i < multi);
 
     // pick up the lock
     bool good = false;
     locks[idx].lock();
-    while(!queues[idx].empty()) {
+    while (!queues[idx].empty()) {
       // not empty, pop and verify
       ret_vid = queues[idx].front();
       queues[idx].pop_front();
@@ -114,19 +112,18 @@ sched_status::status_enum fifo_scheduler::get_next(const size_t cpuid,
     }
     locks[idx].unlock();
     // managed to retrieve a task
-    if(good) {
+    if (good) {
       return sched_status::NEW_TASK;
     }
   }
-  return sched_status::EMPTY;     
-} // end of get_next_task
-
+  return sched_status::EMPTY;
+}  // end of get_next_task
 
 bool fifo_scheduler::empty() {
-  for (size_t i = 0;i < queues.size(); ++i) {
+  for (size_t i = 0; i < queues.size(); ++i) {
     if (!queues[i].empty()) return false;
   }
   return true;
 }
 
-}
+}  // namespace graphlab

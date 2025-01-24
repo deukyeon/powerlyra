@@ -20,13 +20,12 @@
  *
  */
 
-
 #ifndef GRAPHLAB_RPC_CIRCULAR_IOVEC_BUFFER_HPP
 #define GRAPHLAB_RPC_CIRCULAR_IOVEC_BUFFER_HPP
 #include <vector>
 #include <sys/socket.h>
 
-namespace graphlab{
+namespace graphlab {
 namespace dc_impl {
 
 /**
@@ -46,14 +45,9 @@ struct circular_iovec_buffer {
     numel = 0;
   }
 
-  inline bool empty() const {
-    return numel == 0;
-  }
+  inline bool empty() const { return numel == 0; }
 
-  size_t size() const {
-    return numel;
-  }
-
+  size_t size() const { return numel; }
 
   void reserve(size_t _n) {
     if (_n <= v.size()) return;
@@ -68,7 +62,7 @@ struct circular_iovec_buffer {
       // there is a loop around
       // we need to fix the shift
       size_t newtail = originalsize;
-      for (size_t i = 0;i < tail; ++i) {
+      for (size_t i = 0; i < tail; ++i) {
         v[newtail] = v[i];
         parallel_v[newtail] = parallel_v[i];
         ++newtail;
@@ -79,47 +73,46 @@ struct circular_iovec_buffer {
 
   inline void write(const std::vector<iovec>& other, size_t nwrite) {
     reserve(numel + nwrite);
-    for (size_t i = 0;i < nwrite; ++i) {
+    for (size_t i = 0; i < nwrite; ++i) {
       v[tail] = other[i];
       parallel_v[tail] = other[i];
       tail = (tail + 1) & (v.size() - 1);
     }
     numel += nwrite;
-
   }
 
   /**
    * Writes an entry into the buffer, resizing the buffer if necessary.
    * This buffer will take over all iovec pointers and free them when done
    */
-  inline void write(const iovec &entry) {
+  inline void write(const iovec& entry) {
     if (numel == v.size()) {
       reserve(2 * numel);
     }
 
     v[tail] = entry;
     parallel_v[tail] = entry;
-    tail = (tail + 1) & (v.size() - 1); ++numel;
+    tail = (tail + 1) & (v.size() - 1);
+    ++numel;
   }
-
 
   /**
    * Writes an entry into the buffer, resizing the buffer if necessary.
    * This buffer will take over all iovec pointers and free them when done.
-   * This version of write allows the iovec that is sent to be different from the
-   * iovec that is freed. (for instance, what is sent could be subarray of
+   * This version of write allows the iovec that is sent to be different from
+   * the iovec that is freed. (for instance, what is sent could be subarray of
    * what is to be freed.
    */
-  inline void write(const iovec &entry, const iovec& actual_ptr_entry) {
+  inline void write(const iovec& entry, const iovec& actual_ptr_entry) {
     if (numel == v.size()) {
       reserve(2 * numel);
     }
 
     v[tail] = actual_ptr_entry;
     parallel_v[tail] = entry;
-    tail = (tail + 1) & (v.size() - 1); ++numel;
+    tail = (tail + 1) & (v.size() - 1);
+    ++numel;
   }
-
 
   /**
    * Erases a single iovec from the head and free the pointer
@@ -137,8 +130,7 @@ struct circular_iovec_buffer {
     data.msg_iov = &(parallel_v[head]);
     if (head < tail) {
       data.msg_iovlen = tail - head;
-    }
-    else {
+    } else {
       data.msg_iovlen = v.size() - head;
     }
     data.msg_iovlen = std::min<size_t>(IOV_MAX, data.msg_iovlen);
@@ -148,10 +140,11 @@ struct circular_iovec_buffer {
    * Advances the head as if some amount of data was sent.
    */
   void sent(size_t len) {
-    while(len > 0) {
+    while (len > 0) {
       size_t curv_sent_len = std::min(len, parallel_v[head].iov_len);
       parallel_v[head].iov_len -= curv_sent_len;
-      parallel_v[head].iov_base = (char*)(parallel_v[head].iov_base) + curv_sent_len;
+      parallel_v[head].iov_base =
+          (char*)(parallel_v[head].iov_base) + curv_sent_len;
       len -= curv_sent_len;
       if (parallel_v[head].iov_len == 0) {
         erase_from_head_and_free();
@@ -166,7 +159,7 @@ struct circular_iovec_buffer {
   size_t numel;
 };
 
-}
-}
+}  // namespace dc_impl
+}  // namespace graphlab
 
 #endif

@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #include <iostream>
 #include <string>
 #include <map>
@@ -29,39 +28,31 @@
 
 using namespace graphlab;
 
-struct teststruct{
+struct teststruct {
   int a;
   double b;
   std::vector<std::string> name;
-  
-  void save(oarchive &arc) const {
-    arc << a << b << name;
-  };
-  void load(iarchive &arc) {
-    arc >> a >> b >> name;
-  };
+
+  void save(oarchive &arc) const { arc << a << b << name; };
+  void load(iarchive &arc) { arc >> a >> b >> name; };
 };
 
-
-void print(std::map<int, teststruct> &data1,  
-           std::string data2) {
+void print(std::map<int, teststruct> &data1, std::string data2) {
   std::cout << "1.a = " << data1[1].a << std::endl;
   std::cout << "2.b = " << data1[2].b << std::endl;
   std::cout << "string = " << data2 << std::endl;
 }
 
-
-
-int main(int argc, char ** argv) {
+int main(int argc, char **argv) {
   mpi_tools::init(argc, argv);
   distributed_control dc;
 
   if (dc.numprocs() != 2) {
-    std::cout<< "RPC Example 4: Asynchronous RPC with Manual Serialization\n";
+    std::cout << "RPC Example 4: Asynchronous RPC with Manual Serialization\n";
     std::cout << "Run with exactly 2 MPI nodes.\n";
     return 0;
   }
-    
+
   if (dc.procid() == 0) {
     std::map<int, teststruct> data;
     data[1].a = 10;
@@ -69,6 +60,6 @@ int main(int argc, char ** argv) {
     dc.remote_call(1, print, data, "hello world!");
   }
   dc.barrier();
-  
+
   mpi_tools::finalize();
 }

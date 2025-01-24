@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,20 +20,15 @@
  *
  */
 
-
-
 /**
  * Also contains code that is Copyright 2011 Yahoo! Inc.  All rights
- * reserved.  
+ * reserved.
  *
  * Contributed under the iCLA for:
- *    Joseph Gonzalez (jegonzal@yahoo-inc.com) 
+ *    Joseph Gonzalez (jegonzal@yahoo-inc.com)
  *
  */
-
-
 
 #include <graphlab/options/command_line_options.hpp>
 #include <graphlab/options/options_map.hpp>
 #include <graphlab/options/graphlab_options.hpp>
-

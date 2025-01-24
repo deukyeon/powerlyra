@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef GRAPHLAB_UTIL_TRACEPOINT_HPP
 #define GRAPHLAB_UTIL_TRACEPOINT_HPP
 #include <iostream>
@@ -31,9 +30,9 @@
 #include <graphlab/parallel/atomic.hpp>
 #include <graphlab/parallel/atomic_ops.hpp>
 
-namespace graphlab{
+namespace graphlab {
 
-struct trace_count{
+struct trace_count {
   std::string name;
   std::string description;
   bool print_on_destruct;
@@ -41,24 +40,22 @@ struct trace_count{
   graphlab::atomic<unsigned long long> total;
   unsigned long long minimum;
   unsigned long long maximum;
-  inline trace_count(std::string name = "",
-                    std::string description = "",
-                    bool print_on_destruct = true):
-                      name(name),
-                      description(description),
-                      print_on_destruct(print_on_destruct),
-                      count(0),
-                      total(0),
-                      minimum(std::numeric_limits<unsigned long long>::max()),
-                      maximum(0) { }
+  inline trace_count(std::string name = "", std::string description = "",
+                     bool print_on_destruct = true)
+      : name(name),
+        description(description),
+        print_on_destruct(print_on_destruct),
+        count(0),
+        total(0),
+        minimum(std::numeric_limits<unsigned long long>::max()),
+        maximum(0) {}
 
   /**
    * Initializes the tracer with a name, a description
    * and whether to print on destruction
    */
-  inline void initialize(std::string n,
-                  std::string desc,
-                  bool print_out = true) {
+  inline void initialize(std::string n, std::string desc,
+                         bool print_out = true) {
     name = n;
     description = desc;
     print_on_destruct = print_out;
@@ -67,39 +64,49 @@ struct trace_count{
   /**
    * Adds an event time to the trace
    */
-  inline void incorporate(unsigned long long val)  __attribute__((always_inline)) {
+  inline void incorporate(unsigned long long val)
+      __attribute__((always_inline)) {
     count.inc();
     total.inc(val);
-    while(1) {
+    while (1) {
       unsigned long long m = minimum;
-      if (__likely__(val > m || graphlab::atomic_compare_and_swap(minimum, m, val))) break;
+      if (__likely__(val > m ||
+                     graphlab::atomic_compare_and_swap(minimum, m, val)))
+        break;
     }
-    while(1) {
+    while (1) {
       unsigned long long m = maximum;
-      if (__likely__(val < m || graphlab::atomic_compare_and_swap(maximum, m, val))) break;
-    }
-  }
-  
-  /**
-   * Adds the counts in a second tracer to the current tracer.
-   */  
-  inline void incorporate(const trace_count &val)  __attribute__((always_inline)) {
-    count.inc(val.count.value);
-    total.inc(val.total.value);
-    while(1) {
-      unsigned long long m = minimum;
-      if (__likely__(val.minimum > m || graphlab::atomic_compare_and_swap(minimum, m, val.minimum))) break;
-    }
-    while(1) {
-      unsigned long long m = maximum;
-      if (__likely__(val.maximum < m || graphlab::atomic_compare_and_swap(maximum, m, val.maximum))) break;
+      if (__likely__(val < m ||
+                     graphlab::atomic_compare_and_swap(maximum, m, val)))
+        break;
     }
   }
 
   /**
    * Adds the counts in a second tracer to the current tracer.
    */
-  inline trace_count& operator+=(trace_count &val) {
+  inline void incorporate(const trace_count& val)
+      __attribute__((always_inline)) {
+    count.inc(val.count.value);
+    total.inc(val.total.value);
+    while (1) {
+      unsigned long long m = minimum;
+      if (__likely__(val.minimum > m || graphlab::atomic_compare_and_swap(
+                                            minimum, m, val.minimum)))
+        break;
+    }
+    while (1) {
+      unsigned long long m = maximum;
+      if (__likely__(val.maximum < m || graphlab::atomic_compare_and_swap(
+                                            maximum, m, val.maximum)))
+        break;
+    }
+  }
+
+  /**
+   * Adds the counts in a second tracer to the current tracer.
+   */
+  inline trace_count& operator+=(trace_count& val) {
     incorporate(val);
     return *this;
   }
@@ -116,7 +123,7 @@ struct trace_count{
   void print(std::ostream& out, unsigned long long tpersec = 0) const;
 };
 
-} // namespace
+}  // namespace graphlab
 
 /**
  * DECLARE_TRACER(name)
@@ -124,7 +131,7 @@ struct trace_count{
  * called "name" which is of type trace_count. and is equivalent to:
  *
  * graphlab::trace_count name;
- * 
+ *
  * The primary reason to use this macro instead of just writing
  * the code above directly, is that the macro is ignored and compiles
  * to nothing when tracepoints are disabled.
@@ -146,9 +153,9 @@ struct trace_count{
  * The object with name "name" created by DECLARE_TRACER must be in scope.
  * Times a block of code. Every END_TRACEPOINT must be matched with a
  * BEGIN_TRACEPOINT within the same scope. Tracepoints are parallel.
- * 
+ *
 
-  
+
 Example Usage:
   DECLARE_TRACER(classname_someevent)
   INITIALIZE_TRACER(classname_someevent, "hello world");
@@ -159,42 +166,50 @@ Example Usage:
  *
 */
 
-
 #ifdef USE_TRACEPOINT
 #define DECLARE_TRACER(name) graphlab::trace_count name;
 
-#define INITIALIZE_TRACER(name, description) name.initialize(#name, description);
-#define INITIALIZE_TRACER_NO_PRINT(name, description) name.initialize(#name, description, false);
+#define INITIALIZE_TRACER(name, description) \
+  name.initialize(#name, description);
+#define INITIALIZE_TRACER_NO_PRINT(name, description) \
+  name.initialize(#name, description, false);
 
-#define BEGIN_TRACEPOINT(name) unsigned long long __ ## name ## _trace_ = rdtsc();
-#define END_TRACEPOINT(name) name.incorporate(rdtsc() - __ ## name ## _trace_);
-#define END_AND_BEGIN_TRACEPOINT(endname, beginname) unsigned long long __ ## beginname ## _trace_ = rdtsc(); \
-                                                     endname.incorporate(__ ## beginname ## _trace_ - __ ## endname ## _trace_);
+#define BEGIN_TRACEPOINT(name) unsigned long long __##name##_trace_ = rdtsc();
+#define END_TRACEPOINT(name) name.incorporate(rdtsc() - __##name##_trace_);
+#define END_AND_BEGIN_TRACEPOINT(endname, beginname)   \
+  unsigned long long __##beginname##_trace_ = rdtsc(); \
+  endname.incorporate(__##beginname##_trace_ - __##endname##_trace_);
 
-#define CREATE_ACCUMULATING_TRACEPOINT(name) graphlab::trace_count __ ## name ## _acc_trace_; \
-                                             unsigned long long __ ## name ## _acc_trace_elem_;
-#define BEGIN_ACCUMULATING_TRACEPOINT(name) __ ## name ## _acc_trace_elem_ = rdtsc();
-#define END_ACCUMULATING_TRACEPOINT(name) __ ## name ## _acc_trace_.incorporate(rdtsc() - __ ## name ## _acc_trace_elem_);
+#define CREATE_ACCUMULATING_TRACEPOINT(name)   \
+  graphlab::trace_count __##name##_acc_trace_; \
+  unsigned long long __##name##_acc_trace_elem_;
+#define BEGIN_ACCUMULATING_TRACEPOINT(name) \
+  __##name##_acc_trace_elem_ = rdtsc();
+#define END_ACCUMULATING_TRACEPOINT(name) \
+  __##name##_acc_trace_.incorporate(rdtsc() - __##name##_acc_trace_elem_);
 
-#define END_AND_BEGIN_ACCUMULATING_TRACEPOINT(endname, beginname) __ ## beginname ## _acc_trace_elem_ = rdtsc(); \
-                                                                  __ ## endname ## _acc_trace_.incorporate(__ ## beginname ## _acc_trace_elem_ - __ ## endname ## _acc_trace_elem_)
+#define END_AND_BEGIN_ACCUMULATING_TRACEPOINT(endname, beginname)        \
+  __##beginname##_acc_trace_elem_ = rdtsc();                             \
+  __##endname##_acc_trace_.incorporate(__##beginname##_acc_trace_elem_ - \
+                                       __##endname##_acc_trace_elem_)
 
-#define STORE_ACCUMULATING_TRACEPOINT(name) name.incorporate(__ ## name ## _acc_trace_);
+#define STORE_ACCUMULATING_TRACEPOINT(name) \
+  name.incorporate(__##name##_acc_trace_);
 #else
 #define DECLARE_TRACER(name)
 #define INITIALIZE_TRACER(name, description)
-#define INITIALIZE_TRACER_NO_PRINT(name, description) 
+#define INITIALIZE_TRACER_NO_PRINT(name, description)
 
-#define BEGIN_TRACEPOINT(name) 
-#define END_TRACEPOINT(name) 
+#define BEGIN_TRACEPOINT(name)
+#define END_TRACEPOINT(name)
 
-#define CREATE_ACCUMULATING_TRACEPOINT(name) 
-#define BEGIN_ACCUMULATING_TRACEPOINT(name) 
+#define CREATE_ACCUMULATING_TRACEPOINT(name)
+#define BEGIN_ACCUMULATING_TRACEPOINT(name)
 #define END_ACCUMULATING_TRACEPOINT(name)
 #define STORE_ACCUMULATING_TRACEPOINT(name)
 
 #define END_AND_BEGIN_ACCUMULATING_TRACEPOINT(endname, beginname)
-#define END_AND_BEGIN_TRACEPOINT(endname, beginname) 
-#endif           
+#define END_AND_BEGIN_TRACEPOINT(endname, beginname)
+#endif
 
 #endif

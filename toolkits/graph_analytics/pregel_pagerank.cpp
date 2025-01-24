@@ -43,15 +43,16 @@ typedef float vertex_data_type;
 typedef float edge_data_type;
 
 // The graph type is determined by the vertex and edge data types
-typedef graphlab::distributed_graph<vertex_data_type, edge_data_type> graph_type;
+typedef graphlab::distributed_graph<vertex_data_type, edge_data_type>
+    graph_type;
 
 typedef struct pagerank_message : public graphlab::IS_POD_TYPE {
-    double value;
-    double priority() const { return std::fabs(value); }
-    pagerank_message& operator+=(const pagerank_message& other) {
-      value += other.value; 
-      return *this;
-    }
+  double value;
+  double priority() const { return std::fabs(value); }
+  pagerank_message& operator+=(const pagerank_message& other) {
+    value += other.value;
+    return *this;
+  }
 } message_type;
 
 /*
@@ -59,8 +60,6 @@ typedef struct pagerank_message : public graphlab::IS_POD_TYPE {
  * to initialize the vertes data.
  */
 void init_vertex(graph_type::vertex_type& vertex) { vertex.data() = 1; }
-
-
 
 /*
  * The factorized page rank update function extends ivertex_program
@@ -79,30 +78,30 @@ void init_vertex(graph_type::vertex_type& vertex) { vertex.data() = 1; }
  * pagerank also extends graphlab::IS_POD_TYPE (is plain old data type)
  * which tells graphlab that the pagerank program can be serialized
  * (converted to a byte stream) by directly reading its in memory
- * representation.  If a vertex program does not exted      std::cout << "Iteration: " << context.iteration() << std::endl;
+ * representation.  If a vertex program does not exted      std::cout <<
+ "Iteration: " << context.iteration() << std::endl;
 
  * graphlab::IS_POD_TYPE it must implement load and save functions.
  */
-class pagerank :
-public graphlab::ivertex_program<graph_type, graphlab::empty, pagerank_message>,
-  public graphlab::IS_POD_TYPE {
+class pagerank : public graphlab::ivertex_program<graph_type, graphlab::empty,
+                                                  pagerank_message>,
+                 public graphlab::IS_POD_TYPE {
   float last_change;
   double message_value;
-public:
-    
-  void init(icontext_type& context, const vertex_type& vertex, 
-            const message_type& msg) { 
+
+ public:
+  void init(icontext_type& context, const vertex_type& vertex,
+            const message_type& msg) {
     message_value = msg.value;
-  } 
-    
-    /**
+  }
+
+  /**
    * No gather because of vertex messages during scatter phase.
    */
   edge_dir_type gather_edges(icontext_type& context,
-                              const vertex_type& vertex) const {
+                             const vertex_type& vertex) const {
     return graphlab::NO_EDGES;
   }
-    
 
   /* Use the total rank of adjacent pages to update this page */
   void apply(icontext_type& context, vertex_type& vertex,
@@ -115,9 +114,9 @@ public:
   /* The scatter edges depend on whether the pagerank has converged */
   edge_dir_type scatter_edges(icontext_type& context,
                               const vertex_type& vertex) const {
-    // if (last_change > TOLERANCE || context.iteration() == 0) return graphlab::OUT_EDGES;
-    // else return graphlab::NO_EDGES;
-      return graphlab::OUT_EDGES;
+    // if (last_change > TOLERANCE || context.iteration() == 0) return
+    // graphlab::OUT_EDGES; else return graphlab::NO_EDGES;
+    return graphlab::OUT_EDGES;
   }
 
   /* The scatter function just signal adjacent pages */
@@ -128,8 +127,7 @@ public:
     msg.value = vertex.data() / vertex.num_out_edges();
     context.signal(edge.target(), msg);
   }
-}; // end of factorized_pagerank update functor
-
+};  // end of factorized_pagerank update functor
 
 /*
  * We want to save the final graph so we define a write which will be
@@ -142,14 +140,11 @@ struct pagerank_writer {
     return strm.str();
   }
   std::string save_edge(graph_type::edge_type e) { return ""; }
-}; // end of pagerank writer
+};  // end of pagerank writer
 
 double map_rank(const graph_type::vertex_type& v) { return v.data(); }
 
-
-double pagerank_sum(graph_type::vertex_type v) {
-  return v.data();
-}
+double pagerank_sum(graph_type::vertex_type v) { return v.data(); }
 
 int main(int argc, char** argv) {
   // Initialize control plain using mpi
@@ -170,17 +165,17 @@ int main(int argc, char** argv) {
                        "The engine type synchronous or asynchronous");
   clopts.attach_option("tol", TOLERANCE,
                        "The permissible change at convergence.");
-  clopts.attach_option("format", format,
-                       "The graph file format");
+  clopts.attach_option("format", format, "The graph file format");
   size_t powerlaw = 0;
   clopts.attach_option("powerlaw", powerlaw,
                        "Generate a synthetic powerlaw out-degree graph. ");
-  clopts.attach_option("iterations", ITERATIONS,
-                       "If set, will force the use of the synchronous engine"
-                       "overriding any engine option set by the --engine parameter. "
-                       "Runs complete (non-dynamic) PageRank for a fixed "
-                       "number of iterations. Also overrides the iterations "
-                       "option in the engine");
+  clopts.attach_option(
+      "iterations", ITERATIONS,
+      "If set, will force the use of the synchronous engine"
+      "overriding any engine option set by the --engine parameter. "
+      "Runs complete (non-dynamic) PageRank for a fixed "
+      "number of iterations. Also overrides the iterations "
+      "option in the engine");
   clopts.attach_option("use_delta", USE_DELTA_CACHE,
                        "Use the delta cache to reduce time in gather.");
   std::string saveprefix;
@@ -188,11 +183,10 @@ int main(int argc, char** argv) {
                        "If set, will save the resultant pagerank to a "
                        "sequence of files with prefix saveprefix");
 
-  if(!clopts.parse(argc, argv)) {
+  if (!clopts.parse(argc, argv)) {
     dc.cout() << "Error in parsing command line arguments." << std::endl;
     return EXIT_FAILURE;
   }
-
 
   // Enable gather caching in the engine
   clopts.get_engine_args().set_option("use_cache", USE_DELTA_CACHE);
@@ -201,40 +195,35 @@ int main(int argc, char** argv) {
     // make sure this is the synchronous engine
     dc.cout() << "--iterations set. Forcing Synchronous engine, and running "
               << "for " << ITERATIONS << " iterations." << std::endl;
-    //clopts.get_engine_args().set_option("type", "synchronous");
+    // clopts.get_engine_args().set_option("type", "synchronous");
     clopts.get_engine_args().set_option("max_iterations", ITERATIONS);
     clopts.get_engine_args().set_option("sched_allv", true);
   }
 
   // Build the graph ----------------------------------------------------------
   dc.cout() << "Loading graph." << std::endl;
-  graphlab::timer timer; 
+  graphlab::timer timer;
   graph_type graph(dc, clopts);
-  if(powerlaw > 0) { // make a synthetic graph
+  if (powerlaw > 0) {  // make a synthetic graph
     dc.cout() << "Loading synthetic Powerlaw graph." << std::endl;
     graph.load_synthetic_powerlaw(powerlaw, false, 2.1, 100000000);
-  }
-  else if (graph_dir.length() > 0) { // Load the graph from a file
-    dc.cout() << "Loading graph in format: "<< format << std::endl;
+  } else if (graph_dir.length() > 0) {  // Load the graph from a file
+    dc.cout() << "Loading graph in format: " << format << std::endl;
     graph.load_format(graph_dir, format);
-  }
-  else {
+  } else {
     dc.cout() << "graph or powerlaw option must be specified" << std::endl;
     clopts.print_description();
     return 0;
   }
   const double loading = timer.current_time();
-  dc.cout() << "Loading graph. Finished in " 
-            << loading << std::endl;
-
+  dc.cout() << "Loading graph. Finished in " << loading << std::endl;
 
   // must call finalize before querying the graph
   dc.cout() << "Finalizing graph." << std::endl;
   timer.start();
   graph.finalize();
   const double finalizing = timer.current_time();
-  dc.cout() << "Finalizing graph. Finished in " 
-            << finalizing << std::endl;
+  dc.cout() << "Finalizing graph. Finished in " << finalizing << std::endl;
 
   // NOTE: ingress time = loading time + finalizing time
   const double ingress = loading + finalizing;
@@ -254,10 +243,9 @@ int main(int argc, char** argv) {
   const double runtime = timer.current_time();
   dc.cout() << "----------------------------------------------------------"
             << std::endl
-            << "Final Runtime (seconds):   " << runtime 
-            << std::endl
+            << "Final Runtime (seconds):   " << runtime << std::endl
             << "Updates executed: " << engine.num_updates() << std::endl
-            << "Update Rate (updates/second): " 
+            << "Update Rate (updates/second): "
             << engine.num_updates() / runtime << std::endl;
 
   const double total_rank = graph.map_reduce_vertices<double>(map_rank);
@@ -266,15 +254,12 @@ int main(int argc, char** argv) {
   // Save the final graph -----------------------------------------------------
   if (saveprefix != "") {
     graph.save(saveprefix, pagerank_writer(),
-               false,    // do not gzip
-               true,     // save vertices
-               false, 1);   // do not save edges
+               false,      // do not gzip
+               true,       // save vertices
+               false, 1);  // do not save edges
   }
 
   // Tear-down communication layer and quit -----------------------------------
   graphlab::mpi_tools::finalize();
   return EXIT_SUCCESS;
-} // End of main
-
-
-
+}  // End of main

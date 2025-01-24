@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,35 +25,37 @@
 #include <graphlab/rpc/dc.hpp>
 using namespace graphlab;
 
-
 void print(distributed_control &dc, procid_t caller, int val) {
-  std::cout << dc.procid() << ": Receiving print with value : " << val << std::endl;
+  std::cout << dc.procid() << ": Receiving print with value : " << val
+            << std::endl;
 }
 
-
-
-int main(int argc, char ** argv) {
+int main(int argc, char **argv) {
   mpi_tools::init(argc, argv);
   distributed_control dc;
 
   if (dc.numprocs() != 4) {
-    std::cout<< "RPC Example 8: Basic Broadcast Test\n";
+    std::cout << "RPC Example 8: Basic Broadcast Test\n";
     std::cout << "Run with exactly 4 MPI nodes.\n";
     return 0;
   }
-  
+
   if (dc.procid() == 0) {
-    std::cout << "First set of calls... Proc 1 and 3 should receive" << std::endl;
+    std::cout << "First set of calls... Proc 1 and 3 should receive"
+              << std::endl;
     std::vector<procid_t> s;
-    s.push_back(1); s.push_back(3);
+    s.push_back(1);
+    s.push_back(3);
     dc.remote_call(s.begin(), s.end(), print, 1);
   }
   dc.full_barrier();
-  
+
   if (dc.procid() == 0) {
-    std::cout << "Second set of calls... Proc 0 and 2 should receive" << std::endl;
+    std::cout << "Second set of calls... Proc 0 and 2 should receive"
+              << std::endl;
     std::vector<procid_t> s;
-    s.push_back(2); s.push_back(0);
+    s.push_back(2);
+    s.push_back(0);
     dc.remote_call(s.begin(), s.end(), print, 1);
   }
   dc.full_barrier();

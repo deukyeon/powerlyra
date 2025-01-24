@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,9 +17,7 @@
  *
  */
 
-
 #include "discrete_variable.hpp"
 #include "unary_factor.hpp"
 #include "binary_factor.hpp"
 #include "table_factor.hpp"
-

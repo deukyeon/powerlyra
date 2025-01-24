@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,13 +20,9 @@
 #ifndef EIGEN_SERIALIZATION_HPP
 #define EIGEN_SERIALIZATION_HPP
 
-
-
 #include <Eigen/Dense>
 
 #include <graphlab.hpp>
-
-
 
 BEGIN_OUT_OF_PLACE_SAVE(arc, Eigen::VectorXd, vec) {
   typedef Eigen::VectorXd::Index index_type;
@@ -34,8 +30,8 @@ BEGIN_OUT_OF_PLACE_SAVE(arc, Eigen::VectorXd, vec) {
   const index_type size = vec.size();
   arc << size;
   graphlab::serialize(arc, vec.data(), size * sizeof(scalar_type));
-} END_OUT_OF_PLACE_SAVE()
-
+}
+END_OUT_OF_PLACE_SAVE()
 
 BEGIN_OUT_OF_PLACE_LOAD(arc, Eigen::VectorXd, vec) {
   typedef Eigen::VectorXd::Index index_type;
@@ -44,8 +40,8 @@ BEGIN_OUT_OF_PLACE_LOAD(arc, Eigen::VectorXd, vec) {
   arc >> size;
   vec.resize(size);
   graphlab::deserialize(arc, vec.data(), size * sizeof(scalar_type));
-} END_OUT_OF_PLACE_LOAD()
-
+}
+END_OUT_OF_PLACE_LOAD()
 
 BEGIN_OUT_OF_PLACE_SAVE(arc, Eigen::MatrixXd, mat) {
   typedef Eigen::MatrixXd::Index index_type;
@@ -53,24 +49,22 @@ BEGIN_OUT_OF_PLACE_SAVE(arc, Eigen::MatrixXd, mat) {
   const index_type rows = mat.rows();
   const index_type cols = mat.cols();
   arc << rows << cols;
-  graphlab::serialize(arc, mat.data(), rows*cols*sizeof(scalar_type));
-} END_OUT_OF_PLACE_SAVE()
-
+  graphlab::serialize(arc, mat.data(), rows * cols * sizeof(scalar_type));
+}
+END_OUT_OF_PLACE_SAVE()
 
 BEGIN_OUT_OF_PLACE_LOAD(arc, Eigen::MatrixXd, mat) {
-  typedef Eigen::MatrixXd::Index index_type; 
+  typedef Eigen::MatrixXd::Index index_type;
   typedef Eigen::MatrixXd::Scalar scalar_type;
-  index_type rows=0, cols=0;
+  index_type rows = 0, cols = 0;
   arc >> rows >> cols;
-  mat.resize(rows,cols);
-  graphlab::deserialize(arc, mat.data(), rows*cols*sizeof(scalar_type));
-} END_OUT_OF_PLACE_LOAD()
+  mat.resize(rows, cols);
+  graphlab::deserialize(arc, mat.data(), rows * cols * sizeof(scalar_type));
+}
+END_OUT_OF_PLACE_LOAD()
 
-
-
-
-
-// inline graphlab::oarchive& operator<<(graphlab::oarchive& arc, const Eigen::VectorXd& vec) {
+// inline graphlab::oarchive& operator<<(graphlab::oarchive& arc, const
+// Eigen::VectorXd& vec) {
 //   typedef Eigen::VectorXd::Index index_type;
 //   typedef Eigen::VectorXd::Scalar scalar_type;
 //   const index_type size = vec.size();
@@ -79,7 +73,8 @@ BEGIN_OUT_OF_PLACE_LOAD(arc, Eigen::MatrixXd, mat) {
 //   return arc;
 // } // end of save vector
 
-// inline graphlab::iarchive& operator>>(graphlab::iarchive& arc, Eigen::VectorXd& vec) {
+// inline graphlab::iarchive& operator>>(graphlab::iarchive& arc,
+// Eigen::VectorXd& vec) {
 //   typedef Eigen::VectorXd::Index index_type;
 //   typedef Eigen::VectorXd::Scalar scalar_type;
 //   index_type size = 0;
@@ -89,8 +84,8 @@ BEGIN_OUT_OF_PLACE_LOAD(arc, Eigen::MatrixXd, mat) {
 //   return arc;
 // } // end of save vector
 
-
-// inline graphlab::oarchive& operator<<(graphlab::oarchive& arc, const Eigen::MatrixXd& mat) {
+// inline graphlab::oarchive& operator<<(graphlab::oarchive& arc, const
+// Eigen::MatrixXd& mat) {
 //   typedef Eigen::MatrixXd::Index index_type;
 //   typedef Eigen::MatrixXd::Scalar scalar_type;
 //   const index_type rows = mat.rows();
@@ -100,8 +95,9 @@ BEGIN_OUT_OF_PLACE_LOAD(arc, Eigen::MatrixXd, mat) {
 //   return arc;
 // } // end of save matrix
 
-// inline graphlab::iarchive& operator>>(graphlab::iarchive& arc,  Eigen::MatrixXd& mat) {
-//   typedef Eigen::MatrixXd::Index index_type; 
+// inline graphlab::iarchive& operator>>(graphlab::iarchive& arc,
+// Eigen::MatrixXd& mat) {
+//   typedef Eigen::MatrixXd::Index index_type;
 //   typedef Eigen::MatrixXd::Scalar scalar_type;
 //   index_type rows=0, cols=0;
 //   arc >> rows >> cols;
@@ -109,6 +105,5 @@ BEGIN_OUT_OF_PLACE_LOAD(arc, Eigen::MatrixXd, mat) {
 //   graphlab::deserialize(arc, mat.data(), rows*cols*sizeof(scalar_type));
 //   return arc;
 // } // end of load matrix
-
 
 #endif

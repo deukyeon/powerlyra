@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,7 +17,6 @@
  *
  */
 
-
 #ifndef PGIBBS_IMAGE_HPP
 #define PGIBBS_IMAGE_HPP
 
@@ -27,19 +26,18 @@
 
 #include <graphlab.hpp>
 
-
 /** A simple struct represent a gray scale image */
 class image {
   size_t _rows, _cols;
   std::vector<double> data;
-public:
 
+ public:
   /** Create an empty image */
-  image() : _rows(0), _cols(0), data(0,0) { }
-  
+  image() : _rows(0), _cols(0), data(0, 0) {}
+
   /** Create an image of a fixed size */
-  image(size_t rows, size_t cols) : 
-    _rows(rows), _cols(cols), data(rows * cols, 0) { }
+  image(size_t rows, size_t cols)
+      : _rows(rows), _cols(cols), data(rows * cols, 0) {}
 
   void resize(size_t rows, size_t cols);
 
@@ -53,9 +51,9 @@ public:
   size_t pixels() const { return _rows * _cols; }
 
   /** A function to read a pixel */
-  double& pixel(size_t i, size_t j) { return data[vertid(i,j)]; }
-  double pixel(size_t i, size_t j) const { return data[vertid(i,j)]; }
-  
+  double& pixel(size_t i, size_t j) { return data[vertid(i, j)]; }
+  double pixel(size_t i, size_t j) const { return data[vertid(i, j)]; }
+
   /** Linear indexing */
   double& pixel(size_t i) { return data.at(i); }
   double pixel(size_t i) const { return data.at(i); }
@@ -65,25 +63,23 @@ public:
 
   static size_t vertid(size_t rows, size_t cols, size_t i, size_t j) {
     ASSERT_LT(i, rows);
-    ASSERT_LT(j, cols);    
-    return i * cols + j; 
+    ASSERT_LT(j, cols);
+    return i * cols + j;
   }
-  
-  
+
   /** Get the pixel address from the vertex id */
   std::pair<size_t, size_t> loc(size_t vertex) const;
 
-  
   /** A function to save the image to a file in pgm format */
   void save(const char* filename) const;
 
   void save_vec(const char* filename) const;
-  
+
   /** paint a beautiful sunset */
   void paint_sunset(size_t states);
-  
+
   void paint_checkerboard(size_t states, size_t blocks = 10);
-  
+
   /** Add random noise to the image */
   void gaussian_corrupt(double sigma);
 
@@ -93,12 +89,9 @@ public:
 
   double max() const;
 
-  void save(graphlab::oarchive &oarc) const;
-  
-  void load(graphlab::iarchive &iarc);
+  void save(graphlab::oarchive& oarc) const;
 
+  void load(graphlab::iarchive& iarc);
 };
 
-
 #endif
-

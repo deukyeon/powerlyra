@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,40 +20,34 @@
  *
  */
 
-
 #include <iostream>
 #include <graphlab/rpc/dc.hpp>
 using namespace graphlab;
 
+void print(int val) { std::cout << val << std::endl; }
 
-void print(int val) {
-  std::cout << val << std::endl;
-}
+int add_one(int val) { return val + 1; }
 
-int add_one(int val) {
-  return val + 1;
-}
-
-
-int main(int argc, char ** argv) {
+int main(int argc, char** argv) {
   // init MPI
   global_logger().set_log_level(LOG_INFO);
   mpi_tools::init(argc, argv);
   distributed_control dc;
-  
+
   if (dc.numprocs() != 2) {
-    std::cout<< "RPC Example 1: Basic Synchronous RPC\n";
+    std::cout << "RPC Example 1: Basic Synchronous RPC\n";
     std::cout << "Run with exactly 2 MPI nodes.\n";
     return 0;
   }
-  
+
   if (dc.procid() == 0) {
     dc.control_call(1, print, 10);
-    std::cout << "5 plus 1 is : " << dc.remote_request(1, add_one, 5) << std::endl;
-    std::cout << "11 plus 1 is : " << dc.remote_request(1, add_one, 11) << std::endl;
+    std::cout << "5 plus 1 is : " << dc.remote_request(1, add_one, 5)
+              << std::endl;
+    std::cout << "11 plus 1 is : " << dc.remote_request(1, add_one, 11)
+              << std::endl;
   }
   dc.barrier();
   // terminate MPI
   mpi_tools::finalize();
 }
-

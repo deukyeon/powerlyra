@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,24 +20,11 @@
  *
  */
 
-
 #ifndef GRAPHLAB_SYSTEM_USAGE_HPP
 #define GRAPHLAB_SYSTEM_USAGE_HPP
 
-
-
-
 #include <sys/resource.h>
 
-
-namespace graphlab {
-
-
-
-
-
-};
-
+namespace graphlab {};
 
 #endif
-

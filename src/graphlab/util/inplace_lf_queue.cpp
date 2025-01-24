@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #include <graphlab/util/inplace_lf_queue.hpp>
 namespace graphlab {
 void inplace_lf_queue::enqueue(char* c) {
@@ -32,9 +31,8 @@ void inplace_lf_queue::enqueue(char* c) {
   char* prev = c;
   atomic_exchange(tail, prev);
   (*get_next_ptr(prev)) = c;
-  asm volatile ("" : : : "memory");
+  asm volatile("" : : : "memory");
 }
-
 
 void inplace_lf_queue::enqueue_unsafe(char* c) {
   // clear the next pointer
@@ -45,7 +43,6 @@ void inplace_lf_queue::enqueue_unsafe(char* c) {
   std::swap(tail, prev);
   (*get_next_ptr(prev)) = c;
 }
-
 
 char* inplace_lf_queue::dequeue_all() {
   // head is the sentinel
@@ -81,5 +78,4 @@ char* inplace_lf_queue::dequeue_all_unsafe() {
   return ret_head;
 }
 
-
-} // namespace graphlab
+}  // namespace graphlab

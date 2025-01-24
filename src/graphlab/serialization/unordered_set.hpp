@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef GRAPHLAB_SERIALIZE_UNORDERED_SET_HPP
 #define GRAPHLAB_SERIALIZE_UNORDERED_SET_HPP
 
@@ -31,34 +30,32 @@
 
 namespace graphlab {
 namespace archive_detail {
-  /** serializes a set  */
-  template <typename OutArcType, typename T>
-  struct serialize_impl<OutArcType, boost::unordered_set<T>, false > {
-  static void exec(OutArcType& oarc, const boost::unordered_set<T>& vec){
-    serialize_iterator(oarc,
-                       vec.begin(), vec.end(), vec.size());
+/** serializes a set  */
+template <typename OutArcType, typename T>
+struct serialize_impl<OutArcType, boost::unordered_set<T>, false> {
+  static void exec(OutArcType& oarc, const boost::unordered_set<T>& vec) {
+    serialize_iterator(oarc, vec.begin(), vec.end(), vec.size());
   }
-  };
+};
 
-  /** deserializes a set  */
-  template <typename InArcType, typename T>
-  struct deserialize_impl<InArcType, boost::unordered_set<T>, false > {
-  static void exec(InArcType& iarc, boost::unordered_set<T>& vec){
+/** deserializes a set  */
+template <typename InArcType, typename T>
+struct deserialize_impl<InArcType, boost::unordered_set<T>, false> {
+  static void exec(InArcType& iarc, boost::unordered_set<T>& vec) {
     vec.clear();
     // get the number of elements to deserialize
     size_t length = 0;
-    iarc >> length;    
+    iarc >> length;
     // iterate through and send to the output iterator
-    for (size_t x = 0; x < length ; ++x){
+    for (size_t x = 0; x < length; ++x) {
       T v;
       iarc >> v;
       vec.insert(v);
     }
   }
-  };
+};
 
-} // archive_detail  
-} // graphlab
+}  // namespace archive_detail
+}  // namespace graphlab
 
-#endif 
-
+#endif

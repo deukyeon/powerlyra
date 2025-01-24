@@ -1,5 +1,5 @@
-/*  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef OBJECT_REQUEST_DISPATCH_HPP
 #define OBJECT_REQUEST_DISPATCH_HPP
 #include <sstream>
@@ -39,8 +38,7 @@
 #include <boost/preprocessor.hpp>
 
 namespace graphlab {
-namespace dc_impl{
-
+namespace dc_impl {
 
 /**
 \ingroup rpc
@@ -56,7 +54,7 @@ After the function call, it also needs to increment the call count for
 the object context.
 
 \code
-template < typename DcType, typename T, typename F, typename T0 > 
+template < typename DcType, typename T, typename F, typename T0 >
 void OBJECT_NONINTRUSIVE_REQUESTDISPATCH1 (DcType & dc, procid_t source,
                                            unsigned char packet_type_mask,
                                            const char *buf, size_t len) {
@@ -70,16 +68,16 @@ void OBJECT_NONINTRUSIVE_REQUESTDISPATCH1 (DcType & dc, procid_t source,
   iarc >> id;
   T0 (f0);
   iarc >> (f0);
-  typename function_ret_type < 
-    typename boost::remove_const < 
-    typename boost::remove_reference < 
-    typename boost::function < 
-    typename boost::remove_member_pointer < F >::type >::result_type >::type >::type >::type 
-        ret = mem_function_ret_type < 
-                typename boost::remove_const <
-                typename boost::remove_reference < 
-                typename boost::function < 
-                typename boost::remove_member_pointer < F >::type >::result_type >::type >::type >::fcall1 (f, obj, (f0));
+  typename function_ret_type <
+    typename boost::remove_const <
+    typename boost::remove_reference <
+    typename boost::function <
+    typename boost::remove_member_pointer < F >::type >::result_type >::type
+>::type >::type ret = mem_function_ret_type < typename boost::remove_const <
+                typename boost::remove_reference <
+                typename boost::function <
+                typename boost::remove_member_pointer < F >::type >::result_type
+>::type >::type >::fcall1 (f, obj, (f0));
 
   charstring_free (f0);
   boost::iostreams::stream < resizing_array_sink > retstrm (128);
@@ -92,11 +90,11 @@ void OBJECT_NONINTRUSIVE_REQUESTDISPATCH1 (DcType & dc, procid_t source,
   }
   if (packet_type_mask & CONTROL_PACKET) {
     dc.control_call (source, request_reply_handler, id,
-		     blob (retstrm->str, retstrm->len));
+                     blob (retstrm->str, retstrm->len));
   }
   else {
     dc.reply_remote_call (source, request_reply_handler, id,
-			  blob (retstrm->str, retstrm->len));
+                          blob (retstrm->str, retstrm->len));
   }
   free (retstrm->str);
 }
@@ -106,67 +104,58 @@ void OBJECT_NONINTRUSIVE_REQUESTDISPATCH1 (DcType & dc, procid_t source,
 */
 #define GENFN(N) BOOST_PP_CAT(__GLRPC_NIF, N)
 #define GENFN2(N) BOOST_PP_CAT(f, N)
-#define GENNIARGS(Z,N,_) (BOOST_PP_CAT(f, N))
+#define GENNIARGS(Z, N, _) (BOOST_PP_CAT(f, N))
 
-#define GENPARAMS(Z,N,_)                                                \
-  BOOST_PP_CAT(T, N) (BOOST_PP_CAT(f, N)) ;                             \
-  iarc >> (BOOST_PP_CAT(f, N)) ;
+#define GENPARAMS(Z, N, _)                \
+  BOOST_PP_CAT(T, N)(BOOST_PP_CAT(f, N)); \
+  iarc >> (BOOST_PP_CAT(f, N));
 
-#define CHARSTRINGFREE(Z,N,_)  charstring_free(BOOST_PP_CAT(f, N));
+#define CHARSTRINGFREE(Z, N, _) charstring_free(BOOST_PP_CAT(f, N));
 
-#define NONINTRUSIVE_DISPATCH_GENERATOR(Z,N,_)                          \
-  template<typename DcType, typename T,                                 \
-           typename F  BOOST_PP_COMMA_IF(N)                             \
-           BOOST_PP_ENUM_PARAMS(N, typename T) >                        \
-  void BOOST_PP_CAT(OBJECT_NONINTRUSIVE_REQUESTDISPATCH,N) (DcType& dc, \
-                                                            procid_t source, \
-                                                            unsigned char packet_type_mask, \
-                                                            const char* buf, size_t len) { \
-    iarchive iarc(buf, len);                                                \
-    F f;                                                                \
-    deserialize(iarc, (char*)(&f), sizeof(F));                          \
-    size_t objid;                                                       \
-    iarc >> objid;                                                      \
-    T* obj = reinterpret_cast<T*>(dc.get_registered_object(objid));     \
-    size_t id; iarc >> id;                                              \
-    BOOST_PP_REPEAT(N, GENPARAMS, _);                                   \
-    typename function_ret_type<__GLRPC_FRESULT>::type ret =                     \
-      mem_function_ret_type<__GLRPC_FRESULT>::BOOST_PP_CAT(fcall, N)            \
-      (f, obj BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N,GENNIARGS ,_));      \
-    BOOST_PP_REPEAT(N, CHARSTRINGFREE, _);                              \
-    boost::iostreams::stream<resizing_array_sink> retstrm(128);         \
-    oarchive oarc(retstrm);                                             \
-    oarc << ret;                                                        \
-    retstrm.flush();                                                    \
-    if ((packet_type_mask & CONTROL_PACKET) == 0) {                     \
-      dc.get_rmi_instance(objid)->inc_calls_received(source);           \
-      dc.get_rmi_instance(objid)->inc_bytes_sent(source, retstrm->len); \
-    }                                                                   \
-    /*std::cerr << "Request wait on " << id << std::endl ; */           \
-    if (packet_type_mask & CONTROL_PACKET) {                            \
-      dc.control_call(source,                                           \
-                      request_reply_handler,                          \
-                      id,                                               \
-                      blob(retstrm->str, retstrm->len));                \
-    } else if(packet_type_mask & FLUSH_PACKET) {                        \
-      dc.reply_remote_call(source,                                           \
-                      request_reply_handler,                          \
-                      id,                                               \
-                      blob(retstrm->str, retstrm->len));                \
-    }  else {                                                            \
-      dc.remote_call(source,                                       \
-                     request_reply_handler,                      \
-                     id,                                           \
-                     blob(retstrm->str, retstrm->len));            \
-    }                                                                   \
-    free(retstrm->str);                                                 \
-    /* std::cerr << "Request received on " << id << std::endl ; */      \
-  } 
-
-
+#define NONINTRUSIVE_DISPATCH_GENERATOR(Z, N, _)                         \
+  template <typename DcType, typename T,                                 \
+            typename F BOOST_PP_COMMA_IF(N)                              \
+                BOOST_PP_ENUM_PARAMS(N, typename T)>                     \
+  void BOOST_PP_CAT(OBJECT_NONINTRUSIVE_REQUESTDISPATCH, N)(             \
+      DcType & dc, procid_t source, unsigned char packet_type_mask,      \
+      const char* buf, size_t len) {                                     \
+    iarchive iarc(buf, len);                                             \
+    F f;                                                                 \
+    deserialize(iarc, (char*)(&f), sizeof(F));                           \
+    size_t objid;                                                        \
+    iarc >> objid;                                                       \
+    T* obj = reinterpret_cast<T*>(dc.get_registered_object(objid));      \
+    size_t id;                                                           \
+    iarc >> id;                                                          \
+    BOOST_PP_REPEAT(N, GENPARAMS, _);                                    \
+    typename function_ret_type<__GLRPC_FRESULT>::type ret =              \
+        mem_function_ret_type<__GLRPC_FRESULT>::BOOST_PP_CAT(fcall, N)(  \
+            f, obj BOOST_PP_COMMA_IF(N) BOOST_PP_ENUM(N, GENNIARGS, _)); \
+    BOOST_PP_REPEAT(N, CHARSTRINGFREE, _);                               \
+    boost::iostreams::stream<resizing_array_sink> retstrm(128);          \
+    oarchive oarc(retstrm);                                              \
+    oarc << ret;                                                         \
+    retstrm.flush();                                                     \
+    if ((packet_type_mask & CONTROL_PACKET) == 0) {                      \
+      dc.get_rmi_instance(objid)->inc_calls_received(source);            \
+      dc.get_rmi_instance(objid)->inc_bytes_sent(source, retstrm->len);  \
+    }                                                                    \
+    /*std::cerr << "Request wait on " << id << std::endl ; */            \
+    if (packet_type_mask & CONTROL_PACKET) {                             \
+      dc.control_call(source, request_reply_handler, id,                 \
+                      blob(retstrm->str, retstrm->len));                 \
+    } else if (packet_type_mask & FLUSH_PACKET) {                        \
+      dc.reply_remote_call(source, request_reply_handler, id,            \
+                           blob(retstrm->str, retstrm->len));            \
+    } else {                                                             \
+      dc.remote_call(source, request_reply_handler, id,                  \
+                     blob(retstrm->str, retstrm->len));                  \
+    }                                                                    \
+    free(retstrm->str);                                                  \
+    /* std::cerr << "Request received on " << id << std::endl ; */       \
+  }
 
 BOOST_PP_REPEAT(6, NONINTRUSIVE_DISPATCH_GENERATOR, _)
-
 
 #undef GENFN
 #undef GENFN2
@@ -174,8 +163,7 @@ BOOST_PP_REPEAT(6, NONINTRUSIVE_DISPATCH_GENERATOR, _)
 #undef GENPARAMS
 #undef NONINTRUSIVE_DISPATCH_GENERATOR
 
-} // namespace dc_impl
-} // namespace graphlab
+}  // namespace dc_impl
+}  // namespace graphlab
 #include <graphlab/rpc/mem_function_arg_types_undef.hpp>
 #endif
-

@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,8 +23,8 @@
 /**
  * @file org_graphlab_Context.hpp
  * \c javah will generate \c org_graphlab_Context.h from the native methods
- * defined in \c org.graphlab.Context (and so will overwrite the file every time).
- * Define any additional classes/structs/typedefs in this hpp file.
+ * defined in \c org.graphlab.Context (and so will overwrite the file every
+ * time). Define any additional classes/structs/typedefs in this hpp file.
  * @author Jiunn Haur Lim <jiunnhal@cmu.edu>
  */
 

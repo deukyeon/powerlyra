@@ -20,7 +20,6 @@
  *
  */
 
-
 // Copyright (c) 2005, Google Inc.
 // All rights reserved.
 //
@@ -62,11 +61,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #ifdef HAVE_UNISTD_H
-#include <unistd.h>    // for write()
+#include <unistd.h>  // for write()
 #endif
-#include <string.h>    // for strlen(), strcmp()
+#include <string.h>  // for strlen(), strcmp()
 #include <assert.h>
-#include <errno.h>     // for errno
+#include <errno.h>  // for errno
 #include <sstream>
 #include <cassert>
 #include <graphlab/logger/logger.hpp>
@@ -88,30 +87,27 @@ extern void __print_back_trace();
 // controlled by NDEBUG, so the check will be executed regardless of
 // compilation mode.  Therefore, it is safe to do things like:
 //    CHECK(fp->Write(x) == 4)
-#define CHECK(condition)                                                \
-  do {                                                                  \
-    if (__builtin_expect(!(condition), 0)) {                            \
-      logstream(LOG_ERROR)                                              \
-        << "Check failed: " << #condition  << std::endl;                \
-      __print_back_trace();                                             \
+#define CHECK(condition)                                                   \
+  do {                                                                     \
+    if (__builtin_expect(!(condition), 0)) {                               \
+      logstream(LOG_ERROR) << "Check failed: " << #condition << std::endl; \
+      __print_back_trace();                                                \
       GRAPHLAB_LOGGER_FAIL_METHOD("assertion failure");                    \
-    }                                                                   \
-  } while(0)
-
+    }                                                                      \
+  } while (0)
 
 // This prints errno as well.  errno is the posix defined last error
 // number. See errno.h
-#define PCHECK(condition)                                               \
-  do {                                                                  \
-    if (__builtin_expect(!(condition), 0)) {                            \
-      const int _PCHECK_err_no_ = errno;                                \
-      logstream(LOG_ERROR)                                              \
-        << "Check failed: " << #condition << ": "                       \
-        << strerror(err_no) << std::endl;                               \
-      __print_back_trace();                                             \
-      GRAPHLAB_LOGGER_FAIL_METHOD("assertion failure");                    \
-    }                                                                   \
-  } while(0)
+#define PCHECK(condition)                                            \
+  do {                                                               \
+    if (__builtin_expect(!(condition), 0)) {                         \
+      const int _PCHECK_err_no_ = errno;                             \
+      logstream(LOG_ERROR) << "Check failed: " << #condition << ": " \
+                           << strerror(err_no) << std::endl;         \
+      __print_back_trace();                                          \
+      GRAPHLAB_LOGGER_FAIL_METHOD("assertion failure");              \
+    }                                                                \
+  } while (0)
 
 // Helper macro for binary operators; prints the two values on error
 // Don't use this macro directly in your code, use CHECK_EQ et al below
@@ -120,49 +116,41 @@ extern void __print_back_trace();
 // and the other is NULL. To work around this, simply static_cast NULL to the
 // type of the desired pointer.
 #if defined(__cplusplus) && __cplusplus >= 201103L
-#define CHECK_OP(op, val1, val2)                                        \
-  do {                                                                  \
-    const auto _CHECK_OP_v1_ = val1;                            \
-    const auto _CHECK_OP_v2_ = val2;              \
-    if (__builtin_expect(!((_CHECK_OP_v1_) op                           \
-                           (decltype(val1))(_CHECK_OP_v2_)), 0)) {        \
-      logstream(LOG_ERROR)                                              \
-        << "Check failed: "                                             \
-        << #val1 << #op << #val2                                        \
-        << "  ["                                                        \
-        << _CHECK_OP_v1_                                                \
-        << ' ' << #op << ' '                                            \
-        << _CHECK_OP_v2_ << "]" << std::endl;                           \
-      __print_back_trace();                                             \
-      GRAPHLAB_LOGGER_FAIL_METHOD("assertion failure");                    \
-    }                                                                   \
-  } while(0)
+#define CHECK_OP(op, val1, val2)                                              \
+  do {                                                                        \
+    const auto _CHECK_OP_v1_ = val1;                                          \
+    const auto _CHECK_OP_v2_ = val2;                                          \
+    if (__builtin_expect(!((_CHECK_OP_v1_)op(decltype(val1))(_CHECK_OP_v2_)), \
+                         0)) {                                                \
+      logstream(LOG_ERROR) << "Check failed: " << #val1 << #op << #val2       \
+                           << "  [" << _CHECK_OP_v1_ << ' ' << #op << ' '     \
+                           << _CHECK_OP_v2_ << "]" << std::endl;              \
+      __print_back_trace();                                                   \
+      GRAPHLAB_LOGGER_FAIL_METHOD("assertion failure");                       \
+    }                                                                         \
+  } while (0)
 #else
-#define CHECK_OP(op, val1, val2)                                        \
-  do {                                                                  \
-    const typeof(val1) _CHECK_OP_v1_ = (typeof(val1))val1;              \
-    const typeof(val2) _CHECK_OP_v2_ = (typeof(val2))val2;              \
-    if (__builtin_expect(!((_CHECK_OP_v1_) op                           \
-                           (typeof(val1))(_CHECK_OP_v2_)), 0)) {        \
-      logstream(LOG_ERROR)                                              \
-        << "Check failed: "                                             \
-        << #val1 << #op << #val2                                        \
-        << "  ["                                                        \
-        << _CHECK_OP_v1_                                                \
-        << ' ' << #op << ' '                                            \
-        << _CHECK_OP_v2_ << "]" << std::endl;                           \
-      __print_back_trace();                                             \
-      GRAPHLAB_LOGGER_FAIL_METHOD("assertion failure");                    \
-    }                                                                   \
-  } while(0)
+#define CHECK_OP(op, val1, val2)                                            \
+  do {                                                                      \
+    const typeof(val1) _CHECK_OP_v1_ = (typeof(val1))val1;                  \
+    const typeof(val2) _CHECK_OP_v2_ = (typeof(val2))val2;                  \
+    if (__builtin_expect(!((_CHECK_OP_v1_)op(typeof(val1))(_CHECK_OP_v2_)), \
+                         0)) {                                              \
+      logstream(LOG_ERROR) << "Check failed: " << #val1 << #op << #val2     \
+                           << "  [" << _CHECK_OP_v1_ << ' ' << #op << ' '   \
+                           << _CHECK_OP_v2_ << "]" << std::endl;            \
+      __print_back_trace();                                                 \
+      GRAPHLAB_LOGGER_FAIL_METHOD("assertion failure");                     \
+    }                                                                       \
+  } while (0)
 #endif
 
 #define CHECK_EQ(val1, val2) CHECK_OP(==, val1, val2)
 #define CHECK_NE(val1, val2) CHECK_OP(!=, val1, val2)
 #define CHECK_LE(val1, val2) CHECK_OP(<=, val1, val2)
-#define CHECK_LT(val1, val2) CHECK_OP(< , val1, val2)
+#define CHECK_LT(val1, val2) CHECK_OP(<, val1, val2)
 #define CHECK_GE(val1, val2) CHECK_OP(>=, val1, val2)
-#define CHECK_GT(val1, val2) CHECK_OP(> , val1, val2)
+#define CHECK_GT(val1, val2) CHECK_OP(>, val1, val2)
 
 // Synonyms for CHECK_* that are used in some unittests.
 #define EXPECT_EQ(val1, val2) CHECK_EQ(val1, val2)
@@ -178,27 +166,25 @@ extern void __print_back_trace();
 #define ASSERT_GE(val1, val2) EXPECT_GE(val1, val2)
 #define ASSERT_GT(val1, val2) EXPECT_GT(val1, val2)
 // As are these variants.
-#define EXPECT_TRUE(cond)     CHECK(cond)
-#define EXPECT_FALSE(cond)    CHECK(!(cond))
-#define EXPECT_STREQ(a, b)    CHECK(strcmp(a, b) == 0)
-#define ASSERT_TRUE(cond)     EXPECT_TRUE(cond)
-#define ASSERT_FALSE(cond)    EXPECT_FALSE(cond)
-#define ASSERT_STREQ(a, b)    EXPECT_STREQ(a, b)
+#define EXPECT_TRUE(cond) CHECK(cond)
+#define EXPECT_FALSE(cond) CHECK(!(cond))
+#define EXPECT_STREQ(a, b) CHECK(strcmp(a, b) == 0)
+#define ASSERT_TRUE(cond) EXPECT_TRUE(cond)
+#define ASSERT_FALSE(cond) EXPECT_FALSE(cond)
+#define ASSERT_STREQ(a, b) EXPECT_STREQ(a, b)
 
-
-#define ASSERT_MSG(condition, fmt, ...)                                 \
-  do {                                                                  \
-    if (__builtin_expect(!(condition), 0)) {                            \
-      logstream(LOG_ERROR)                                              \
-        << "Check failed: " << #condition << ":\n";                     \
-      logger(LOG_ERROR, fmt, ##__VA_ARGS__);                            \
-      __print_back_trace();                                             \
-      GRAPHLAB_LOGGER_FAIL_METHOD("assertion failure");                    \
-    }                                                                   \
-  } while(0)
+#define ASSERT_MSG(condition, fmt, ...)                                \
+  do {                                                                 \
+    if (__builtin_expect(!(condition), 0)) {                           \
+      logstream(LOG_ERROR) << "Check failed: " << #condition << ":\n"; \
+      logger(LOG_ERROR, fmt, ##__VA_ARGS__);                           \
+      __print_back_trace();                                            \
+      GRAPHLAB_LOGGER_FAIL_METHOD("assertion failure");                \
+    }                                                                  \
+  } while (0)
 
 // Used for (libc) functions that return -1 and set errno
-#define CHECK_ERR(invocation)  PCHECK((invocation) != -1)
+#define CHECK_ERR(invocation) PCHECK((invocation) != -1)
 
 // A few more checks that only happen in debug mode
 #ifdef NDEBUG
@@ -220,14 +206,14 @@ extern void __print_back_trace();
 #define DASSERT_MSG(condition, fmt, ...)
 
 #else
-#define DCHECK_EQ(val1, val2)  CHECK_EQ(val1, val2)
-#define DCHECK_NE(val1, val2)  CHECK_NE(val1, val2)
-#define DCHECK_LE(val1, val2)  CHECK_LE(val1, val2)
-#define DCHECK_LT(val1, val2)  CHECK_LT(val1, val2)
-#define DCHECK_GE(val1, val2)  CHECK_GE(val1, val2)
-#define DCHECK_GT(val1, val2)  CHECK_GT(val1, val2)
-#define DASSERT_TRUE(cond)     ASSERT_TRUE(cond)
-#define DASSERT_FALSE(cond)    ASSERT_FALSE(cond)
+#define DCHECK_EQ(val1, val2) CHECK_EQ(val1, val2)
+#define DCHECK_NE(val1, val2) CHECK_NE(val1, val2)
+#define DCHECK_LE(val1, val2) CHECK_LE(val1, val2)
+#define DCHECK_LT(val1, val2) CHECK_LT(val1, val2)
+#define DCHECK_GE(val1, val2) CHECK_GE(val1, val2)
+#define DCHECK_GT(val1, val2) CHECK_GT(val1, val2)
+#define DASSERT_TRUE(cond) ASSERT_TRUE(cond)
+#define DASSERT_FALSE(cond) ASSERT_FALSE(cond)
 #define DASSERT_EQ(val1, val2) ASSERT_EQ(val1, val2)
 #define DASSERT_NE(val1, val2) ASSERT_NE(val1, val2)
 #define DASSERT_LE(val1, val2) ASSERT_LE(val1, val2)
@@ -235,24 +221,20 @@ extern void __print_back_trace();
 #define DASSERT_GE(val1, val2) ASSERT_GE(val1, val2)
 #define DASSERT_GT(val1, val2) ASSERT_GT(val1, val2)
 
-
-#define DASSERT_MSG(condition, fmt, ...)                                \
-  do {                                                                  \
-    if (__builtin_expect(!(condition), 0)) {                            \
-      logstream(LOG_ERROR)                                              \
-        << "Check failed: " << #condition << ":\n";                     \
-      logger(LOG_ERROR, fmt, ##__VA_ARGS__);                            \
-      __print_back_trace();                                             \
-      GRAPHLAB_LOGGER_FAIL_METHOD("assertion failure");                    \
-    }                                                                   \
-  } while(0)
+#define DASSERT_MSG(condition, fmt, ...)                               \
+  do {                                                                 \
+    if (__builtin_expect(!(condition), 0)) {                           \
+      logstream(LOG_ERROR) << "Check failed: " << #condition << ":\n"; \
+      logger(LOG_ERROR, fmt, ##__VA_ARGS__);                           \
+      __print_back_trace();                                            \
+      GRAPHLAB_LOGGER_FAIL_METHOD("assertion failure");                \
+    }                                                                  \
+  } while (0)
 
 #endif
-
 
 #ifdef ERROR
-#undef ERROR      // may conflict with ERROR macro on windows
+#undef ERROR  // may conflict with ERROR macro on windows
 #endif
 
-#endif // _LOGGING_H_
-
+#endif  // _LOGGING_H_

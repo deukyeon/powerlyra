@@ -20,7 +20,6 @@
  *
  */
 
-
 #ifndef DC_TCP_COMM_HPP
 #define DC_TCP_COMM_HPP
 
@@ -47,7 +46,6 @@
 namespace graphlab {
 namespace dc_impl {
 
-
 void on_receive_event(int fd, short ev, void* arg);
 void on_send_event(int fd, short ev, void* arg);
 
@@ -58,9 +56,8 @@ TCP implementation of the communications subsystem.
 Provides a single object interface to sending/receiving data streams to
 a collection of machines.
 */
-class dc_tcp_comm:public dc_comm_base {
+class dc_tcp_comm : public dc_comm_base {
  public:
-
   DECLARE_TRACER(tcp_send_call);
 
   inline dc_tcp_comm() {
@@ -68,9 +65,7 @@ class dc_tcp_comm:public dc_comm_base {
     INITIALIZE_TRACER(tcp_send_call, "dc_tcp_comm: send syscall");
   }
 
-  size_t capabilities() const {
-    return COMM_STREAM;
-  }
+  size_t capabilities() const { return COMM_STREAM; }
 
   /**
    this fuction should pause until all communication has been set up
@@ -79,26 +74,23 @@ class dc_tcp_comm:public dc_comm_base {
    should operate normally. Every received message should immediate trigger the
    attached receiver
 
-   machines: a vector of strings where each string is of the form [IP]:[portnumber]
-   initopts: unused
-   curmachineid: The ID of the current machine. machines[curmachineid] will be
-                 the listening address of this machine
+   machines: a vector of strings where each string is of the form
+   [IP]:[portnumber] initopts: unused curmachineid: The ID of the current
+   machine. machines[curmachineid] will be the listening address of this machine
 
-   recvcallback: A function pointer to the receiving function. This function must be thread-safe
-   tag: An additional pointer passed to the receiving function.
+   recvcallback: A function pointer to the receiving function. This function
+   must be thread-safe tag: An additional pointer passed to the receiving
+   function.
   */
-  void init(const std::vector<std::string> &machines,
-            const std::map<std::string,std::string> &initopts,
-            procid_t curmachineid,
-            std::vector<dc_receive*> receiver,
+  void init(const std::vector<std::string>& machines,
+            const std::map<std::string, std::string>& initopts,
+            procid_t curmachineid, std::vector<dc_receive*> receiver,
             std::vector<dc_send*> senders);
 
   /** shuts down all sockets and cleans up */
   void close();
 
-  ~dc_tcp_comm() {
-    close();
-  }
+  ~dc_tcp_comm() { close(); }
 
   inline bool channel_active(size_t target) const {
     return (sock[target].outsock != -1);
@@ -108,24 +100,18 @@ class dc_tcp_comm:public dc_comm_base {
     Returns the number of machines in the network.
     Only valid after call to init()
   */
-  inline procid_t numprocs() const {
-    return nprocs;
-  }
+  inline procid_t numprocs() const { return nprocs; }
 
   /**
    * Returns the current machine ID.
    * Only valid after call to init()
    */
-  inline procid_t procid() const {
-    return curid;
-  }
+  inline procid_t procid() const { return curid; }
 
   /**
    * Returns the total number of bytes sent
    */
-  inline size_t network_bytes_sent() const {
-    return network_bytessent.value;
-  }
+  inline size_t network_bytes_sent() const { return network_bytessent.value; }
 
   /**
    * Returns the total number of bytes received
@@ -156,8 +142,8 @@ class dc_tcp_comm:public dc_comm_base {
   void set_non_blocking(int fd);
 
   /// called when listener receives an incoming socket request
-  void new_socket(int newsock, sockaddr_in* otheraddr, procid_t remotemachineid);
-
+  void new_socket(int newsock, sockaddr_in* otheraddr,
+                  procid_t remotemachineid);
 
   /// The number of incoming connections established
   size_t num_in_connected() const;
@@ -167,20 +153,17 @@ class dc_tcp_comm:public dc_comm_base {
    */
   void open_listening(int sockhandle = 0);
 
-
   /// constructs a connection to the target machine
   void connect(size_t target);
 
   /// wrapper around the standard send. but loops till the buffer is all sent
   int sendtosock(int sockfd, const char* buf, size_t len);
 
-
   procid_t curid;   /// if od the current processor
   procid_t nprocs;  /// number of processors
   bool is_closed;   /// whether this socket is closed
 
   std::string program_md5;  /// MD5 hash of current program
-
 
   /// all_addrs[i] will contain the IP address of machine i
   std::vector<uint32_t> all_addrs;
@@ -191,21 +174,19 @@ class dc_tcp_comm:public dc_comm_base {
   std::vector<dc_send*> sender;
   atomic<size_t> buffered_len;
 
-
   struct initial_message {
     procid_t id;
     char md5[32];
   };
 
-
   /// All information about stuff regarding a particular sock
   /// Passed to the receive handler
-  struct socket_info{
-    size_t id;    /// which machine this is connected to
-    dc_tcp_comm* owner; /// this object
-    int outsock;  /// FD of the outgoing socket
-    int insock;   /// FD of the incoming socket
-    struct event* inevent;  /// event object for incoming information
+  struct socket_info {
+    size_t id;               /// which machine this is connected to
+    dc_tcp_comm* owner;      /// this object
+    int outsock;             /// FD of the outgoing socket
+    int insock;              /// FD of the incoming socket
+    struct event* inevent;   /// event object for incoming information
     struct event* outevent;  /// event object for outgoing information
     bool wouldblock;
     mutex m;
@@ -214,8 +195,9 @@ class dc_tcp_comm:public dc_comm_base {
     struct msghdr data;
   };
 
-  mutex insock_lock; /// locks the insock field in socket_info
-  conditional insock_cond; /// triggered when the insock field in socket_info changes
+  mutex insock_lock;  /// locks the insock field in socket_info
+  conditional
+      insock_cond;  /// triggered when the insock field in socket_info changes
 
   struct timeout_event {
     bool send_all;
@@ -235,8 +217,6 @@ class dc_tcp_comm:public dc_comm_base {
   void check_for_new_data(socket_info& sockinfo);
   void construct_events();
 
-
-
   // counters
   atomic<size_t> network_bytessent;
   atomic<size_t> network_bytesreceived;
@@ -248,7 +228,6 @@ class dc_tcp_comm:public dc_comm_base {
   friend void process_sock(socket_info* sockinfo);
   friend void on_receive_event(int fd, short ev, void* arg);
   struct event_base* inevbase;
-
 
   ////////////       Sending Sockets      //////////////////////
   thread_group outthreads;
@@ -269,8 +248,8 @@ class dc_tcp_comm:public dc_comm_base {
 
 void process_sock(dc_tcp_comm::socket_info* sockinfo);
 
-} // namespace dc_impl
-} // namespace graphlab
+}  // namespace dc_impl
+}  // namespace graphlab
 
 #ifndef __APPLE__
 // prefix mangling if not Mac
@@ -278,4 +257,3 @@ void process_sock(dc_tcp_comm::socket_info* sockinfo);
 #endif
 
 #endif
-

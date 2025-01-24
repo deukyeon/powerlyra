@@ -1,5 +1,5 @@
-/**  
- * Copyright (c) 2009 Carnegie Mellon University. 
+/**
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,16 +19,15 @@
 
 #include "eigen_serialization.hpp"
 
-
-
-graphlab::oarchive& operator<<(graphlab::oarchive& arc, const Eigen::VectorXd& vec) {
+graphlab::oarchive& operator<<(graphlab::oarchive& arc,
+                               const Eigen::VectorXd& vec) {
   typedef Eigen::VectorXd::Index index_type;
   typedef Eigen::VectorXd::Scalar scalar_type;
   const index_type size = vec.size();
   arc << size;
   graphlab::serialize(arc, vec.data(), size * sizeof(scalar_type));
   return arc;
-} // end of save vector
+}  // end of save vector
 
 graphlab::iarchive& operator>>(graphlab::iarchive& arc, Eigen::VectorXd& vec) {
   typedef Eigen::VectorXd::Index index_type;
@@ -38,25 +37,25 @@ graphlab::iarchive& operator>>(graphlab::iarchive& arc, Eigen::VectorXd& vec) {
   vec.resize(size);
   graphlab::deserialize(arc, vec.data(), size * sizeof(scalar_type));
   return arc;
-} // end of save vector
+}  // end of save vector
 
-
-graphlab::oarchive& operator<<(graphlab::oarchive& arc, const Eigen::MatrixXd& mat) {
+graphlab::oarchive& operator<<(graphlab::oarchive& arc,
+                               const Eigen::MatrixXd& mat) {
   typedef Eigen::MatrixXd::Index index_type;
   typedef Eigen::MatrixXd::Scalar scalar_type;
   const index_type rows = mat.rows();
   const index_type cols = mat.cols();
   arc << rows << cols;
-  graphlab::serialize(arc, mat.data(), rows*cols*sizeof(scalar_type));
+  graphlab::serialize(arc, mat.data(), rows * cols * sizeof(scalar_type));
   return arc;
-} // end of save matrix
+}  // end of save matrix
 
-graphlab::iarchive& operator>>(graphlab::iarchive& arc,  Eigen::MatrixXd& mat) {
-  typedef Eigen::MatrixXd::Index index_type; 
+graphlab::iarchive& operator>>(graphlab::iarchive& arc, Eigen::MatrixXd& mat) {
+  typedef Eigen::MatrixXd::Index index_type;
   typedef Eigen::MatrixXd::Scalar scalar_type;
-  index_type rows=0, cols=0;
+  index_type rows = 0, cols = 0;
   arc >> rows >> cols;
-  mat.resize(rows,cols);
-  graphlab::deserialize(arc, mat.data(), rows*cols*sizeof(scalar_type));
+  mat.resize(rows, cols);
+  graphlab::deserialize(arc, mat.data(), rows * cols * sizeof(scalar_type));
   return arc;
-} // end of load matrix
+}  // end of load matrix

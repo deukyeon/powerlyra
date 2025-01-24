@@ -20,25 +20,23 @@
  *
  */
 
-
 #ifndef GRAPHLAB_DC_INIT_FROM_ZOOKEEPER_HPP
 #define GRAPHLAB_DC_INIT_FROM_ZOOKEEPER_HPP
 #include <graphlab/rpc/dc.hpp>
 namespace graphlab {
-  /**
-   * \ingroup rpc
-   * initializes parameters from ZooKeeper. Returns true on success.
-   * To initialize from Zookeeper, the following environment variables must be set
-   *
-   * ZK_SERVERS: A comma separated list of zookeeper servers. Port
-   *             number must be included.
-   * ZK_JOBNAME: The name of the job to use. This must be unique to the cluster.
-   *             i.e. no other job with the same name must run at the same time
-   * ZK_NUMNODES: The number of processes to wait for
-   *
-   */
-  bool init_param_from_zookeeper(dc_init_param& param);
-}
+/**
+ * \ingroup rpc
+ * initializes parameters from ZooKeeper. Returns true on success.
+ * To initialize from Zookeeper, the following environment variables must be set
+ *
+ * ZK_SERVERS: A comma separated list of zookeeper servers. Port
+ *             number must be included.
+ * ZK_JOBNAME: The name of the job to use. This must be unique to the cluster.
+ *             i.e. no other job with the same name must run at the same time
+ * ZK_NUMNODES: The number of processes to wait for
+ *
+ */
+bool init_param_from_zookeeper(dc_init_param& param);
+}  // namespace graphlab
 
-#endif // GRAPHLAB_DC_INIT_FROM_ZOOKEEPER_HPP
-
+#endif  // GRAPHLAB_DC_INIT_FROM_ZOOKEEPER_HPP

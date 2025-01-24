@@ -1,5 +1,5 @@
-/* 
- * Copyright (c) 2009 Carnegie Mellon University. 
+/*
+ * Copyright (c) 2009 Carnegie Mellon University.
  *     All rights reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,33 +27,27 @@
 #include <utility>
 #include <boost/function.hpp>
 
-
 namespace graphlab {
 
-
-
-/** 
+/**
     \ingroup httpserver
     The callback type used for add_metric_server_callback()
     See add_metric_server_callback() for details.
   */
-typedef boost::function<std::pair<std::string, std::string>
-                                (std::map<std::string, std::string>&)> 
-        http_redirect_callback_type;
-
-
-
+typedef boost::function<std::pair<std::string, std::string>(
+    std::map<std::string, std::string>&)>
+    http_redirect_callback_type;
 
 /**
 
   \ingroup httpserver
-  \brief This is used to map a URL on the mtrics server 
+  \brief This is used to map a URL on the mtrics server
              to a processing function.
-  
+
   The processing function must have the prototype
   \code
-  std::pair<std::string, std::string> callback(std::map<std::string, std::string>&)
-  \endcode
+  std::pair<std::string, std::string> callback(std::map<std::string,
+  std::string>&) \endcode
 
   The processing function takes a map of GET variables to their corresponding
   values, and returns a pair of strings. (content_type, content)
@@ -64,9 +58,9 @@ typedef boost::function<std::pair<std::string, std::string>
   For instance: The builtin 404 handler looks like this:
 
   \code
-  std::pair<std::string, std::string> 
+  std::pair<std::string, std::string>
   four_oh_four(std::map<std::string, std::string>& varmap) {
-    return std::make_pair(std::string("text/html"), 
+    return std::make_pair(std::string("text/html"),
                         std::string("Page Not Found"));
   }
   \endcode
@@ -78,9 +72,8 @@ typedef boost::function<std::pair<std::string, std::string>
               will be shown on http://[server]/a.html
   \param callback The callback function to use to process the page
  */
-void add_metric_server_callback(std::string page, 
+void add_metric_server_callback(std::string page,
                                 http_redirect_callback_type callback);
-
 
 /**
   \ingroup httpserver
@@ -90,8 +83,6 @@ void add_metric_server_callback(std::string page,
   does useful work on machine 0. Only machine 0 will launch the web server.
  */
 void launch_metric_server();
-
-
 
 /**
   \ingroup httpserver
@@ -104,7 +95,7 @@ void stop_metric_server();
 
 /**
   \ingroup httpserver
-  \brief Waits for a ctrl-D on machine 0, and 
+  \brief Waits for a ctrl-D on machine 0, and
          stops the metrics reporting server if one is started.
 
   The function may be called by all machines simultaneously since it only
@@ -113,5 +104,5 @@ void stop_metric_server();
 */
 void stop_metric_server_on_eof();
 
-} // graphlab 
-#endif // GRAPHLAB_METRICS_SERVER_HPP
+}  // namespace graphlab
+#endif  // GRAPHLAB_METRICS_SERVER_HPP
